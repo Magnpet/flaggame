@@ -1,0 +1,924 @@
+:root {
+    --heading-font: 'Montserrat', sans-serif;
+    --body-font: 'Open Sans', sans-serif;
+}
+
+body {
+    font-family: var(--body-font);
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('images/world.png');
+    background-size: cover; /* Changed from 800px to cover */
+    background-position: center center;
+    background-repeat: no-repeat; /* Changed from repeat to no-repeat */
+    opacity: 1.00;
+    z-index: -1;
+}
+
+header {
+    background-color: #003366; /* Dark blue background */
+    color: white; /* White text */
+    text-align: center;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+/* Make main title all caps and bolder */
+header h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Make tabs less bold than the main title */
+header .tab {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px 20px;
+    cursor: pointer;
+    color: white;
+    z-index: 10;
+    font-weight: 500; /* Less bold than the main title */
+    font-size: 15px;  /* Slightly smaller than the main title */
+    font-family: var(--heading-font);
+}
+
+#aboutTab {
+    left: 10px;
+}
+
+#changeModeTab {
+    right: 10px;
+}
+
+.main-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 50px auto 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.categories {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 30px auto;
+}
+
+.category-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.flag-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.flag-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.flag-box {
+    width: 200px;
+    height: 150px;
+    border: none; /* Changed from 2px solid #333 */
+    margin: 20px auto;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.5s ease-in-out;
+}
+
+.country-name {
+    color: #000;
+    font-size: 18px;
+    font-weight: bold;
+    visibility: hidden;
+    font-family: var(--heading-font);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: var(--heading-font);
+    font-weight: 500;
+}
+
+.roll-ended .country-name {
+    visibility: visible;
+}
+
+.category {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.category h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: var(--heading-font);
+}
+
+.category-box {
+    width: 60px;
+    height: 45px;
+    border: 2px solid #333;
+    margin: 0 auto;
+    background-size: contain;
+}
+
+.rank {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+    transition: color 0.3s ease;
+    font-weight: bold;
+}
+
+#pickText {
+    display: none;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.flag-in-box {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#averageRankingText {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 50px;
+    text-align: center;
+}
+
+/* Skips counter */
+.skips-counter {
+    text-align: center;
+    margin-top: 10px;
+    color: #333;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* High score */
+.high-score {
+    text-align: center;
+    color: #003366; /* Dark blue to match header */
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    font-family: var(--heading-font);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Animation for new high score */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.new-high-score {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 24px;
+    margin-top: 10px;
+    animation: pulse 1s infinite;
+}
+
+/* New high score for duel mode */
+.new-high-score-duel {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 24px;
+    margin: 20px auto;
+    text-align: center;
+    animation: pulse 1s infinite;
+    font-family: var(--heading-font);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Dropdown menu for game modes */
+.tab {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 5px;
+}
+
+.dropdown-item {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    font-family: var(--heading-font);
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-item.selected {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+
+/* Show dropdown on hover, but allow JavaScript to control visibility */
+.tab:hover .dropdown-content {
+    display: block;
+}
+
+/* Add this new class to hide dropdown when a choice is made */
+.dropdown-content.hidden {
+    display: none !important;
+}
+
+/* Flag Duel specific styles */
+#flagDuelContainer {
+    text-align: center;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.duel-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.duel-content h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #003366;
+    margin-bottom: 30px;
+    letter-spacing: 0.5px;
+    font-family: var(--heading-font);
+}
+
+.duel-category {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #003366;
+    font-family: var(--heading-font);
+}
+
+.duel-flags {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.duel-flag-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 250px;
+}
+
+.duel-flag {
+    width: 220px;
+    height: 160px;
+    border: none !important; /* Force no border */
+    margin: 10px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    background-color: transparent;
+    box-shadow: none !important; /* Force no box-shadow */
+    outline: none !important; /* Force no outline */
+}
+
+.duel-flag:hover {
+    transform: scale(1.05);
+    box-shadow: none !important; /* Force no box-shadow on hover */
+    border: none !important; /* Force no border on hover */
+    outline: none !important; /* Force no outline on hover */
+}
+
+/* Only add borders/shadows when explicitly showing correct/incorrect */
+.duel-flag.correct {
+    border: 5px solid #00CC00 !important;
+    box-shadow: 0 0 20px rgba(0, 204, 0, 0.5) !important;
+}
+
+.duel-flag.incorrect {
+    border: 5px solid #FF0000 !important;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5) !important;
+}
+
+.vs-container {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 0 30px;
+    color: #003366;
+}
+
+.duel-country-name {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #000;
+    visibility: visible;
+    text-align: center;
+    width: 100%;
+    font-family: var(--heading-font);
+}
+
+.duel-instruction {
+    font-size: 18px;
+    margin: 30px 0;
+    color: #555;
+}
+
+/* Updated score container layout */
+.duel-score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 30px 0;
+    min-height: 80px; /* Ensure container has minimum height even when message isn't shown */
+}
+
+.duel-high-score-message-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    text-align: center;
+}
+
+.duel-scores-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 50px;
+}
+
+.duel-score, .duel-high-score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #003366;
+    background-color: rgba(0,0,0,0.05);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-family: var(--heading-font);
+}
+
+#nextDuelButton {
+    padding: 12px 24px;
+    font-size: 18px;
+    background-color: #003366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    font-family: var(--heading-font);
+}
+
+#nextDuelButton:hover {
+    background-color: #004080;
+    transform: scale(1.05);
+}
+
+/* Add class to show game mode content */
+.game-container {
+    display: none;
+}
+
+.game-container.active {
+    display: block;
+}
+
+/* Flag Reveal specific styles */
+#flagRevealContainer {
+    text-align: center;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.reveal-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.reveal-content h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #003366;
+    margin-bottom: 30px;
+    letter-spacing: 0.5px;
+    font-family: var(--heading-font);
+}
+
+.reveal-game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.reveal-flag-container {
+    position: relative;
+    width: 300px;
+    height: 200px;
+    margin: 20px auto;
+    border: 2px solid #ccc;
+}
+
+.reveal-flag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    visibility: hidden; /* Start with the flag hidden */
+}
+
+.reveal-puzzle-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    z-index: 2;
+}
+
+.puzzle-piece {
+    background-color: #003366;
+    border: 1px solid #002244;
+    transition: opacity 0.3s ease;
+}
+
+.puzzle-piece.revealed {
+    opacity: 0;
+}
+
+.reveal-info {
+    display: flex;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 500px;
+    margin: 20px auto;
+    flex-wrap: wrap;
+}
+
+.reveal-progress, .reveal-score, .reveal-high-score, .reveal-lives {
+    font-family: var(--heading-font);
+    font-size: 16px;
+    font-weight: 600;
+    color: #003366;
+    margin: 10px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+.reveal-input-container {
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+#countryGuessInput {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #003366;
+    border-radius: 4px 0 0 4px;
+    width: 70%;
+    font-family: var(--body-font);
+}
+
+#submitGuessButton {
+    background-color: #003366;
+    color: white;
+    font-family: var(--heading-font);
+    font-weight: 500;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#submitGuessButton:hover {
+    background-color: #004080;
+}
+
+.reveal-message {
+    margin: 20px auto;
+    font-family: var(--heading-font);
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 24px;
+}
+
+.reveal-message.correct {
+    color: #008000;
+}
+
+.reveal-message.incorrect {
+    color: #FF0000;
+}
+
+#nextRevealButton {
+    background-color: #003366;
+    color: white;
+    font-family: var(--heading-font);
+    font-weight: 500;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+#nextRevealButton:hover {
+    background-color: #004080;
+    transform: scale(1.05);
+}
+
+.reveal-high-score-message {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 24px;
+    margin: 20px auto;
+    text-align: center;
+    animation: pulse 1s infinite;
+    font-family: var(--heading-font);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Specific for the new game mode in the mode switcher */
+#gameModeDropdown .dropdown-item[data-mode="reveal"] {
+    border-top: 1px solid #ddd;
+}
+/* Flag Puzzle Guesser specific styles */
+#flagPuzzleContainer {
+    text-align: center;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.puzzle-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.puzzle-content h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #003366;
+    margin-bottom: 30px;
+    letter-spacing: 0.5px;
+    font-family: var(--heading-font);
+}
+
+.puzzle-game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px 0;
+}
+
+.puzzle-info {
+    display: flex;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+.puzzle-timer, .puzzle-score, .puzzle-high-score {
+    font-family: var(--heading-font);
+    font-size: 18px;
+    font-weight: 600;
+    color: #003366;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+.puzzle-timer {
+    color: #d9534f; /* Red for timer */
+}
+
+.puzzle-flag-container {
+    position: relative;
+    width: 300px;
+    height: 200px;
+    margin: 20px auto;
+    border: 2px solid #ccc;
+    overflow: hidden;
+}
+
+.puzzle-merged-flag {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.puzzle-progress {
+    margin-top: 10px;
+    font-family: var(--heading-font);
+    font-size: 16px;
+    font-weight: 600;
+    color: #003366;
+}
+
+.puzzle-input-container {
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+#countryPuzzleInput {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #003366;
+    border-radius: 4px 0 0 4px;
+    width: 70%;
+    font-family: var(--body-font);
+}
+
+#submitPuzzleButton {
+    background-color: #003366;
+    color: white;
+    font-family: var(--heading-font);
+    font-weight: 500;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#submitPuzzleButton:hover {
+    background-color: #004080;
+}
+
+.puzzle-guessed-flags {
+    margin: 15px 0;
+    min-height: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.guessed-flag {
+    padding: 5px 10px;
+    background-color: #e0f0ff;
+    border-radius: 4px;
+    font-family: var(--body-font);
+    font-weight: bold;
+}
+
+.puzzle-message {
+    margin: 15px auto;
+    font-family: var(--heading-font);
+    font-size: 18px;
+    font-weight: 600;
+    min-height: 24px;
+    color: #003366;
+}
+
+/* Flag merging styles */
+.vertical-split .puzzle-merged-flag {
+    background-image: linear-gradient(to right, 
+        var(--flag1-url) 0%, var(--flag1-url) 50%, 
+        var(--flag2-url) 50%, var(--flag2-url) 100%);
+    background-size: cover;
+}
+
+.horizontal-split .puzzle-merged-flag {
+    background-image: linear-gradient(to bottom, 
+        var(--flag1-url) 0%, var(--flag1-url) 50%, 
+        var(--flag2-url) 50%, var(--flag2-url) 100%);
+    background-size: cover;
+}
+
+.diagonal-split .puzzle-merged-flag {
+    background: linear-gradient(135deg, 
+        var(--flag1-color) 0%, var(--flag1-color) 49%, 
+        var(--flag2-color) 51%, var(--flag2-color) 100%);
+}
+
+.opacity-blend .puzzle-merged-flag {
+    position: relative;
+}
+
+.opacity-blend .puzzle-merged-flag::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--flag1-url);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
+.opacity-blend .puzzle-merged-flag::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--flag2-url);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.7;
+    z-index: 2;
+}
+
+.checkerboard .puzzle-merged-flag {
+    background: repeating-conic-gradient(
+        var(--flag1-color) 0deg 90deg,
+        var(--flag2-color) 90deg 180deg
+    ) 0 0 / 50px 50px;
+}
+
+#startPuzzleButton, #restartPuzzleButton {
+    background-color: #003366;
+    color: white;
+    font-family: var(--heading-font);
+    font-weight: 500;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+#startPuzzleButton:hover, #restartPuzzleButton:hover {
+    background-color: #004080;
+    transform: scale(1.05);
+}
+
+.puzzle-high-score-message {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 24px;
+    margin: 20px auto;
+    text-align: center;
+    animation: pulse 1s infinite;
+    font-family: var(--heading-font);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Game over screen */
+.game-over-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 100;
+    border-radius: 8px;
+}
+
+.game-over-text {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    font-family: var(--heading-font);
+}
+
+.final-score {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-family: var(--body-font);
+}
+
+@keyframes messagePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.message-pop {
+    animation: messagePop 0.3s ease-in-out;
+}
+
+.correct-message {
+    color: green;
+    font-weight: bold;
+}
+
+.incorrect-message {
+    color: red;
+    font-weight: bold;
+}
