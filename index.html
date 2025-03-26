@@ -21,6 +21,7 @@
                 <div class="dropdown-item selected" data-mode="classic">Flag Game</div>
                 <div class="dropdown-item" data-mode="duel">Flag Duel</div>
                 <div class="dropdown-item" data-mode="reveal">Flag Reveal</div>
+                <div class="dropdown-item" data-mode="puzzle">Flag Puzzle Guesser</div>
             </div>
         </div>
     </header>
@@ -45,10 +46,10 @@
                         <div class="category-box"></div>
                         <div class="rank" id="populationRank"></div>
                     </div>
-                    <div class="category" id="naturalCapitalBox">
-                        <h2>Natural Capital</h2>
+                    <div class="category" id="highestElevationBox">
+                        <h2>Highest Elevation</h2>
                         <div class="category-box"></div>
-                        <div class="rank" id="naturalCapitalRank"></div>
+                        <div class="rank" id="highestElevationRank"></div>
                     </div>
                 </div>
 
@@ -64,20 +65,20 @@
 
                 <div class="category-column">
                     <!-- Right-side categories -->
-                    <div class="category" id="militaryBox">
-                        <h2>Military</h2>
+                    <div class="category" id="lifeExpectancyBox">
+                        <h2>Life Expectancy</h2>
                         <div class="category-box"></div>
-                        <div class="rank" id="militaryRank"></div>
+                        <div class="rank" id="lifeExpectancyRank"></div>
                     </div>
                     <div class="category" id="landAreaBox">
                         <h2>Land Area</h2>
                         <div class="category-box"></div>
                         <div class="rank" id="landAreaRank"></div>
                     </div>
-                    <div class="category" id="tourismBox">
-                        <h2>Tourism</h2>
+                    <div class="category" id="averageTemperatureBox">
+                        <h2>Average Temperature</h2>
                         <div class="category-box"></div>
-                        <div class="rank" id="tourismRank"></div>
+                        <div class="rank" id="averageTemperatureRank"></div>
                     </div>
                     <div class="category" id="gdpPerCapitaBox">
                         <h2>GDP per Capita</h2>
@@ -183,6 +184,11 @@
                     <div class="puzzle-input-container">
                         <input type="text" id="countryPuzzleInput" placeholder="Type country name...">
                         <button id="submitPuzzleButton">Submit</button>
+                    </div>
+                    
+                    <!-- Skip button (in its own container) -->
+                    <div class="puzzle-skip-container">
+                        <button id="skipPuzzleButton">Skip This Puzzle</button>
                     </div>
                     
                     <!-- Guessed Countries List -->
