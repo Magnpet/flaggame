@@ -922,3 +922,58 @@ button:disabled {
     color: red;
     font-weight: bold;
 }
+.puzzle-skip-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto;
+    width: 100%;
+}
+
+#skipPuzzleButton {
+    background-color: #f0f0f0;
+    color: #666;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-family: var(--heading-font);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#skipPuzzleButton:hover {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+#skipPuzzleButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* Adjust spacing for Flag Puzzle game to fit better on screen */
+#flagPuzzleContainer .puzzle-content {
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+#flagPuzzleContainer .puzzle-game-area {
+    margin-top: 15px;
+}
+
+#flagPuzzleContainer .puzzle-info {
+    margin: 10px auto;
+}
+
+#flagPuzzleContainer .puzzle-flag-container {
+    margin: 10px auto;
+}
+
+#flagPuzzleContainer .puzzle-message {
+    min-height: 20px;
+    margin: 10px auto;
+}
+
+/* Make the start button visible without scrolling */
+#startPuzzleButton, #restartPuzzleButton {
+    margin-top: 10px;
+}
