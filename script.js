@@ -12,6 +12,7 @@ const hdiRankings = {
     "Liechtenstein": "11th",
     "Belgium": "11th",
     "Finland": "11th",
+    "Monaco": "11th", // Added - approximated to be similar to its neighbors (France & Liechtenstein)
     "United Kingdom": "14th",
     "New Zealand": "15th",
     "United Arab Emirates": "16th",
@@ -137,7 +138,7 @@ const hdiRankings = {
     "Honduras": "136th",
     "Laos": "137th",
     "Vanuatu": "138th",
-    "Sao Tome and Principe": "139th",
+    "São Tomé and Príncipe": "139th",
     "Eswatini": "140th",
     "Namibia": "140th",
     "Myanmar": "142nd",
@@ -1632,11 +1633,14 @@ const lifeExpectancyRankings = {
     "South Korea": "2nd",
     "Andorra": "3rd",
     "Switzerland": "4th",
+    "Liechtenstein": "4th",
     "Australia": "5th",
     "Singapore": "6th",
     "Italy": "7th",
+    "San Marino": "7th",
     "Spain": "8th",
     "France": "9th",
+    "Monaco": "9th", 
     "Norway": "10th",
     "Malta": "11th",
     "Sweden": "12th",
@@ -1756,7 +1760,7 @@ const lifeExpectancyRankings = {
     "Guyana": "126th",
     "Turkmenistan": "127th",
     "Philippines": "128th",
-    "Sao Tome and Principe": "129th",
+    "São Tomé and Príncipe": "129th",
     "Libya": "130th",
     "Yemen": "131st",
     "Botswana": "132nd",
@@ -2554,7 +2558,9 @@ const officialCountries = [
   
 // Filter the countryNames and flags to only include official countries
 const filteredCountryNames = countryNames.filter(country => 
-    officialCountries.includes(country) && country !== "Vatican City", "Taiwan"
+    officialCountries.includes(country) && 
+    country !== "Vatican City" && 
+    country !== "Taiwan"
 );
 const filteredFlags = filteredCountryNames.map(country => {
     const index = countryNames.indexOf(country);
