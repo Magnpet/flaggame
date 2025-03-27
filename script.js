@@ -2554,7 +2554,7 @@ const officialCountries = [
   
 // Filter the countryNames and flags to only include official countries
 const filteredCountryNames = countryNames.filter(country => 
-    officialCountries.includes(country) && country !== "Vatican City"
+    officialCountries.includes(country) && country !== "Vatican City", "Taiwan"
 );
 const filteredFlags = filteredCountryNames.map(country => {
     const index = countryNames.indexOf(country);
