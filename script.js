@@ -344,7 +344,7 @@ const olympicRankings = {
     "United States": "1st",
     "Russia": "2nd",
     "Germany": "3rd",
-    "Great Britain": "4th",
+    "United Kingdom": "4th",
     "China": "5th",
     "France": "6th",
     "Italy": "7th",
