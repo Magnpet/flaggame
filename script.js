@@ -859,7 +859,7 @@ const populationRankings = {
     "Iceland": "173rd",
     "Vanuatu": "174th",
     "Barbados": "175th",
-    "São Tomé and Príncipe": "176th",
+    "Sao Tome and Principe": "176th",
     "Samoa": "177th",
     "Saint Lucia": "178th",
     "Kiribati": "179th",
@@ -4253,4 +4253,28 @@ document.addEventListener('DOMContentLoaded', function() {
         skipButton.addEventListener('click', handleSkipPuzzle);
         skipButton.disabled = true; // Start disabled
     }
+});
+
+// Modal functionality for How to Play
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('howToPlayModal');
+    const howToPlayButton = document.getElementById('howToPlayButton');
+    const closeButton = document.querySelector('.close-button');
+    
+    // Open modal when How to Play button is clicked
+    howToPlayButton.addEventListener('click', function() {
+        modal.style.display = 'block';
+    });
+    
+    // Close modal when X is clicked
+    closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
 });
