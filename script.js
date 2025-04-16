@@ -1,3 +1,98 @@
+// Define the category pairs (highest/lowest for each category type)
+const categoryPairs = [
+    // HDI pair (top left position)
+    {
+        type: "hdi",
+        boxId: "hdiBox", 
+        rankElement: "hdiRank",
+        rankingsVar: "hdiRankings",
+        variants: [
+            { id: "hdiHighest", name: "Highest HDI", isHigherBetter: true },
+            { id: "hdiLowest", name: "Lowest HDI", isHigherBetter: false }
+        ]
+    },
+    // Olympic pair (second from top, left side)
+    {
+        type: "olympic",
+        boxId: "olympicBox",
+        rankElement: "olympicRank",
+        rankingsVar: "olympicRankings",
+        variants: [
+            { id: "olympicHighest", name: "Most Olympic Medals", isHigherBetter: true },
+            { id: "olympicLowest", name: "Least Olympic Medals", isHigherBetter: false }
+        ]
+    },
+    // Population pair (third from top, left side)
+    {
+        type: "population",
+        boxId: "populationBox",
+        rankElement: "populationRank",
+        rankingsVar: "populationRankings",
+        variants: [
+            { id: "populationHighest", name: "Highest Population", isHigherBetter: true },
+            { id: "populationLowest", name: "Lowest Population", isHigherBetter: false }
+        ]
+    },
+    // Elevation pair (bottom left)
+    {
+        type: "elevation",
+        boxId: "highestElevationBox",
+        rankElement: "highestElevationRank",
+        rankingsVar: "highestElevationRankings",
+        variants: [
+            { id: "elevationHighest", name: "Highest Elevation", isHigherBetter: true },
+            { id: "elevationLowest", name: "Lowest Elevation", isHigherBetter: false }
+        ]
+    },
+    // Life Expectancy pair (top right)
+    {
+        type: "lifeExpectancy",
+        boxId: "lifeExpectancyBox",
+        rankElement: "lifeExpectancyRank",
+        rankingsVar: "lifeExpectancyRankings",
+        variants: [
+            { id: "lifeExpectancyHighest", name: "Highest Life Expectancy", isHigherBetter: true },
+            { id: "lifeExpectancyLowest", name: "Lowest Life Expectancy", isHigherBetter: false }
+        ]
+    },
+    // Land Area pair (second from top, right side)
+    {
+        type: "landArea",
+        boxId: "landAreaBox",
+        rankElement: "landAreaRank",
+        rankingsVar: "landAreaRankings",
+        variants: [
+            { id: "landAreaHighest", name: "Largest Land Area", isHigherBetter: true },
+            { id: "landAreaLowest", name: "Smallest Land Area", isHigherBetter: false }
+        ]
+    },
+    // Temperature pair (third from top, right side)
+    {
+        type: "temperature",
+        boxId: "averageTemperatureBox",
+        rankElement: "averageTemperatureRank",
+        rankingsVar: "averageTemperatureRankings",
+        variants: [
+            { id: "temperatureHighest", name: "Highest Avg Temperature", isHigherBetter: true },
+            { id: "temperatureLowest", name: "Lowest Avg Temperature", isHigherBetter: false }
+        ]
+    },
+    // GDP pair (bottom right)
+    {
+        type: "gdpPerCapita",
+        boxId: "gdpPerCapitaBox",
+        rankElement: "gdpPerCapitaRank",
+        rankingsVar: "gdpPerCapitaRankings",
+        variants: [
+            { id: "gdpPerCapitaHighest", name: "Highest GDP per Capita", isHigherBetter: true },
+            { id: "gdpPerCapitaLowest", name: "Lowest GDP per Capita", isHigherBetter: false }
+        ]
+    }
+];
+
+// Global variable to store the current game's categories
+let currentGameCategories = [];
+
 const hdiRankings = {
     "Switzerland": "1st",
     "Norway": "2nd",
@@ -2666,6 +2761,198 @@ function rollFlag() {
     requestAnimationFrame(animateFlag);
 }
 
+// Function to shuffle array (Fisher-Yates algorithm)
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Function to randomly select one variant from each category pair
+function selectRandomCategories() {
+    currentGameCategories = categoryPairs.map(pair => {
+        // Randomly choose between the highest/lowest variant (50/50 chance)
+        const randomIndex = Math.floor(Math.random() * 2);
+        const selectedVariant = pair.variants[randomIndex];
+        
+        // Return the selected variant with additional information from the pair
+        return {
+            ...selectedVariant,
+            boxId: pair.boxId,
+            rankElement: pair.rankElement,
+            rankingsVar: pair.rankingsVar
+        };
+    });
+    
+    return currentGameCategories;
+}
+
+// Function to set up the game board with the selected categories
+function setupGameBoard() {
+    // Select random variants for each category
+    selectRandomCategories();
+    
+    // Update each category box title
+    currentGameCategories.forEach(category => {
+        const categoryBox = document.getElementById(category.boxId);
+        if (categoryBox) {
+            const titleElement = categoryBox.querySelector('h2');
+            if (titleElement) {
+                titleElement.textContent = category.name;
+            }
+            
+            // Store the category id on the box element for later reference
+            categoryBox.dataset.categoryId = category.id;
+            
+            // Clear any previous rank
+            const rankElement = document.getElementById(category.rankElement);
+            if (rankElement) {
+                rankElement.textContent = '';
+                rankElement.style.color = '#333';
+            }
+            
+            // Clear any previous flag
+            const categoryBoxElement = categoryBox.querySelector('.category-box');
+            if (categoryBoxElement) {
+                categoryBoxElement.style.background = 'none';
+            }
+        }
+    });
+}
+
+// Function to evaluate rank based on whether higher or lower is better
+function evaluateRank(country, categoryId) {
+    // Find the category in our current game categories
+    const category = currentGameCategories.find(cat => cat.id === categoryId);
+    
+    if (!category) return "No data available";
+    
+    // Get the rankings data by directly referencing the variable instead of using window[]
+    let rankingsData;
+    switch (category.rankingsVar) {
+        case "hdiRankings":
+            rankingsData = hdiRankings;
+            break;
+        case "olympicRankings":
+            rankingsData = olympicRankings;
+            break;
+        case "populationRankings":
+            rankingsData = populationRankings;
+            break;
+        case "highestElevationRankings":
+            rankingsData = highestElevationRankings;
+            break;
+        case "lifeExpectancyRankings":
+            rankingsData = lifeExpectancyRankings;
+            break;
+        case "landAreaRankings":
+            rankingsData = landAreaRankings;
+            break;
+        case "averageTemperatureRankings":
+            rankingsData = averageTemperatureRankings;
+            break;
+        case "gdpPerCapitaRankings":
+            rankingsData = gdpPerCapitaRankings;
+            break;
+        default:
+            return "No data available";
+    }
+    
+    if (!rankingsData) return "No data available";
+    
+    // Get the country's rank
+    let rank = rankingsData[country];
+    if (!rank) return "No data available";
+    
+    // If this is a "lowest is better" category, invert the displayed rank
+    if (!category.isHigherBetter) {
+        // Extract the number from the rank string (e.g., "190th" -> 190)
+        const rankNum = parseInt(rank);
+        if (!isNaN(rankNum)) {
+            // Get total number of countries (estimate based on rankings objects)
+            let totalCountries;
+            switch (category.rankingsVar) {
+                case "hdiRankings":
+                    totalCountries = 191; // Based on the highest number in hdiRankings
+                    break;
+                case "olympicRankings":
+                    totalCountries = 140; // Based on highest in olympicRankings
+                    break;
+                case "populationRankings":
+                    totalCountries = 195; // Based on highest in populationRankings
+                    break;
+                case "highestElevationRankings":
+                    totalCountries = 193; // Based on highest in highestElevationRankings
+                    break;
+                case "lifeExpectancyRankings":
+                    totalCountries = 192; // Based on highest in lifeExpectancyRankings
+                    break;
+                case "landAreaRankings":
+                    totalCountries = 196; // Based on highest in landAreaRankings
+                    break;
+                case "averageTemperatureRankings":
+                    totalCountries = 194; // Based on highest in averageTemperatureRankings
+                    break;
+                case "gdpPerCapitaRankings":
+                    totalCountries = 194; // Based on highest in gdpPerCapitaRankings
+                    break;
+                default:
+                    totalCountries = 195; // Default estimate
+            }
+            
+            // Calculate the inverted rank
+            const invertedRankNum = totalCountries - rankNum + 1;
+            
+            // Convert back to string with correct suffix
+            const suffix = getSuffix(invertedRankNum);
+            rank = invertedRankNum + suffix;
+        }
+    }
+    
+    return rank;
+}
+
+// Helper function to get the correct suffix for a number
+function getSuffix(num) {
+    if (num >= 11 && num <= 13) {
+        return "th";
+    }
+    
+    switch (num % 10) {
+        case 1:
+            return "st";
+        case 2:
+            return "nd";
+        case 3:
+            return "rd";
+        default:
+            return "th";
+    }
+}
+
+// Function to get the adjusted rank for average calculation
+function getAdjustedRankValue(rankText, categoryId) {
+    if (rankText.includes("No data")) return 0;
+    
+    // Extract the number from strings like "1st", "2nd", "3rd", "4th"
+    const rankNum = parseInt(rankText);
+    if (isNaN(rankNum)) return 0;
+    
+    // Find the category to determine if higher or lower is better
+    const category = currentGameCategories.find(cat => cat.id === categoryId);
+    if (!category) return rankNum;
+    
+    // If it's a category where lower is better, invert the rank
+    if (!category.isHigherBetter) {
+        const totalCountries = 195; // Approximate number of countries
+        return totalCountries - rankNum + 1; // Invert the rank
+    }
+    
+    return rankNum;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Create skips counter display
     const flagContainer = document.querySelector('.flag-container');
@@ -2683,6 +2970,9 @@ document.addEventListener('DOMContentLoaded', function () {
     highScoreDisplay.id = 'highScoreDisplay';
     highScoreDisplay.className = 'high-score';
     highScoreDisplay.textContent = `High Score: ${getHighScore() || 'None'}`;
+    
+    // Set up the game board with random categories
+setupGameBoard();
     
     // Add high score at the bottom of the page
     const container = document.querySelector('.container');
@@ -2727,31 +3017,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 selectedBoxes.add(box);
 
                 const countryName = document.getElementById('countryName').textContent;
-                if (box.parentElement.id === 'hdiBox') {
-                    hdiRank.textContent = hdiRankings[countryName] || "No data available";
-                    colorizeRank(hdiRank);
-                }else if (box.parentElement.id === 'lifeExpectancyBox') {
-                    lifeExpectancyRank.textContent = lifeExpectancyRankings[countryName] || "No data available";
-                    colorizeRank(lifeExpectancyRank);
-                } else if (box.parentElement.id === 'olympicBox') {
-                    olympicRank.textContent = olympicRankings[countryName] || "134th";
-                    colorizeRank(olympicRank);
-                }
-                 else if (box.parentElement.id === 'landAreaBox') {
-                    landAreaRank.textContent = landAreaRankings[countryName] || "No data available";
-                    colorizeRank(landAreaRank);
-                } else if (box.parentElement.id === 'populationBox') {
-                    populationRank.textContent = populationRankings[countryName] || "No data available";
-                    colorizeRank(populationRank);
-                } else if (box.parentElement.id === 'averageTemperatureBox') {
-                    averageTemperatureRank.textContent = averageTemperatureRankings[countryName] || "No data available";
-                    colorizeRank(averageTemperatureRank);
-                } else if (box.parentElement.id === 'highestElevationBox') {
-                    highestElevationRank.textContent = highestElevationRankings[countryName] || "No data available";
-                    colorizeRank(highestElevationRank);
-                } else if (box.parentElement.id === 'gdpPerCapitaBox') {
-                    gdpPerCapitaRank.textContent = gdpPerCapitaRankings[countryName] || "No data available";
-                    colorizeRank(gdpPerCapitaRank);
+                
+                // Get the category ID from the parent element
+                const categoryBox = box.parentElement;
+                const categoryId = categoryBox.dataset.categoryId;
+                
+                // Find the category
+                const category = currentGameCategories.find(cat => cat.id === categoryId);
+                
+                if (category) {
+                    // Get the rank element by ID (more reliable)
+                    const rankElement = document.getElementById(category.rankElement);
+                    
+                    if (rankElement) {
+                        // Set the rank text
+                        rankElement.textContent = evaluateRank(countryName, categoryId);
+                        
+                        // Colorize the rank
+                        colorizeRank(rankElement, categoryId);
+                    }
                 }
 
                 // Reset the roll button to "Roll" after placing a country
@@ -2769,20 +3053,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    function colorizeRank(rankElement) {
-        if (rankElement.textContent.includes("No data")) return;
-        
-        // Extract the number from the rank (e.g., "1st" -> 1)
-        const rankNum = parseInt(rankElement.textContent);
-        
-        if (rankNum <= 30) {
-            rankElement.style.color = '#008000'; // Green for good rankings
-        } else if (rankNum <= 100) {
-            rankElement.style.color = '#FFA500'; // Orange for medium rankings
-        } else {
-            rankElement.style.color = '#FF0000'; // Red for poor rankings
-        }
+    // Make resetGame globally accessible
+    window.resetGame = resetGame;
+
+
+// Modified function to colorize rank based on whether higher or lower is better
+// Modified function to colorize rank based on whether higher or lower is better
+function colorizeRank(rankElement, categoryId) {
+    if (rankElement.textContent.includes("No data")) return;
+    
+    // Find the category to determine if higher or lower is better
+    const category = currentGameCategories.find(cat => cat.id === categoryId);
+    if (!category) return;
+    
+    // Extract the number from the rank (e.g., "1st" -> 1)
+    const rankNum = parseInt(rankElement.textContent);
+    
+    // Always use the same coloring logic (good = green, medium = orange, bad = red)
+    // regardless of whether higher or lower is better
+    // For "lowest is better", the rank is already inverted in the evaluateRank function
+    if (rankNum <= 30) {
+        rankElement.style.color = '#008000'; // Green for good rankings (top 30)
+    } else if (rankNum <= 100) {
+        rankElement.style.color = '#FFA500'; // Orange for medium rankings
+    } else {
+        rankElement.style.color = '#FF0000'; // Red for poor rankings
     }
+}
 
     function getHighScore() {
         return localStorage.getItem('flagGameHighScore');
@@ -2794,22 +3091,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function displayAverageRanking() {
-        const ranks = [
-            extractNumberFromRank(hdiRank.textContent),
-            extractNumberFromRank(lifeExpectancyRank.textContent),
-            extractNumberFromRank(olympicRank.textContent),
-            extractNumberFromRank(landAreaRank.textContent),
-            extractNumberFromRank(populationRank.textContent),
-            extractNumberFromRank(averageTemperatureRank.textContent),
-            extractNumberFromRank(highestElevationRank.textContent),
-            extractNumberFromRank(gdpPerCapitaRank.textContent)
-        ];
-
+        const ranks = [];
+        
+        // Loop through each category box to get ranks
+        currentGameCategories.forEach(category => {
+            const rankElement = document.getElementById(category.rankElement);
+            
+            if (rankElement && rankElement.textContent) {
+                const rankValue = getAdjustedRankValue(rankElement.textContent, category.id);
+                if (rankValue > 0) {
+                    ranks.push(rankValue);
+                }
+            }
+        });
+    
         const validRanks = ranks.filter(rank => rank > 0);
         const averageRanking = validRanks.reduce((sum, rank) => sum + rank, 0) / validRanks.length;
         const formattedAverage = averageRanking.toFixed(2);
-
-        averageRankingText.textContent = `Average Ranking: ${formattedAverage}`;
+    
+        document.getElementById('averageRankingText').textContent = `Average Ranking: ${formattedAverage}`;
         
         // Check if this is a new high score (lower is better)
         const currentHighScore = getHighScore();
@@ -2822,8 +3122,8 @@ document.addEventListener('DOMContentLoaded', function () {
             newHighScoreMsg.textContent = "New High Score!";
             newHighScoreMsg.className = "new-high-score";
             
-            averageRankingText.appendChild(document.createElement('br'));
-            averageRankingText.appendChild(newHighScoreMsg);
+            document.getElementById('averageRankingText').appendChild(document.createElement('br'));
+            document.getElementById('averageRankingText').appendChild(newHighScoreMsg);
         }
     }
 
@@ -2841,12 +3141,14 @@ document.addEventListener('DOMContentLoaded', function () {
         currentRoll = null;
         isRolling = false;
         updateSkipsCounter();
-
+    
+        const rollButton = document.querySelector('button');
         rollButton.textContent = 'Roll';
         rollButton.disabled = false;
         rollButton.style.opacity = '1';
         rollButton.style.cursor = 'pointer';
-
+    
+        const categoryBoxes = document.querySelectorAll('.category-box');
         categoryBoxes.forEach(box => {
             box.style.background = 'none';
         });
@@ -2858,7 +3160,11 @@ document.addEventListener('DOMContentLoaded', function () {
             element.style.color = '#333'; // Reset color
         });
         
+        const averageRankingText = document.getElementById('averageRankingText');
         averageRankingText.textContent = '';
+        
+        // Set up a new game board with random categories
+        setupGameBoard();
     }
     
     // Make resetGame globally accessible
