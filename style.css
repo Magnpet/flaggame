@@ -1,6 +1,29 @@
 :root {
     --heading-font: 'Montserrat', sans-serif;
     --body-font: 'Open Sans', sans-serif;
+    
+    /* Primary colors */
+    --primary-dark: #003366;    /* Dark blue - keep your current primary */
+    --primary: #0059b3;         /* Medium blue */
+    --primary-light: #e0f0ff;   /* Light blue */
+    
+    /* Secondary colors */
+    --secondary: #f39c12;       /* Amber/orange - good complementary color */
+    --secondary-light: #ffeaa7; /* Light yellow */
+    
+    /* Neutral colors */
+    --neutral-dark: #2c3e50;    /* Dark slate */
+    --neutral: #7f8c8d;         /* Medium gray */
+    --neutral-light: #f0f0f0;   /* Light gray (keep current) */
+    
+    /* Feedback colors */
+    --success: #27ae60;         /* Green */
+    --warning: #f39c12;         /* Amber */
+    --danger: #e74c3c;          /* Red */
+    
+    /* UI elements */
+    --shadow: rgba(0, 0, 0, 0.1);
+    --overlay: rgba(0, 0, 0, 0.7);
 }
 
 body {
@@ -84,19 +107,22 @@ header .tab {
 .container {
     width: 100%;
     max-width: 1200px;
-    margin: 50px auto 0 auto;
+    margin: 20px auto 0 auto;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
+    padding-bottom: 40px;
+    animation: fadeIn 0.5s ease-in-out;
+
 }
 
 .categories {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin: 30px auto;
+    margin: 20px auto;
 }
 
 .category-column {
@@ -123,12 +149,19 @@ header .tab {
 .flag-box {
     width: 200px;
     height: 150px;
-    border: none; /* Changed from 2px solid #333 */
+    border: none;
     margin: 20px auto;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     transition: transform 0.5s ease-in-out;
+    box-shadow: none;
+    background-color: transparent;
+    overflow: visible;
+}
+
+.flag-box:after {
+    display: none;
 }
 
 .country-name {
@@ -145,6 +178,16 @@ button {
     cursor: pointer;
     font-family: var(--heading-font);
     font-weight: 500;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--primary-dark);
+    transform: scale(1.05);
 }
 
 .roll-ended .country-name {
@@ -153,23 +196,46 @@ button {
 
 .category {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px; /* Increased from 20px to 30px to add more space */
+    position: relative; /* Add positioning context */
+    transition: transform 0.3s ease;
+    animation: slideInUp 0.5s ease-in-out;
+    animation-fill-mode: both;
 }
 
+.category:hover {
+    transform: translateY(-3px);
+}
+
+.category:nth-child(1) { animation-delay: 0.1s; }
+.category:nth-child(2) { animation-delay: 0.2s; }
+.category:nth-child(3) { animation-delay: 0.3s; }
+.category:nth-child(4) { animation-delay: 0.4s; }
+
 .category h2 {
-    color: #333;
+    color: var(--neutral-dark);
     margin-bottom: 10px;
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400; /* Reduced from 600 to 400 */
     font-family: var(--heading-font);
+    letter-spacing: 0.25px; /* Reduced from 0.5px */
+    text-transform: none; /* Removed uppercase */
 }
 
 .category-box {
     width: 60px;
     height: 45px;
-    border: 2px solid #333;
+    border: 2px solid var(--neutral);
     margin: 0 auto;
     background-size: contain;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px var(--shadow);
+}
+
+.category-box:hover {
+    transform: scale(1.05);
+    border-color: var(--primary);
+    box-shadow: 0 3px 8px var(--shadow);
 }
 
 .rank {
@@ -197,8 +263,10 @@ button {
 #averageRankingText {
     font-size: 18px;
     font-weight: bold;
-    margin-top: 50px;
+    margin-top: 10px;
     text-align: center;
+    min-height: 50px;
+    margin-bottom: 0;
 }
 
 /* Skips counter */
@@ -223,8 +291,8 @@ button {
     background-color: rgba(0, 0, 0, 0.1);
     display: inline-block;
     font-family: var(--heading-font);
+    transform: translateY(-60px); /* Move it 60px upward */
 }
-
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -1077,4 +1145,131 @@ button:disabled {
 
 .how-to-play-button:hover {
     background-color: #f0f0f0;
+}
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    0% { transform: translateY(30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-20px); }
+    60% { transform: translateY(-10px); }
+}
+
+/* Flag reveal animation */
+.roll-ended .flag-box {
+    animation: bounce 0.6s ease-in-out;
+}
+
+/* Game mode transitions */
+.game-container {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.game-container.active {
+    display: block;
+    opacity: 1;
+}
+
+.rank {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #333;
+    transition: color 0.3s ease;
+    font-weight: bold;
+    height: 18px; /* Fixed height for rank display */
+    min-height: 18px; /* Ensure minimum height */
+    display: block; /* Make sure it's a block element */
+}
+
+/* Shared animations for all game modes */
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Flag Duel animations */
+#flagDuelContainer.active .duel-content h2 {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+#flagDuelContainer.active .duel-category {
+    animation: fadeInUp 0.5s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+#flagDuelContainer.active .duel-flags {
+    animation: fadeInUp 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+#flagDuelContainer.active .duel-instruction {
+    animation: fadeInUp 0.5s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+#flagDuelContainer.active .duel-score-container {
+    animation: fadeInUp 0.5s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+/* Flag Reveal animations */
+#flagRevealContainer.active .reveal-content h2 {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+#flagRevealContainer.active .reveal-flag-container {
+    animation: fadeInUp 0.5s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+#flagRevealContainer.active .reveal-info {
+    animation: fadeInUp 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+#flagRevealContainer.active .reveal-input-container {
+    animation: fadeInUp 0.5s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+#flagRevealContainer.active .reveal-message {
+    animation: fadeInUp 0.5s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+/* Flag Puzzle animations */
+#flagPuzzleContainer.active .puzzle-content h2 {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+#flagPuzzleContainer.active .puzzle-info {
+    animation: fadeInUp 0.5s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+#flagPuzzleContainer.active .puzzle-flag-container {
+    animation: fadeInUp 0.5s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+#flagPuzzleContainer.active .puzzle-input-container,
+#flagPuzzleContainer.active .puzzle-skip-container {
+    animation: fadeInUp 0.5s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+#flagPuzzleContainer.active .puzzle-message,
+#flagPuzzleContainer.active #startPuzzleButton,
+#flagPuzzleContainer.active #restartPuzzleButton {
+    animation: fadeInUp 0.5s ease-out 0.4s forwards;
+    opacity: 0;
 }
