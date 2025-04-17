@@ -2693,19 +2693,10 @@ function rollFlag() {
     const rollButton = document.querySelector('button');
     const rollDuration = 2000;
 
-    // Check if we're re-rolling and need to count a skip
+    // Handle skips
     if (currentRoll !== null && selectedBox === null) {
-        // This is a re-roll, so decrease remaining skips
-        console.log("Decreasing skips from", skipsRemaining);
         skipsRemaining--;
-        console.log("Skips now:", skipsRemaining);
         updateSkipsCounter();
-        
-        // If we've used all skips, disable the button AFTER this roll
-        if (skipsRemaining <= 0) {
-            // We'll disable the button after the animation completes
-            // This allows the last roll to happen
-        }
     }
 
     containerDiv.classList.remove('roll-ended');
@@ -2713,41 +2704,73 @@ function rollFlag() {
     selectedBox = null;
 
     let startTime = null;
+    let randomCountryIndex;
+    let animationFrameId;
+    
+    // Variables to control the "slot machine" feel
+    let lastChangeTime = 0;
+    let changeInterval = 50; // Start with very fast changes (50ms)
 
     function animateFlag(timestamp) {
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
         const percentage = Math.min(progress / rollDuration, 1);
+        const currentTime = performance.now();
 
         // Filter available country indices
         const availableCountryIndices = filteredCountryNames
             .map((_, index) => index)
             .filter(index => !rolledCountryIndices.has(index));
         
-        // Select a random index from available indices
-        const randomIndex = Math.floor(Math.random() * availableCountryIndices.length);
-        const randomCountryIndex = availableCountryIndices[randomIndex];
-
-        // Set the flag and country name
-        flagBox.style.backgroundImage = `url(${filteredFlags[randomCountryIndex]})`;
-        countryNameDiv.textContent = filteredCountryNames[randomCountryIndex];
-
+        // Change interval timing based on progress to simulate slot machine slowing down
+        // Start very fast and gradually slow down
+        if (percentage < 0.3) {
+            changeInterval = 50; // Very fast at start (50ms)
+        } else if (percentage < 0.6) {
+            changeInterval = 100; // Slowing down (100ms)
+        } else if (percentage < 0.8) {
+            changeInterval = 200; // Even slower (200ms)
+        } else if (percentage < 0.9) {
+            changeInterval = 300; // Very slow near end (300ms)
+        }
+        
+        // Only change flags when enough time has passed based on current changeInterval
+        if (percentage < 0.9 && currentTime - lastChangeTime > changeInterval) {
+            // Select a random index from available indices for the animation
+            const randomIndex = Math.floor(Math.random() * availableCountryIndices.length);
+            randomCountryIndex = availableCountryIndices[randomIndex];
+            
+            // Set the flag and country name for animation
+            flagBox.style.backgroundImage = `url(${filteredFlags[randomCountryIndex]})`;
+            countryNameDiv.textContent = filteredCountryNames[randomCountryIndex];
+            
+            lastChangeTime = currentTime;
+        }
+        
         if (percentage < 1) {
-            requestAnimationFrame(animateFlag);
+            animationFrameId = requestAnimationFrame(animateFlag);
         } else {
+            // At the end of the animation, select the final country
+            const finalIndex = Math.floor(Math.random() * availableCountryIndices.length);
+            randomCountryIndex = availableCountryIndices[finalIndex];
+            
+            // Set the final flag and country
+            flagBox.style.backgroundImage = `url(${filteredFlags[randomCountryIndex]})`;
+            countryNameDiv.textContent = filteredCountryNames[randomCountryIndex];
+            
+            // Complete the animation
             startTime = null;
             containerDiv.classList.add('roll-ended');
             pickText.style.visibility = 'visible';
-            rolledCountryIndices.add(randomCountryIndex); // Add the rolled country index to the set
+            rolledCountryIndices.add(randomCountryIndex);
             
             // Save the current roll
             currentRoll = randomCountryIndex;
             
-            // Change button text to "Re-roll" if skips are available
+            // Update button text
             if (skipsRemaining > 0) {
                 rollButton.textContent = 'Re-roll';
             } else {
-                // Disable the button AFTER the final roll completes
                 rollButton.disabled = true;
                 rollButton.style.opacity = '0.5';
                 rollButton.style.cursor = 'not-allowed';
@@ -2758,7 +2781,7 @@ function rollFlag() {
         }
     }
 
-    requestAnimationFrame(animateFlag);
+    animationFrameId = requestAnimationFrame(animateFlag);
 }
 
 // Function to shuffle array (Fisher-Yates algorithm)
@@ -2862,9 +2885,20 @@ function evaluateRank(country, categoryId) {
     
     if (!rankingsData) return "No data available";
     
-    // Get the country's rank
-    let rank = rankingsData[country];
-    if (!rank) return "No data available";
+// Get the country's rank
+let rank = rankingsData[country];
+
+// Special handling for Olympic rankings - use 134th as fallback
+if (!rank && category.rankingsVar === "olympicRankings") {
+    // If it's "Least Olympic Medals", they should tie for 1st place
+    if (!category.isHigherBetter) {
+        return "1st";
+    } else {
+        rank = "134th";
+    }
+} else if (!rank) {
+    return "No data available";
+}
     
     // If this is a "lowest is better" category, invert the displayed rank
     if (!category.isHigherBetter) {
@@ -3093,20 +3127,22 @@ function colorizeRank(rankElement, categoryId) {
     function displayAverageRanking() {
         const ranks = [];
         
-        // Loop through each category box to get ranks
+        // Loop through each category to get ranks
         currentGameCategories.forEach(category => {
             const rankElement = document.getElementById(category.rankElement);
             
-            if (rankElement && rankElement.textContent) {
-                const rankValue = getAdjustedRankValue(rankElement.textContent, category.id);
-                if (rankValue > 0) {
-                    ranks.push(rankValue);
+            if (rankElement && rankElement.textContent && !rankElement.textContent.includes("No data")) {
+                // Always use the number that's actually displayed to the user
+                const rankNum = parseInt(rankElement.textContent);
+                if (!isNaN(rankNum)) {
+                    ranks.push(rankNum);
                 }
             }
         });
     
-        const validRanks = ranks.filter(rank => rank > 0);
-        const averageRanking = validRanks.reduce((sum, rank) => sum + rank, 0) / validRanks.length;
+        if (ranks.length === 0) return; // No valid ranks to calculate
+        
+        const averageRanking = ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length;
         const formattedAverage = averageRanking.toFixed(2);
     
         document.getElementById('averageRankingText').textContent = `Average Ranking: ${formattedAverage}`;
@@ -4584,3 +4620,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function switchGameMode(mode) {
+    currentGameMode = mode;
+    
+    // Get all game containers
+    const classicContainer = document.querySelector('.container');
+    const duelContainer = document.getElementById('flagDuelContainer');
+    const revealContainer = document.getElementById('flagRevealContainer');
+    const puzzleContainer = document.getElementById('flagPuzzleContainer');
+    
+    // Fade out all containers
+    [classicContainer, duelContainer, revealContainer, puzzleContainer].forEach(container => {
+        if (container) {
+            container.style.opacity = '0';
+        }
+    });
+    
+    // Add a slight delay before changing display property
+    setTimeout(() => {
+        // Hide all containers
+        classicContainer.style.display = 'none';
+        duelContainer.style.display = 'none';
+        
+        if (revealContainer) {
+            revealContainer.style.display = 'none';
+        }
+        
+        if (puzzleContainer) {
+            puzzleContainer.style.display = 'none';
+        }
+        
+        // Show and fade in the selected container
+        if (mode === 'classic') {
+            classicContainer.style.display = 'block';
+            setTimeout(() => {
+                classicContainer.style.opacity = '1';
+            }, 50);
+            
+            if (typeof resetGame === 'function') {
+                resetGame();
+            }
+        } else if (mode === 'duel') {
+            duelContainer.style.display = 'block';
+            setTimeout(() => {
+                duelContainer.style.opacity = '1';
+            }, 50);
+            
+            if (typeof initFlagDuel === 'function') {
+                initFlagDuel();
+            }
+        } else if (mode === 'reveal' && revealContainer) {
+            revealContainer.style.display = 'block';
+            setTimeout(() => {
+                revealContainer.style.opacity = '1';
+            }, 50);
+            
+            if (typeof initFlagReveal === 'function') {
+                initFlagReveal();
+            }
+        } else if (mode === 'puzzle' && puzzleContainer) {
+            puzzleContainer.style.display = 'block';
+            setTimeout(() => {
+                puzzleContainer.style.opacity = '1';
+            }, 50);
+            
+            if (typeof initFlagPuzzle === 'function') {
+                initFlagPuzzle();
+            }
+        }
+    }, 300); // Wait for fade out to complete
+}
