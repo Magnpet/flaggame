@@ -14,7 +14,7 @@
 <body>
     <header>
         <div class="tab" id="aboutTab">About</div>
-        <h1>Flag Game</h1>
+        <h1>Flag Games</h1>
         <div class="tab" id="changeModeTab">
             Change Gamemode
             <div class="dropdown-content" id="gameModeDropdown">
@@ -24,6 +24,7 @@
                 <div class="dropdown-item" data-mode="puzzle">Flag Puzzle Guesser</div>
             </div>
         </div>
+        <div class="tab" id="settingsTab">Settings ⚙</div>
     </header>
     
     <div class="main-wrapper">
@@ -79,6 +80,31 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Settings</h2>
+        
+        <div class="settings-section">
+            <div class="setting-item">
+                <span class="setting-label">Dark Mode:</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <span class="setting-label">Language:</span>
+                <select id="languageSelect">
+                    <option value="en">English</option>
+                    <option value="no">Norwegian</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <div class="category-column">
                     <!-- Right-side categories -->
