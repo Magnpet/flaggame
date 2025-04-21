@@ -1,3 +1,5 @@
+
+
 // Define the category pairs (highest/lowest for each category type)
 const categoryPairs = [
     // HDI pair (top left position)
@@ -957,23 +959,24 @@ const populationRankings = {
     "Sao Tome and Principe": "176th",
     "Samoa": "177th",
     "Saint Lucia": "178th",
-    "Kiribati": "179th",
-    "Grenada": "180th",
-    "Saint Vincent and the Grenadines": "181st",
-    "Micronesia": "182nd",
-    "Antigua and Barbuda": "183rd",
-    "Tonga": "184th",
-    "Andorra": "185th",
-    "Dominica": "186th",
-    "Saint Kitts and Nevis": "187th",
-    "Marshall Islands": "188th",
-    "Liechtenstein": "189th",
-    "Monaco": "190th",
-    "San Marino": "191st",
-    "Palau": "192nd",
-    "Nauru": "193rd",
-    "Tuvalu": "194th",
-    "Vatican City": "195th"
+    "Seychelles" : "179th",
+    "Kiribati": "180th",
+    "Grenada": "181th",
+    "Saint Vincent and the Grenadines": "182st",
+    "Micronesia": "183nd",
+    "Antigua and Barbuda": "184rd",
+    "Tonga": "185th",
+    "Andorra": "186th",
+    "Dominica": "187th",
+    "Saint Kitts and Nevis": "188th",
+    "Marshall Islands": "189th",
+    "Liechtenstein": "190th",
+    "Monaco": "191th",
+    "San Marino": "192st",
+    "Palau": "193nd",
+    "Nauru": "194rd",
+    "Tuvalu": "195th",
+    "Vatican City": "196th"
 };
 
 const tourismRankings = {
@@ -2120,7 +2123,7 @@ const averageTemperatureRankings = {
 };
 
 const flags = [
-    'flags_images/ad.png',
+    'flags_images/ad.flag.png',
     'flags_images/ae.png',
     'flags_images/af.png',
     'flags_images/ag.png',
@@ -2655,6 +2658,58 @@ const officialCountries = [
     'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates',
     'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
   ];
+
+// Create a mapping of aliases to official country names - only for countries that need aliases
+const countryAliases = {
+    // Common abbreviations
+    "usa": "United States",
+    "uk": "United Kingdom",
+    "uae": "United Arab Emirates",
+    
+    // Alternative names
+    "great britain": "United Kingdom",
+    
+    // Long names with common shortened versions
+    "bosnia": "Bosnia and Herzegovina",
+    "saint vincent": "Saint Vincent and the Grenadines",
+    "st vincent": "Saint Vincent and the Grenadines",
+    "saint kitts": "Saint Kitts and Nevis",
+    "st kitts": "Saint Kitts and Nevis",
+    "st lucia": "Saint Lucia",
+    "dr congo": "Democratic Republic of the Congo",
+    "congo": "Republic of the Congo",
+    "ivory coast": "Ivory Coast",
+    "guinea bissau": "Guinea-Bissau",
+    "czechia": "Czech Republic",
+    "eswatini": "Eswatini",
+    "swaziland": "Eswatini",
+    "east timor": "Timor-Leste",
+    "micronesia": "Federated States of Micronesia",
+    "new zealand": "New Zealand",
+};
+
+// Function to get the official country name from an input (which might be an alias)
+function getOfficialCountryName(input) {
+    // Normalize input: trim whitespace and convert to lowercase
+    const normalizedInput = input.trim().toLowerCase();
+    
+    // Check if the input is a direct match for an official country
+    const directMatch = filteredCountryNames.find(country => 
+        country.toLowerCase() === normalizedInput
+    );
+    
+    if (directMatch) {
+        return directMatch; // Return the officially cased country name
+    }
+    
+    // Check if the input is an alias
+    if (countryAliases[normalizedInput]) {
+        return countryAliases[normalizedInput];
+    }
+    
+    // No match found
+    return null;
+}
   
 // Filter the countryNames and flags to only include official countries
 const filteredCountryNames = countryNames.filter(country => 
@@ -3047,10 +3102,27 @@ setupGameBoard();
             if (!isRolling && !selectedBoxes.has(box) && currentRoll !== null) {
                 selectedBox = box;
                 const flagUrl = document.getElementById('flagBox').style.backgroundImage;
-                box.style.background = `${flagUrl} center/cover no-repeat`;
-                selectedBoxes.add(box);
-
                 const countryName = document.getElementById('countryName').textContent;
+                
+                // Remove the border and any background color
+                box.style.border = 'none';
+                box.style.boxShadow = 'none';
+                box.style.background = 'transparent'; // Clear any background first
+                
+                // Set just the flag image with transparent background
+                box.style.backgroundImage = flagUrl;
+                box.style.backgroundSize = 'contain';
+                box.style.backgroundPosition = 'center';
+                box.style.backgroundRepeat = 'no-repeat';
+                
+                // Remove the pseudo-element gradient 
+                box.classList.add('flag-placed');
+                
+                // Slightly increase the size to compensate for removed border
+                box.style.width = '64px';
+                box.style.height = '49px';
+                
+                selectedBoxes.add(box);
                 
                 // Get the category ID from the parent element
                 const categoryBox = box.parentElement;
@@ -3071,21 +3143,21 @@ setupGameBoard();
                         colorizeRank(rankElement, categoryId);
                     }
                 }
-
+    
                 // Reset the roll button to "Roll" after placing a country
                 rollButton.textContent = 'Roll';
                 rollButton.disabled = false;
                 rollButton.style.opacity = '1';
                 rollButton.style.cursor = 'pointer';
                 currentRoll = null;
-
+    
                 if (selectedBoxes.size === categoryBoxes.length) {
                     rollButton.textContent = 'Reset';
                     displayAverageRanking();
                 }
             }
         });
-    });
+    })
 
     // Make resetGame globally accessible
     window.resetGame = resetGame;
@@ -3186,7 +3258,17 @@ function colorizeRank(rankElement, categoryId) {
     
         const categoryBoxes = document.querySelectorAll('.category-box');
         categoryBoxes.forEach(box => {
-            box.style.background = 'none';
+            // Remove inline styles completely by setting them to empty string
+            box.style = ''; 
+            
+            // Remove the flag-placed class that disables the gradient
+            box.classList.remove('flag-placed');
+            
+            // If needed, you can explicitly set some key properties back
+            // but removing inline styles should let the CSS take over again
+            box.style.border = '2px solid var(--neutral)';
+            box.style.width = '60px';
+            box.style.height = '45px';
         });
         
         // Reset all rank displays
@@ -3628,6 +3710,9 @@ let revealInterval = 1500; // Time in ms between piece reveals (1.5 seconds)
 let isGameActive = false;
 let currentDifficulty = 'medium'; // 'easy', 'medium', 'hard'
 let scoreMultiplier = 1;
+let lastIncorrectGuessTime = 0; // Track time of last incorrect guess
+let alreadyPenalized = false;
+let isProcessingGuess = false;
 
 // Function to load high score from localStorage
 function getRevealHighScore() {
@@ -3700,7 +3785,11 @@ function initFlagReveal() {
 
 // Function to set up a new flag reveal round
 function setupNewReveal() {
-    // Reset UI elements
+
+        // Reset penalty tracking for each new round
+        alreadyPenalized = false;
+   
+        // Reset UI elements
     const revealFlag = document.getElementById('revealFlag');
     const puzzleGrid = document.getElementById('puzzleGrid');
     const revealMessage = document.getElementById('revealMessage');
@@ -3796,6 +3885,7 @@ function startRevealTimer() {
 
 // Function to reveal a random puzzle piece
 function revealRandomPiece() {
+    // Exit early if game is not active
     if (!isGameActive) return;
     
     const puzzlePieces = document.querySelectorAll('.puzzle-piece:not(.revealed)');
@@ -3803,6 +3893,12 @@ function revealRandomPiece() {
     if (puzzlePieces.length === 0 || revealedPieces >= totalPieces) {
         // All pieces revealed, end the game
         clearInterval(revealTimer);
+        
+        // IMPORTANT: Only handle out of time if game is still active
+        // This prevents handleOutOfTime from running after handleIncorrectGuess
+        if (isGameActive) {
+            handleOutOfTime();
+        }
         return;
     }
     
@@ -3816,15 +3912,6 @@ function revealRandomPiece() {
     
     // Update progress
     document.getElementById('revealProgress').textContent = revealedPieces;
-    
-    // If all pieces revealed, show the answer after a brief delay
-    if (revealedPieces >= totalPieces) {
-        setTimeout(() => {
-            if (isGameActive) {
-                handleOutOfTime();
-            }
-        }, 1000);
-    }
 }
 
 // Function to handle guess submission
@@ -3832,13 +3919,14 @@ function handleGuessSubmit() {
     if (!isGameActive) return;
     
     const countryGuessInput = document.getElementById('countryGuessInput');
-    const submittedGuess = countryGuessInput.value.trim().toLowerCase();
-    const correctAnswer = currentRevealCountry.toLowerCase();
+    const submittedGuess = countryGuessInput.value.trim();
+    const officialCountryName = getOfficialCountryName(submittedGuess);
+    const correctAnswer = currentRevealCountry;
     
     // Stop the timer
     clearInterval(revealTimer);
     
-    if (submittedGuess === correctAnswer) {
+    if (officialCountryName === correctAnswer) {
         // Correct answer
         handleCorrectGuess();
     } else {
@@ -3847,10 +3935,8 @@ function handleGuessSubmit() {
     }
 }
 
-// Function to handle correct guess - with much shorter delay
+// Function to handle correct guess
 function handleCorrectGuess() {
-    isGameActive = false;
-    
     const revealMessage = document.getElementById('revealMessage');
     const countryGuessInput = document.getElementById('countryGuessInput');
     
@@ -3898,19 +3984,24 @@ function handleCorrectGuess() {
     }, 300); // Only 300ms delay - very quick transition
 }
 
-// Function to handle incorrect guess
+// Function to handle incorrect guess - FIXED VERSION
 function handleIncorrectGuess() {
+    console.log("BEFORE decreasing: lives =", revealLives);
     // Decrease lives
     revealLives--;
+    console.log("AFTER decreasing: lives =", revealLives);
     document.getElementById('revealLives').textContent = revealLives;
     
     const revealMessage = document.getElementById('revealMessage');
     const countryGuessInput = document.getElementById('countryGuessInput');
     
     if (revealLives <= 0) {
+        console.log("NO LIVES LEFT - calling handleGameOver");
         // Game over
+        isGameActive = false;
         handleGameOver();
     } else {
+        console.log("Still have lives left:", revealLives);
         // Still have lives left
         revealMessage.textContent = `Incorrect. ${revealLives} attempts left.`;
         revealMessage.className = 'reveal-message incorrect';
@@ -3926,34 +4017,24 @@ function handleIncorrectGuess() {
     }
 }
 
-// Function to handle running out of time - with shorter delay
+// Function to handle out of time - FIXED VERSION
 function handleOutOfTime() {
     isGameActive = false;
     
     const revealMessage = document.getElementById('revealMessage');
-    const nextRevealButton = document.getElementById('nextRevealButton');
     const countryGuessInput = document.getElementById('countryGuessInput');
     
     // Update UI
     revealMessage.textContent = `Time's up! The country was ${currentRevealCountry}.`;
     revealMessage.className = 'reveal-message incorrect';
     
-    // Decrease lives
-    revealLives--;
-    document.getElementById('revealLives').textContent = revealLives;
-    
-    if (revealLives <= 0) {
-        // Game over
-        handleGameOver();
-    } else {
-        // Still have lives, automatically go to next flag after a shorter delay
-        setTimeout(() => {
-            setupNewReveal();
-            
-            // Focus on the input box for quick entry
-            countryGuessInput.focus();
-        }, 700); // 700ms - short but enough to read the message
-    }
+    // Simply set up a new round, no life reduction
+    setTimeout(() => {
+        setupNewReveal();
+        
+        // Focus on the input box for quick entry
+        countryGuessInput.focus();
+    }, 700);
 }
 
 // Function to handle game over
@@ -4297,13 +4378,30 @@ function handlePuzzleGuess() {
     
     const countryInput = document.getElementById('countryPuzzleInput');
     const puzzleMessage = document.getElementById('puzzleMessage');
-    const submittedGuess = countryInput.value.trim().toLowerCase();
+    const submittedGuess = countryInput.value.trim();
+    const officialCountryName = getOfficialCountryName(submittedGuess);
     
     // Clear input
     countryInput.value = '';
     
+    // If no valid country name was found
+    if (!officialCountryName) {
+        puzzleMessage.textContent = 'Not a valid country name. Try again!';
+        puzzleMessage.className = 'puzzle-message incorrect-message';
+        
+        // Apply the animation
+        puzzleMessage.classList.add('message-pop');
+        
+        // Remove the animation class after it completes
+        setTimeout(() => {
+            puzzleMessage.classList.remove('message-pop');
+        }, 300);
+        
+        return;
+    }
+    
     // Check if already guessed
-    if (Array.from(guessedCountries).some(c => c.toLowerCase() === submittedGuess)) {
+    if (Array.from(guessedCountries).some(c => c === officialCountryName)) {
         puzzleMessage.textContent = 'You already guessed that country!';
         puzzleMessage.className = 'puzzle-message incorrect-message';
         
@@ -4320,7 +4418,7 @@ function handlePuzzleGuess() {
     
     // Check if correct
     const correctGuess = mergedFlags.find(flag => 
-        flag.country.toLowerCase() === submittedGuess
+        flag.country === officialCountryName
     );
     
     if (correctGuess) {
@@ -4691,3 +4789,59 @@ function switchGameMode(mode) {
         }
     }, 300); // Wait for fade out to complete
 }
+// Add this to the end of your script.js file
+
+// Create a function to handle settings functionality completely independently
+(function() {
+    // Wait for document to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize dark mode once at the beginning
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+        
+        // Add a document-level click handler ONLY for the settings button
+        document.addEventListener('click', function(event) {
+            // Check if clicked element has ID 'settingsTab'
+            if (event.target.id === 'settingsTab' || 
+                (event.target.parentElement && event.target.parentElement.id === 'settingsTab')) {
+                // Get the settings modal
+                const modal = document.getElementById('settingsModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            }
+            
+            // Check if it's the close button in the settings modal
+            if (event.target.classList.contains('close-button') && 
+                event.target.closest('#settingsModal')) {
+                const modal = document.getElementById('settingsModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            }
+            
+            // Check for clicks outside the modal
+            if (event.target.id === 'settingsModal') {
+                event.target.style.display = 'none';
+            }
+        });
+        
+        // Add handler for dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+                localStorage.setItem('darkMode', this.checked);
+            });
+            
+            // Set initial state
+            darkModeToggle.checked = isDarkMode;
+        }
+    });
+})();
