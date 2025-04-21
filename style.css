@@ -24,13 +24,52 @@
     /* UI elements */
     --shadow: rgba(0, 0, 0, 0.1);
     --overlay: rgba(0, 0, 0, 0.7);
+
+    /* Add these new variables for theme switching */
+    --background-image-opacity: 1.0;
+    --background-overlay: rgba(0, 0, 0, 0);
+    --text-color: #333;
+    --category-text: var(--neutral-dark);
+    --modal-bg: white;
+    --modal-text: #333;
+    --setting-item-bg: #f5f5f5;
+    --input-bg: white;
+    --input-text: #333;
+    --button-bg: white;
+    --button-text: #003366;
+    --button-border: #003366;
+    --blue-text: #0059b3;        /* Default blue text color */
+    --highlight-text: #0059b3;   /* Highlighted text color */
+    --game-title: #003366;       /* Game titles color */
+    --score-text: #003366;       /* Score text color */
+}
+
+/* Dark theme colors */
+body.dark-mode {
+    --background-image-opacity: 0.7;  /* Reduce the opacity of the world map */
+    --background-overlay: rgba(0, 0, 0, 0.7);  /* Add a dark overlay */
+    --text-color: white;
+    --category-text: #f0f0f0;
+    --modal-bg: #2d2d2d;
+    --modal-text: #f0f0f0;
+    --setting-item-bg: #333;
+    --input-bg: #444;
+    --input-text: white;
+    --button-bg: #444;
+    --button-text: white;
+    --button-border: #666;
+    --blue-text: #4da6ff;        /* Lighter blue for dark mode */
+    --highlight-text: #66b3ff;   /* Brighter blue for dark mode */
+    --game-title: #4da6ff;       /* Brighter game title */
+    --score-text: #4da6ff;       /* Brighter score text */
 }
 
 body {
     font-family: var(--body-font);
     margin: 0;
     padding: 0;
-    background-color: #f0f0f0;
+    background-color: var(--background-color);
+    color: var(--text-color);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -45,16 +84,28 @@ body::before {
     width: 100%;
     height: 100%;
     background-image: url('images/world.png');
-    background-size: cover; /* Changed from 800px to cover */
+    background-size: cover;
     background-position: center center;
-    background-repeat: no-repeat; /* Changed from repeat to no-repeat */
-    opacity: 1.00;
-    z-index: -1;
+    background-repeat: no-repeat;
+    opacity: var(--background-image-opacity);
+    z-index: -2;  /* Lower z-index to make room for the overlay */
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-overlay);
+    z-index: -1;  /* Position between the background image and content */
+    pointer-events: none;  /* Allow clicks to pass through */
 }
 
 header {
-    background-color: #003366; /* Dark blue background */
-    color: white; /* White text */
+    background-color: #003366;
+    color: white;
     text-align: center;
     padding: 10px 0;
     display: flex;
@@ -87,13 +138,135 @@ header .tab {
     font-family: var(--heading-font);
 }
 
+/* Additional dark mode styles as needed */
+body.dark-mode .close-button {
+    color: white;
+}
+
+body.dark-mode .close-button:hover {
+    color: white;
+}
+
+/* Exceptions for specific elements */
+body.dark-mode a,
+body.dark-mode button {
+    color: white !important;
+}
+
+body.dark-mode .country-name {
+    color: var(--text-color);
+}
+
+body.dark-mode .instructions p {
+    color: #f0f0f0;
+}
+
+body.dark-mode #pickText {
+    color: var(--text-color);
+}
+
+body.dark-mode .rank {
+    color: var(--text-color);
+}
+
+body.dark-mode .category-box {
+    border-color: #666;
+}
+
+body.dark-mode select, 
+body.dark-mode input[type="text"] {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border-color: #666;
+}
+
+body.dark-mode .modal-content {
+    background-color: #333 !important;
+}
+
+/* Make setting items dark */
+body.dark-mode .setting-item {
+    background-color: #444 !important;
+}
+
+/* Make sure modal works in dark mode */
+body.dark-mode .modal {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Style the How to Play button in dark mode */
+body.dark-mode .how-to-play-button {
+    background-color: #444 !important;
+    color: white !important;
+    border-color: #666 !important;
+}
+
+/* Make form elements readable in dark mode */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode option {
+    background-color: #444 !important;
+    color: white !important;
+    border-color: #666 !important;
+}
+
+/* Fix blue text elements in dark mode */
+body.dark-mode .duel-content h2,
+body.dark-mode .reveal-content h2,
+body.dark-mode .puzzle-content h2 {
+    color: var(--game-title);
+}
+
+body.dark-mode .duel-category,
+body.dark-mode .duel-score, 
+body.dark-mode .duel-high-score,
+body.dark-mode .reveal-progress, 
+body.dark-mode .reveal-score, 
+body.dark-mode .reveal-high-score,
+body.dark-mode .puzzle-timer, 
+body.dark-mode .puzzle-score, 
+body.dark-mode .puzzle-high-score {
+    color: var(--score-text);
+}
+
+body.dark-mode .instructions h3,
+body.dark-mode .category h2 {
+    color: var(--highlight-text);
+}
+
+body.dark-mode .high-score {
+    color: var(--highlight-text);
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Add a subtle glow to important elements in dark mode */
+body.dark-mode .duel-content h2,
+body.dark-mode .reveal-content h2,
+body.dark-mode .puzzle-content h2,
+body.dark-mode .duel-category {
+    text-shadow: 0 0 8px rgba(77, 166, 255, 0.5);
+}
+
+/* Ensure clickable areas remain accessible */
+body.dark-mode button:not(:disabled),
+body.dark-mode .tab {
+    cursor: pointer;
+}
+
 #aboutTab {
     left: 10px;
 }
 
 #changeModeTab {
-    right: 10px;
+    right: 160px;
 }
+
+#settingsTab {
+    right: 20px;
+    font-size: 16px; /* Make the gear icon a good size */
+    cursor: pointer;
+}
+
 
 .main-wrapper {
     width: 100%;
@@ -213,7 +386,7 @@ button:hover {
 .category:nth-child(4) { animation-delay: 0.4s; }
 
 .category h2 {
-    color: var(--neutral-dark);
+    color: var(--category-text);
     margin-bottom: 10px;
     font-size: 14px;
     font-weight: 400; /* Reduced from 600 to 400 */
@@ -226,16 +399,46 @@ button:hover {
     width: 60px;
     height: 45px;
     border: 2px solid var(--neutral);
+    border-radius: 4px; /* Slightly rounded corners */
     margin: 0 auto;
     background-size: contain;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px var(--shadow);
+    box-shadow: 0 3px 6px var(--shadow); /* Slightly stronger shadow */
+    position: relative; /* For pseudo-elements */
+    overflow: hidden; /* Keep any effects inside the box */
+    border-color: var(--category-border);
+    background-color: var(--category-box-bg);
+
+}
+
+.category-box::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+    pointer-events: none; /* So it doesn't interfere with clicks */
 }
 
 .category-box:hover {
-    transform: scale(1.05);
-    border-color: var(--primary);
-    box-shadow: 0 3px 8px var(--shadow);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px var(--shadow);
+}
+
+.category-box.filled {
+    box-shadow: 0 0 8px rgba(0, 51, 102, 0.4); /* Subtle blue glow matching your theme */
+}
+
+/* Remove the pseudo-element overlay when a flag is placed */
+.category-box.flag-placed::before {
+    display: none;
+}
+
+/* Ensure there's no background color behind placed flags */
+.category-box.flag-placed {
+    background-color: transparent !important;
 }
 
 .rank {
@@ -1053,9 +1256,10 @@ button:disabled {
 }
 
 .how-to-play-button {
-    background-color: white;
-    color: #003366;
+    background-color: var(--button-bg);
+    color: var(--button-text);
     border: 2px solid #003366;
+    border-color: var(--button-border);
     padding: 8px 16px;
     font-family: var(--heading-font);
     font-weight: 500;
@@ -1083,7 +1287,9 @@ button:disabled {
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--modal-bg);
+    color: var(--modal-text);
+    border-color: var(--border-color);
     margin: 10% auto;
     padding: 20px;
     border: 1px solid #ccc;
@@ -1122,6 +1328,95 @@ button:disabled {
 
 .instructions p {
     margin: 8px 0;
+}
+
+/* Settings Modal Styles */
+.settings-section {
+    margin-top: 20px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--setting-item-bg);
+    color: var(--modal-text);
+    border-radius: 8px;
+}
+
+.setting-label {
+    font-family: var(--heading-font);
+    font-weight: 500;
+    font-size: 16px;
+}
+
+/* Toggle Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Language Select Styles */
+#languageSelect {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: white;
+    font-family: var(--body-font);
+    font-size: 14px;
+    min-width: 120px;
 }
 
 /* How to Play Button */
