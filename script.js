@@ -1,4 +1,60 @@
 
+// Add this to the top of your script.js file or in a separate troubleshooting section
+
+// Debug click handler for milestones tab
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up milestones tab click handler');
+    
+    const milestonesTab = document.getElementById('milestonesTab');
+    
+    if (milestonesTab) {
+        console.log('Milestones tab found, attaching click event');
+        
+        milestonesTab.addEventListener('click', function(event) {
+            console.log('Milestones tab clicked');
+            openMilestonesTab();
+        });
+    } else {
+        console.error('Milestones tab element not found!');
+    }
+    
+    // Define openMilestonesTab function if it doesn't exist yet
+    if (typeof openMilestonesTab !== 'function') {
+        window.openMilestonesTab = function() {
+            console.log('Opening milestones tab');
+            
+            // Hide all game containers
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+                container.style.display = 'none';
+            });
+            
+            // Show milestones container
+            const milestonesContainer = document.getElementById('milestonesContainer');
+            if (milestonesContainer) {
+                milestonesContainer.style.display = 'block';
+                
+                // Add a short delay before adding the active class for animation
+                setTimeout(() => {
+                    milestonesContainer.classList.add('active');
+                }, 50);
+                
+                console.log('Milestones container displayed');
+                
+                // Update display
+                if (typeof renderMilestones === 'function') {
+                    renderMilestones();
+                }
+                if (typeof updateHighScoreDisplay === 'function') {
+                    updateHighScoreDisplay();
+                }
+            } else {
+                console.error('Milestones container not found!');
+            }
+        };
+    }
+});
+
 
 // Define the category pairs (highest/lowest for each category type)
 const categoryPairs = [
@@ -2123,7 +2179,7 @@ const averageTemperatureRankings = {
 };
 
 const flags = [
-    'flags_images/ad.flag.png',
+    'flags_images/andorra.png',
     'flags_images/ae.png',
     'flags_images/af.png',
     'flags_images/ag.png',
@@ -3401,6 +3457,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 initFlagPuzzle();
             }
         }
+    // After switching modes, re-setup the settings button
+    setTimeout(setupSettingsButton, 50);
     }
 });
 
@@ -3631,6 +3689,7 @@ window.initFlagDuel = initFlagDuel;
 
 // Add this at the very bottom of your script.js file
 document.addEventListener('DOMContentLoaded', function() {
+    setupSettingsButton();
     // Fix for all game mode options
     const modeItems = document.querySelectorAll('.dropdown-item');
     
@@ -4789,59 +4848,2065 @@ function switchGameMode(mode) {
         }
     }, 300); // Wait for fade out to complete
 }
-// Add this to the end of your script.js file
+// COMPLETE SETTINGS REBUILD
+// Add this at the end of your script.js
 
-// Create a function to handle settings functionality completely independently
-(function() {
-    // Wait for document to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize dark mode once at the beginning
-        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Find and hide the original settings tab
+    const originalSettingsTab = document.getElementById('settingsTab');
+    const changeModeTab = document.getElementById('changeModeTab');
+    const header = document.querySelector('header');
+    
+    if (originalSettingsTab) {
+      originalSettingsTab.style.display = 'none';
+    }
+    
+    // 2. Create a completely new settings button
+    const newSettingsButton = document.createElement('div');
+    newSettingsButton.id = 'newSettingsButton';
+    newSettingsButton.innerHTML = 'Settings ⚙';
+    newSettingsButton.className = 'tab';
+    newSettingsButton.style.position = 'absolute';
+    newSettingsButton.style.top = '50%';
+    newSettingsButton.style.right = '20px';
+    newSettingsButton.style.transform = 'translateY(-50%)';
+    newSettingsButton.style.backgroundColor = '#003366';
+    newSettingsButton.style.color = 'white';
+    newSettingsButton.style.padding = '10px 20px';
+    newSettingsButton.style.borderRadius = '4px';
+    newSettingsButton.style.cursor = 'pointer';
+    newSettingsButton.style.zIndex = '10';
+    newSettingsButton.style.fontFamily = 'var(--heading-font, Montserrat, sans-serif)';
+    newSettingsButton.style.fontSize = '15px';
+    newSettingsButton.style.fontWeight = '500';
+
+      // Add the button to the header instead of the body
+  if (header) {
+    header.appendChild(newSettingsButton);
+  } else {
+    // Fallback to body if header not found
+    document.body.appendChild(newSettingsButton);
+  }
+    
+    // 3. Create a new settings modal
+    const newSettingsModal = document.createElement('div');
+    newSettingsModal.id = 'newSettingsModal';
+    newSettingsModal.style.display = 'none';
+    newSettingsModal.style.position = 'fixed';
+    newSettingsModal.style.zIndex = '10000';
+    newSettingsModal.style.left = '0';
+    newSettingsModal.style.top = '0';
+    newSettingsModal.style.width = '100%';
+    newSettingsModal.style.height = '100%';
+    newSettingsModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    
+    // 4. Create the modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.backgroundColor = 'white';
+    modalContent.style.margin = '15% auto';
+    modalContent.style.padding = '20px';
+    modalContent.style.border = '1px solid #888';
+    modalContent.style.borderRadius = '8px';
+    modalContent.style.width = '80%';
+    modalContent.style.maxWidth = '600px';
+    modalContent.style.position = 'relative';
+    
+    // 5. Add a heading
+    const heading = document.createElement('h2');
+    heading.textContent = 'Settings';
+    heading.style.marginTop = '0';
+    
+    // 6. Add a close button
+    const closeButton = document.createElement('span');
+    closeButton.innerHTML = '&times;';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '10px';
+    closeButton.style.right = '20px';
+    closeButton.style.color = '#aaa';
+    closeButton.style.fontSize = '28px';
+    closeButton.style.fontWeight = 'bold';
+    closeButton.style.cursor = 'pointer';
+    
+    // 7. Create settings section
+    const settingsSection = document.createElement('div');
+    settingsSection.style.marginTop = '20px';
+    
+    // 8. Create dark mode setting
+    const darkModeSetting = document.createElement('div');
+    darkModeSetting.style.display = 'flex';
+    darkModeSetting.style.alignItems = 'center';
+    darkModeSetting.style.justifyContent = 'space-between';
+    darkModeSetting.style.padding = '10px';
+    darkModeSetting.style.backgroundColor = '#f5f5f5';
+    darkModeSetting.style.borderRadius = '8px';
+    darkModeSetting.style.marginBottom = '20px';
+    
+    // 9. Create dark mode label
+    const darkModeLabel = document.createElement('span');
+    darkModeLabel.textContent = 'Dark Mode:';
+    darkModeLabel.style.fontFamily = 'Montserrat, sans-serif';
+    darkModeLabel.style.fontWeight = '500';
+    darkModeLabel.style.fontSize = '16px';
+    
+    // 10. Create switch container
+    const switchContainer = document.createElement('label');
+    switchContainer.style.position = 'relative';
+    switchContainer.style.display = 'inline-block';
+    switchContainer.style.width = '60px';
+    switchContainer.style.height = '34px';
+    
+    // 11. Create checkbox
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'newDarkModeToggle';
+    checkbox.style.opacity = '0';
+    checkbox.style.width = '0';
+    checkbox.style.height = '0';
+    
+    // 12. Create slider
+    const slider = document.createElement('span');
+    slider.style.position = 'absolute';
+    slider.style.cursor = 'pointer';
+    slider.style.top = '0';
+    slider.style.left = '0';
+    slider.style.right = '0';
+    slider.style.bottom = '0';
+    slider.style.backgroundColor = '#ccc';
+    slider.style.transition = '.4s';
+    slider.style.borderRadius = '34px';
+    
+    // 13. Create slider button
+    slider.innerHTML = '<span style="position: absolute; content: \'\'; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>';
+    
+    // 14. Assemble the elements
+    switchContainer.appendChild(checkbox);
+    switchContainer.appendChild(slider);
+    
+    darkModeSetting.appendChild(darkModeLabel);
+    darkModeSetting.appendChild(switchContainer);
+    
+    settingsSection.appendChild(darkModeSetting);
+    
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(heading);
+    modalContent.appendChild(settingsSection);
+    
+    newSettingsModal.appendChild(modalContent);
+    
+    // 15. Add event listeners
+    newSettingsButton.addEventListener('click', function() {
+      newSettingsModal.style.display = 'block';
+    });
+    
+    closeButton.addEventListener('click', function() {
+      newSettingsModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', function(event) {
+      if (event.target === newSettingsModal) {
+        newSettingsModal.style.display = 'none';
+      }
+    });
+    
+    // 16. Set up dark mode functionality
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    checkbox.checked = isDarkMode;
+    
+    function updateSliderStyle() {
+      const sliderButton = slider.querySelector('span');
+      if (checkbox.checked) {
+        slider.style.backgroundColor = '#0059b3';
+        sliderButton.style.transform = 'translateX(26px)';
+      } else {
+        slider.style.backgroundColor = '#ccc';
+        sliderButton.style.transform = 'translateX(0)';
+      }
+    }
+    
+    updateSliderStyle();
+    
+    checkbox.addEventListener('change', function() {
+      document.body.classList.toggle('dark-mode', this.checked);
+      localStorage.setItem('darkMode', this.checked);
+      updateSliderStyle();
+    });
+    
+    // 17. Add the elements to the page
+    document.body.appendChild(newSettingsModal);
+    
+    console.log('New settings button and modal created successfully');
+  });
+
+  // Add this code to customize dark mode at the end of your script.js file
+// This will enhance the dark mode styles across all game modes
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Create a style element to add custom dark mode CSS
+    const darkModeStyles = document.createElement('style');
+    darkModeStyles.id = 'custom-dark-mode-styles';
+    darkModeStyles.textContent = `
+      /* Global text color in dark mode */
+      body.dark-mode {
+        color: white !important;
+      }
+      
+      /* Flag Game - category titles */
+      body.dark-mode .category h2 {
+        color: white !important;
+      }
+      
+      /* Flag Game - skips counter */
+      body.dark-mode .skips-counter {
+        color: white !important;
+      }
+      
+      /* Flag Game - rank display */
+      body.dark-mode .rank {
+        color: white !important;
+      }
+      
+      /* Flag Game - pick text */
+      body.dark-mode #pickText {
+        color: white !important;
+      }
+      
+      /* Flag Game - country name */
+      body.dark-mode .country-name {
+        color: white !important;
+      }
+      
+      /* Flag Duel - all text elements */
+      body.dark-mode .duel-content h2,
+      body.dark-mode .duel-category,
+      body.dark-mode .duel-country-name,
+      body.dark-mode .duel-instruction,
+      body.dark-mode .duel-score,
+      body.dark-mode .duel-high-score,
+      body.dark-mode .vs-container {
+        color: white !important;
+      }
+      
+      /* Flag Reveal - all text elements */
+      body.dark-mode .reveal-content h2,
+      body.dark-mode .reveal-progress,
+      body.dark-mode .reveal-score,
+      body.dark-mode .reveal-high-score,
+      body.dark-mode .reveal-lives {
+        color: white !important;
+      }
+      
+      /* Flag Puzzle - all text elements */
+      body.dark-mode .puzzle-content h2,
+      body.dark-mode .puzzle-timer,
+      body.dark-mode .puzzle-score,
+      body.dark-mode .puzzle-high-score,
+      body.dark-mode .puzzle-progress {
+        color: white !important;
+      }
+      
+      /* Guessed countries boxes in puzzle mode */
+      body.dark-mode .guessed-flag {
+        background-color: #003366 !important;
+        color: white !important;
+      }
+      
+      /* Keep correct/incorrect messages colored appropriately */
+      body.dark-mode .correct-message {
+        color: #00FF00 !important;
+      }
+      
+      body.dark-mode .incorrect-message {
+        color: #FF6666 !important;
+      }
+      
+      /* Settings modal in dark mode */
+      body.dark-mode #newSettingsModal .modal-content {
+        background-color: #222 !important;
+        color: white !important;
+        border-color: #444 !important;
+      }
+      
+      body.dark-mode #newSettingsModal h2 {
+        color: white !important;
+      }
+      
+      body.dark-mode #newSettingsModal .close-button {
+        color: #ddd !important;
+      }
+      
+      body.dark-mode #newSettingsModal .close-button:hover {
+        color: white !important;
+      }
+      
+      /* Dark mode setting in settings modal */
+      body.dark-mode #newSettingsModal .dark-mode-setting {
+        background-color: #333 !important;
+      }
+      
+      body.dark-mode #newSettingsModal .dark-mode-label {
+        color: white !important;
+      }
+      
+      /* Apply all other dark mode styles from your original CSS */
+      body.dark-mode .high-score {
+        color: white !important;
+        background-color: rgba(0, 0, 0, 0.3) !important;
+      }
+    `;
+    
+    // Add the styles to the document head
+    document.head.appendChild(darkModeStyles);
+    
+    // Modify the settings modal creation to handle dark mode properly
+    const updateSettingsModalForDarkMode = function() {
+      const settingsModal = document.getElementById('newSettingsModal');
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      
+      if (settingsModal) {
+        const modalContent = settingsModal.querySelector('.modal-content');
+        const darkModeSetting = settingsModal.querySelector('.dark-mode-setting');
+        const darkModeLabel = settingsModal.querySelector('.dark-mode-label');
+        
         if (isDarkMode) {
-            document.body.classList.add('dark-mode');
+          if (modalContent) {
+            modalContent.style.backgroundColor = '#222';
+            modalContent.style.color = 'white';
+            modalContent.style.borderColor = '#444';
+          }
+          
+          if (darkModeSetting) {
+            darkModeSetting.style.backgroundColor = '#333';
+          }
+          
+          if (darkModeLabel) {
+            darkModeLabel.style.color = 'white';
+          }
+          
+          const closeButton = settingsModal.querySelector('.close-button');
+          if (closeButton) {
+            closeButton.style.color = '#ddd';
+          }
+        } else {
+          if (modalContent) {
+            modalContent.style.backgroundColor = 'white';
+            modalContent.style.color = '#333';
+            modalContent.style.borderColor = '#ccc';
+          }
+          
+          if (darkModeSetting) {
+            darkModeSetting.style.backgroundColor = '#f5f5f5';
+          }
+          
+          if (darkModeLabel) {
+            darkModeLabel.style.color = '#333';
+          }
+          
+          const closeButton = settingsModal.querySelector('.close-button');
+          if (closeButton) {
+            closeButton.style.color = '#aaa';
+          }
+        }
+      }
+    };
+    
+    // Update dark mode toggle to also update the settings modal appearance
+    const darkModeToggle = document.getElementById('newDarkModeToggle');
+    if (darkModeToggle) {
+      // Get the original event listener
+      const originalChangeHandler = darkModeToggle.onchange;
+      
+      // Replace with enhanced handler
+      darkModeToggle.onchange = function() {
+        if (this.checked) {
+          document.body.classList.add('dark-mode');
+          localStorage.setItem('darkMode', 'true');
+        } else {
+          document.body.classList.remove('dark-mode');
+          localStorage.setItem('darkMode', 'false');
         }
         
-        // Add a document-level click handler ONLY for the settings button
-        document.addEventListener('click', function(event) {
-            // Check if clicked element has ID 'settingsTab'
-            if (event.target.id === 'settingsTab' || 
-                (event.target.parentElement && event.target.parentElement.id === 'settingsTab')) {
-                // Get the settings modal
-                const modal = document.getElementById('settingsModal');
-                if (modal) {
-                    modal.style.display = 'block';
-                }
-            }
+        // Update the slider appearance
+        const slider = this.nextElementSibling;
+        const sliderButton = slider.querySelector('span');
+        if (this.checked) {
+          slider.style.backgroundColor = '#0059b3';
+          sliderButton.style.transform = 'translateX(26px)';
+        } else {
+          slider.style.backgroundColor = '#ccc';
+          sliderButton.style.transform = 'translateX(0)';
+        }
+        
+        // Update settings modal appearance
+        updateSettingsModalForDarkMode();
+      };
+    }
+    
+    // Apply dark mode to settings modal on initial load
+    updateSettingsModalForDarkMode();
+  });
+
+  // Player stats object
+let playerStats = {
+    gamesPlayed: 0,
+    classicGamesCompleted: 0,
+    duelWins: 0,
+    duelStreak: 0,
+    revealFlagsIdentified: 0,
+    puzzleCompleted: 0,
+    totalPlaytime: 0, // in minutes
+    consecutiveDays: 0,
+    lastPlayedDate: null,
+    identifiedCountries: [], // Array of country names
+    highScores: {
+        flagGame: 0, // Best average ranking
+        flagDuel: 0, // Highest streak
+        flagReveal: 0, // Highest score
+        flagPuzzle: 0 // Highest score
+    }
+};
+
+// Achievement unlocked history
+let unlockedAchievements = [];
+
+// Function to initialize milestones system
+function initMilestones() {
+    // Load saved data from localStorage
+    loadMilestonesData();
+    
+    // Add event listener for the Milestones tab
+    document.getElementById('milestonesTab').addEventListener('click', openMilestonesTab);
+    
+    // Add event listeners for milestone navigation
+    const navButtons = document.querySelectorAll('.milestone-nav-btn');
+    navButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
             
-            // Check if it's the close button in the settings modal
-            if (event.target.classList.contains('close-button') && 
-                event.target.closest('#settingsModal')) {
-                const modal = document.getElementById('settingsModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            }
-            
-            // Check for clicks outside the modal
-            if (event.target.id === 'settingsModal') {
-                event.target.style.display = 'none';
+            // Filter milestones based on button type
+            filterMilestones(this.getAttribute('data-type'));
+        });
+    });
+    
+    // Update high scores display
+    updateHighScoreDisplay();
+    
+    // Add milestone checkpoints to different parts of the game
+    setupMilestoneCheckpoints();
+}
+
+// Function to load milestones data from localStorage
+function loadMilestonesData() {
+    const savedStats = localStorage.getItem('flagGamePlayerStats');
+    if (savedStats) {
+        playerStats = JSON.parse(savedStats);
+    }
+    
+    const savedMilestones = localStorage.getItem('flagGameMilestones');
+    if (savedMilestones) {
+        const savedData = JSON.parse(savedMilestones);
+        
+        // Update progress for basic milestones
+        milestonesData.basicMilestones.forEach((milestone, index) => {
+            if (savedData.basicMilestones[index]) {
+                milestone.progress = savedData.basicMilestones[index].progress;
+                milestone.completed = savedData.basicMilestones[index].completed || false;
             }
         });
         
-        // Add handler for dark mode toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        if (darkModeToggle) {
-            darkModeToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    document.body.classList.add('dark-mode');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                }
-                localStorage.setItem('darkMode', this.checked);
-            });
-            
-            // Set initial state
-            darkModeToggle.checked = isDarkMode;
+        // Update progress for advanced achievements
+        milestonesData.advancedAchievements.forEach((achievement, index) => {
+            if (savedData.advancedAchievements[index]) {
+                achievement.progress = savedData.advancedAchievements[index].progress;
+                achievement.completed = savedData.advancedAchievements[index].completed || false;
+            }
+        });
+    }
+    
+    const savedUnlocked = localStorage.getItem('flagGameUnlockedAchievements');
+    if (savedUnlocked) {
+        unlockedAchievements = JSON.parse(savedUnlocked);
+    }
+    
+    // Check for consecutive days
+    checkConsecutiveDays();
+}
+
+// Function to save milestones data to localStorage
+function saveMilestonesData() {
+    localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
+    localStorage.setItem('flagGameMilestones', JSON.stringify(milestonesData));
+    localStorage.setItem('flagGameUnlockedAchievements', JSON.stringify(unlockedAchievements));
+}
+
+// Function to check consecutive days
+function checkConsecutiveDays() {
+    const today = new Date().toDateString();
+    
+    if (playerStats.lastPlayedDate) {
+        const lastPlayed = new Date(playerStats.lastPlayedDate);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastPlayed.toDateString() === yesterday.toDateString()) {
+            // Played yesterday, increment streak
+            playerStats.consecutiveDays++;
+        } else if (lastPlayed.toDateString() !== today) {
+            // Didn't play yesterday and hasn't played today yet, reset streak
+            playerStats.consecutiveDays = 1;
+        }
+    } else {
+        // First time playing
+        playerStats.consecutiveDays = 1;
+    }
+    
+    playerStats.lastPlayedDate = today;
+    saveMilestonesData();
+}
+
+// Function to check time-based achievements
+function checkTimeBasedAchievements() {
+    const currentHour = new Date().getHours();
+    
+    // Night Owl (after midnight)
+    if (currentHour >= 0 && currentHour < 6) {
+        updateAchievementProgress('night-owl', 1);
+    }
+    
+    // Early Bird (before 6am)
+    if (currentHour < 6) {
+        updateAchievementProgress('early-bird', 1);
+    }
+}
+
+// Function to open the Milestones tab
+function openMilestonesTab() {
+    console.log("Opening milestones tab...");
+    
+    // Hide all game containers
+    document.querySelectorAll('.game-container').forEach(container => {
+        container.classList.remove('active');
+        container.style.display = 'none';
+    });
+    
+    // Show milestones container
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    if (!milestonesContainer) {
+        console.error("Milestones container not found!");
+        return;
+    }
+    
+    milestonesContainer.style.display = 'block';
+    
+    // Add a short delay before adding the active class for animation
+    setTimeout(() => {
+        milestonesContainer.classList.add('active');
+    }, 50);
+    
+    // Update display
+    console.log("Calling renderMilestones()...");
+    renderMilestones();
+    
+    console.log("Calling updateHighScoreDisplay()...");
+    updateHighScoreDisplay();
+    
+    console.log("Milestones tab opened successfully");
+}
+
+// Function to filter milestones based on type (all, completed, in-progress)
+function filterMilestones(type) {
+    const basicItems = document.querySelectorAll('#basicMilestones .milestone-item');
+    const advancedItems = document.querySelectorAll('#advancedAchievements .milestone-item');
+    
+    const allItems = [...basicItems, ...advancedItems];
+    
+    allItems.forEach(item => {
+        const isCompleted = item.classList.contains('completed');
+        
+        if (type === 'all') {
+            item.style.display = 'block';
+        } else if (type === 'completed' && isCompleted) {
+            item.style.display = 'block';
+        } else if (type === 'in-progress' && !isCompleted) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
         }
     });
-})();
+}
+
+// Function to render all milestones
+function renderMilestones() {
+    const basicContainer = document.getElementById('basicMilestones');
+    const advancedContainer = document.getElementById('advancedAchievements');
+    
+    // Clear containers
+    basicContainer.innerHTML = '';
+    advancedContainer.innerHTML = '';
+    
+    // Render basic milestones
+    milestonesData.basicMilestones.forEach(milestone => {
+        basicContainer.appendChild(createMilestoneElement(milestone));
+    });
+    
+    // Render advanced achievements
+    milestonesData.advancedAchievements.forEach(achievement => {
+        advancedContainer.appendChild(createMilestoneElement(achievement));
+    });
+}
+
+// Function to update high score display
+function updateHighScoreDisplay() {
+    document.getElementById('flagGameHighScore').textContent = playerStats.highScores.flagGame.toFixed(2);
+    document.getElementById('flagDuelHighScore').textContent = playerStats.highScores.flagDuel;
+    document.getElementById('flagRevealHighScore').textContent = playerStats.highScores.flagReveal;
+    document.getElementById('flagPuzzleHighScore').textContent = playerStats.highScores.flagPuzzle;
+}
+
+// Function to set up milestone checkpoints throughout the game
+function setupMilestoneCheckpoints() {
+    // Classic game completion checkpoint
+    const originalResetGame = window.resetGame;
+    window.resetGame = function() {
+        // This is called at the end of a classic game
+        if (selectedBoxes && selectedBoxes.size === 8) {
+            // Game was completed
+            updateStat('gamesPlayed', 1);
+            updateStat('classicGamesCompleted', 1);
+            
+            // Check current average ranking
+            const averageRanking = parseFloat(document.getElementById('averageRankingText').textContent.split(':')[1]);
+            if (!isNaN(averageRanking)) {
+                // Check for best score
+                if (playerStats.highScores.flagGame === 0 || averageRanking < playerStats.highScores.flagGame) {
+                    playerStats.highScores.flagGame = averageRanking;
+                }
+                
+                // Check ranking achievements
+                const rankingAchievements = [
+                    { id: 'classic-ranking-50', threshold: 50 },
+                    { id: 'classic-ranking-20', threshold: 20 },
+                    { id: 'global-perfection', threshold: 10 }
+                ];
+                
+                rankingAchievements.forEach(achievement => {
+                    if (averageRanking < achievement.threshold) {
+                        updateAchievementProgress(achievement.id, achievement.threshold);
+                    }
+                });
+            }
+            
+            // Save data
+            saveMilestonesData();
+        }
+        
+        // Call original reset function
+        originalResetGame();
+    };
+    
+    // Flag Duel checkpoints
+    const originalHandleFlagClick = handleFlagClick;
+    window.handleFlagClick = function(side) {
+        // Capture current streak before potentially losing
+        const currentStreak = currentScore;
+        
+        // Call original function
+        originalHandleFlagClick(side);
+        
+        // After the function ran, check if answered correctly
+        if (answeredCorrectly) {
+            // Increment duel wins
+            updateStat('duelWins', 1);
+            
+            // Check for new best streak
+            if (currentScore > playerStats.highScores.flagDuel) {
+                playerStats.highScores.flagDuel = currentScore;
+            }
+            
+            // Check streak achievements
+            if (currentScore >= 15) {
+                updateAchievementProgress('duel-streak-15', 15);
+            }
+            
+            if (currentScore >= 25) {
+                updateAchievementProgress('duel-streak-25', 25);
+            }
+            
+            // Check for high score achievement
+            if (currentScore >= 100) {
+                updateAchievementProgress('century-club', 100);
+            }
+        } else {
+            // Reset streak (the game already does this)
+        }
+        
+        // Save data
+        saveMilestonesData();
+    };
+    
+    // Flag Reveal checkpoints
+    const originalHandleCorrectGuess = handleCorrectGuess;
+    window.handleCorrectGuess = function() {
+        // We identified a flag
+        updateStat('revealFlagsIdentified', 1);
+        
+        // Add country to identified list
+        const countryName = currentRevealCountry;
+        if (countryName && !playerStats.identifiedCountries.includes(countryName)) {
+            playerStats.identifiedCountries.push(countryName);
+            checkAllCountriesAchievement();
+        }
+        
+        // Check for quick identification
+        if (revealedPieces <= 3) {
+            updateAchievementProgress('eagle-eye', 1);
+        }
+        
+        // Check for high score
+        if (revealScore > playerStats.highScores.flagReveal) {
+            playerStats.highScores.flagReveal = revealScore;
+        }
+        
+        // Call original function
+        originalHandleCorrectGuess();
+        
+        // Save data
+        saveMilestonesData();
+    };
+    
+    // Flag Puzzle checkpoints
+    const originalHandlePuzzleGuess = handlePuzzleGuess;
+    window.handlePuzzleGuess = function() {
+        // Call original function
+        originalHandlePuzzleGuess();
+        
+        // Check if a correct guess was made by checking if guessedCountries size increased
+        const currentGuessedSize = guessedCountries.size;
+        
+        // We'll check after the function call if the size increased
+        setTimeout(() => {
+            if (guessedCountries.size > currentGuessedSize) {
+                // A flag was correctly identified
+                // Add country to identified list
+                const latestGuess = Array.from(guessedCountries).pop();
+                if (latestGuess && !playerStats.identifiedCountries.includes(latestGuess)) {
+                    playerStats.identifiedCountries.push(latestGuess);
+                    checkAllCountriesAchievement();
+                }
+                
+                // Check high score
+                if (puzzleScore > playerStats.highScores.flagPuzzle) {
+                    playerStats.highScores.flagPuzzle = puzzleScore;
+                }
+            }
+            
+            // If all flags in a puzzle are guessed, increment completed puzzles
+            if (guessedCountries.size === mergedFlags.length) {
+                updateStat('puzzleCompleted', 1);
+            }
+            
+            // Save data
+            saveMilestonesData();
+        }, 100);
+    };
+    
+    // Check all game modes achievement
+    const gameModesPlayed = new Set();
+    
+    // Original mode switchers
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const mode = this.getAttribute('data-mode');
+            gameModesPlayed.add(mode);
+            
+            // Check if all game modes have been played
+            if (gameModesPlayed.size >= 4) {
+                updateAchievementProgress('flag-aficionado', 4);
+            }
+        });
+    });
+}
+
+// Function to update a player stat and check relevant milestones
+function updateStat(statName, increment) {
+    console.log(`Updating stat: ${statName} by ${increment}`);
+    
+    // Make sure playerStats is loaded from localStorage first
+    const savedStats = localStorage.getItem('flagGamePlayerStats');
+    if (savedStats) {
+        try {
+            playerStats = JSON.parse(savedStats);
+        } catch (e) {
+            console.error("Error parsing player stats:", e);
+        }
+    }
+    
+    // Ensure the stat exists before incrementing
+    if (typeof playerStats[statName] === 'undefined') {
+        console.warn(`Stat ${statName} doesn't exist, initializing to 0`);
+        playerStats[statName] = 0;
+    }
+    
+    // Increment the stat
+    playerStats[statName] += increment;
+    console.log(`New value for ${statName}: ${playerStats[statName]}`);
+    
+    // Update milestone progress
+    let updated = false;
+    
+    // Check basic milestones
+    milestonesData.basicMilestones.forEach(milestone => {
+        if (milestone.requirement.type === statName) {
+            // Update progress
+            milestone.progress = playerStats[statName];
+            console.log(`Updated milestone ${milestone.title} progress to ${milestone.progress}`);
+            
+            // Check if completed
+            checkMilestone(milestone);
+            updated = true;
+        }
+    });
+    
+    // Check advanced achievements
+    milestonesData.advancedAchievements.forEach(achievement => {
+        if (achievement.requirement.type === statName) {
+            // Update progress
+            achievement.progress = playerStats[statName];
+            console.log(`Updated achievement ${achievement.title} progress to ${achievement.progress}`);
+            
+            // Check if completed
+            checkMilestone(achievement);
+            updated = true;
+        }
+    });
+    
+    if (!updated) {
+        console.log(`No milestones found with requirement type ${statName}`);
+    }
+    
+    // Save the updated data
+    saveMilestonesData();
+    
+    return playerStats[statName]; // Return the new value
+}
+
+// Function to update achievement progress
+function updateAchievementProgress(achievementId, amount) {
+    // Find the achievement
+    let achievement = milestonesData.basicMilestones.find(m => m.id === achievementId);
+    if (!achievement) {
+        achievement = milestonesData.advancedAchievements.find(m => m.id === achievementId);
+    }
+    
+    if (achievement) {
+        if (achievement.requirement.compare === 'less') {
+            // For "less than" requirements
+            achievement.progress = amount;
+            if (amount < achievement.requirement.count) {
+                // Achievement completed
+                if (!achievement.completed) {
+                    achievement.completed = true;
+                    showAchievementNotification(achievement);
+                    unlockedAchievements.push(achievement.id);
+                }
+            }
+        } else {
+            // For standard "greater than" requirements
+            achievement.progress = amount;
+            checkMilestone(achievement);
+        }
+        
+        saveMilestonesData();
+    }
+}
+
+// Function to check a milestone/achievement
+function checkMilestone(milestone) {
+    if (milestone.completed) {
+        console.log(`Milestone ${milestone.title} already completed`);
+        return; // Already completed
+    }
+    
+    const requirement = milestone.requirement.count;
+    const progress = milestone.progress || 0;
+    
+    console.log(`Checking milestone ${milestone.id}: ${progress}/${requirement}`);
+    
+    let completed = false;
+    
+    if (milestone.requirement.compare === 'less') {
+        // For "less than" requirements
+        if (progress > 0 && progress < requirement) {
+            completed = true;
+        }
+    } else {
+        // For standard "greater than or equal" requirements
+        if (progress >= requirement) {
+            completed = true;
+        }
+    }
+    
+    if (completed) {
+        console.log(`🎉 Milestone completed: ${milestone.title}`);
+        milestone.completed = true;
+        
+        // Add to unlocked achievements if not already there
+        if (!unlockedAchievements.includes(milestone.id)) {
+            unlockedAchievements.push(milestone.id);
+        }
+        
+        // Show notification
+        showAchievementNotification(milestone);
+        
+        // Save immediately
+        saveMilestonesData();
+    }
+}
+
+// Function to check all countries achievement
+function checkAllCountriesAchievement() {
+    // Count unique countries identified
+    const uniqueCountries = new Set(playerStats.identifiedCountries);
+    
+    // Update countries identified milestones
+    const countryMilestones = [
+        { id: 'countries-identified-25', count: 25 },
+        { id: 'countries-identified-50', count: 50 },
+        { id: 'countries-identified-100', count: 100 },
+        { id: 'countries-identified-150', count: 150 },
+        { id: 'countries-identified-195', count: 195 }
+    ];
+    
+    countryMilestones.forEach(milestone => {
+        if (uniqueCountries.size >= milestone.count) {
+            updateAchievementProgress(milestone.id, uniqueCountries.size);
+        }
+    });
+    
+    // Check for "Around the World" achievement
+    if (uniqueCountries.size >= 195) {
+        updateAchievementProgress('around-the-world', uniqueCountries.size);
+    }
+}
+
+// Add this function to manually check all milestones (useful for debugging)
+function checkAllMilestones() {
+    console.log("Checking all milestones against current stats...");
+    
+    // First update player stats from localStorage
+    const savedStats = localStorage.getItem('flagGamePlayerStats');
+    if (savedStats) {
+        try {
+            playerStats = JSON.parse(savedStats);
+            console.log("Loaded player stats:", playerStats);
+        } catch (e) {
+            console.error("Error parsing player stats:", e);
+            return;
+        }
+    } else {
+        console.warn("No saved player stats found");
+        return;
+    }
+    
+    // Check each basic milestone
+    milestonesData.basicMilestones.forEach(milestone => {
+        const statName = milestone.requirement.type;
+        const statValue = playerStats[statName] || 0;
+        
+        // Update the progress
+        milestone.progress = statValue;
+        
+        // Check if completed
+        checkMilestone(milestone);
+    });
+    
+    // Check each advanced achievement
+    milestonesData.advancedAchievements.forEach(achievement => {
+        const statName = achievement.requirement.type;
+        const statValue = playerStats[statName] || 0;
+        
+        // Update the progress
+        achievement.progress = statValue;
+        
+        // Check if completed
+        checkMilestone(achievement);
+    });
+    
+    // Save updated milestones
+    saveMilestonesData();
+    
+    // Refresh the display
+    renderMilestones();
+}
+
+// Function to check treasure hunter achievement
+function checkTreasureHunterAchievement() {
+    // Count completed achievements
+    let completedCount = 0;
+    
+    milestonesData.basicMilestones.forEach(milestone => {
+        if (milestone.completed) completedCount++;
+    });
+    
+    milestonesData.advancedAchievements.forEach(achievement => {
+        if (achievement.completed) completedCount++;
+    });
+    
+    // Update treasure hunter progress
+    updateAchievementProgress('treasure-hunter', completedCount);
+}
+
+// Function to show achievement notification
+function showAchievementNotification(achievement) {
+    console.log("Achievement unlocked:", achievement.title);
+    
+    const notification = document.getElementById('achievementNotification');
+    const icon = document.getElementById('notificationIcon');
+    const name = document.getElementById('achievementName');
+    
+    if (!notification) {
+        console.error("Achievement notification element not found!");
+        return;
+    }
+    
+    // Set content
+    icon.textContent = achievement.icon;
+    name.textContent = achievement.title;
+    
+    // Show notification
+    notification.style.display = 'block';
+    notification.classList.add('show');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }, 3000);
+}
+
+// Initialize milestones on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit to ensure the rest of the page has loaded
+    setTimeout(initMilestones, 500);
+});
+
+
+// Add a direct click handler for testing
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        // Force initialization
+        console.log("Force initializing milestones system...");
+        
+        // Ensure player stats has default high scores
+        if (!playerStats) {
+            playerStats = {
+                gamesPlayed: 0,
+                classicGamesCompleted: 0,
+                duelWins: 0,
+                duelStreak: 0,
+                revealFlagsIdentified: 0,
+                puzzleCompleted: 0,
+                totalPlaytime: 0,
+                consecutiveDays: 0,
+                lastPlayedDate: null,
+                identifiedCountries: [],
+                highScores: {
+                    flagGame: 0,
+                    flagDuel: 0,
+                    flagReveal: 0,
+                    flagPuzzle: 0
+                }
+            };
+        }
+        
+        const milestonesTab = document.getElementById('milestonesTab');
+        if (milestonesTab) {
+            milestonesTab.addEventListener('click', function() {
+                // First open the tab
+                openMilestonesTab();
+                
+                // Force rendering
+                setTimeout(() => {
+                    console.log("Force rendering milestones...");
+                    debugMilestonesDisplay();
+                    updateHighScoreDisplay();
+                }, 500);
+            });
+        }
+        
+        // Override the high score retrieval to sync with milestones system
+        const originalGetHighScore = getHighScore || function() { return localStorage.getItem('flagGameHighScore'); };
+        window.getHighScore = function() {
+            const score = originalGetHighScore();
+            if (score && playerStats) {
+                // Sync the high score with the milestones system
+                playerStats.highScores.flagGame = parseFloat(score);
+                saveMilestonesData();
+            }
+            return score;
+        };
+        
+        // Override setHighScore to update milestones
+        const originalSetHighScore = setHighScore || function(score) { localStorage.setItem('flagGameHighScore', score); };
+        window.setHighScore = function(score) {
+            originalSetHighScore(score);
+            
+            // Update milestones high score
+            if (playerStats) {
+                playerStats.highScores.flagGame = parseFloat(score);
+                saveMilestonesData();
+                
+                // Update display if milestones tab is active
+                if (document.getElementById('milestonesContainer').classList.contains('active')) {
+                    updateHighScoreDisplay();
+                }
+            }
+        };
+    }, 1000);
+});
+
+// Add this to initialize high scores on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize high scores display with values from localStorage
+    setTimeout(() => {
+        // Check for high scores in localStorage
+        const flagGameHS = localStorage.getItem('flagGameHighScore');
+        const flagDuelHS = localStorage.getItem('flagDuelHighScore');  
+        const flagRevealHS = localStorage.getItem('flagRevealHighScore');
+        const flagPuzzleHS = localStorage.getItem('flagPuzzleHighScore');
+        
+        console.log("Loading high scores:", {
+            flagGame: flagGameHS,
+            flagDuel: flagDuelHS,
+            flagReveal: flagRevealHS,
+            flagPuzzle: flagPuzzleHS
+        });
+        
+        // Make sure playerStats exists
+        if (typeof playerStats !== 'object') {
+            window.playerStats = {
+                highScores: {
+                    flagGame: 0,
+                    flagDuel: 0,
+                    flagReveal: 0,
+                    flagPuzzle: 0
+                }
+            };
+        }
+        
+        // Update playerStats with localStorage values
+        if (flagGameHS) playerStats.highScores.flagGame = parseFloat(flagGameHS);
+        if (flagDuelHS) playerStats.highScores.flagDuel = parseInt(flagDuelHS);
+        if (flagRevealHS) playerStats.highScores.flagReveal = parseInt(flagRevealHS);
+        if (flagPuzzleHS) playerStats.highScores.flagPuzzle = parseInt(flagPuzzleHS);
+        
+        // Make sure the high score elements exist before trying to update them
+        if (document.getElementById('flagGameHighScore')) {
+            document.getElementById('flagGameHighScore').textContent = 
+                playerStats.highScores.flagGame ? playerStats.highScores.flagGame.toFixed(2) : "0.00";
+        }
+        
+        if (document.getElementById('flagDuelHighScore')) {
+            document.getElementById('flagDuelHighScore').textContent = 
+                playerStats.highScores.flagDuel || "0";
+        }
+        
+        if (document.getElementById('flagRevealHighScore')) {
+            document.getElementById('flagRevealHighScore').textContent = 
+                playerStats.highScores.flagReveal || "0";
+        }
+        
+        if (document.getElementById('flagPuzzleHighScore')) {
+            document.getElementById('flagPuzzleHighScore').textContent = 
+                playerStats.highScores.flagPuzzle || "0";
+        }
+        
+        console.log("High scores initialized");
+    }, 1500);
+});
+
+// Function reference fixes (ADD THIS FIRST)
+if (typeof getHighScore !== 'function') {
+    window.getHighScore = function() {
+        return localStorage.getItem('flagGameHighScore');
+    };
+}
+
+if (typeof setHighScore !== 'function') {
+    window.setHighScore = function(score) {
+        localStorage.setItem('flagGameHighScore', score);
+        document.getElementById('highScoreDisplay').textContent = `High Score: ${score}`;
+    };
+}
+
+// IMPORTANT: Add this code as a single block at the end of your script.js file
+
+// Define milestonesData first before any references to it
+
+window.milestonesData = {
+    // Basic milestones that track progress (35 total)
+    basicMilestones: [
+        // Games Played Milestones (5)
+        {
+            id: 'games-played-1',
+            title: 'First Steps',
+            description: 'Play your first game',
+            icon: '🎮',
+            rarity: 'common',
+            requirement: { type: 'gamesPlayed', count: 1 },
+            progress: 0
+        },
+        {
+            id: 'games-played-10',
+            title: 'Getting Started',
+            description: 'Play 10 games',
+            icon: '🎮',
+            rarity: 'common',
+            requirement: { type: 'gamesPlayed', count: 10 },
+            progress: 0
+        },
+        {
+            id: 'games-played-50',
+            title: 'Regular Player',
+            description: 'Play 50 games',
+            icon: '🎮',
+            rarity: 'uncommon',
+            requirement: { type: 'gamesPlayed', count: 50 },
+            progress: 0
+        },
+        {
+            id: 'games-played-100',
+            title: 'Flag Enthusiast',
+            description: 'Play 100 games',
+            icon: '🎮',
+            rarity: 'rare',
+            requirement: { type: 'gamesPlayed', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'games-played-500',
+            title: 'Flag Expert',
+            description: 'Play 500 games',
+            icon: '🎮',
+            rarity: 'epic',
+            requirement: { type: 'gamesPlayed', count: 500 },
+            progress: 0
+        },
+        
+        // Countries Identified Milestones (5)
+        {
+            id: 'countries-identified-25',
+            title: 'Flag Spotter',
+            description: 'Identify 25 different countries',
+            icon: '🔍',
+            rarity: 'common',
+            requirement: { type: 'countriesIdentified', count: 25 },
+            progress: 0
+        },
+        {
+            id: 'countries-identified-50',
+            title: 'Flag Collector',
+            description: 'Identify 50 different countries',
+            icon: '🔍',
+            rarity: 'uncommon',
+            requirement: { type: 'countriesIdentified', count: 50 },
+            progress: 0
+        },
+        {
+            id: 'countries-identified-100',
+            title: 'World Traveler',
+            description: 'Identify 100 different countries',
+            icon: '🔍',
+            rarity: 'rare',
+            requirement: { type: 'countriesIdentified', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'countries-identified-150',
+            title: 'Global Explorer',
+            description: 'Identify 150 different countries',
+            icon: '🔍',
+            rarity: 'epic',
+            requirement: { type: 'countriesIdentified', count: 150 },
+            progress: 0
+        },
+        {
+            id: 'countries-identified-195',
+            title: 'Complete Collection',
+            description: 'Identify all 195 countries',
+            icon: '🔍',
+            rarity: 'legendary',
+            requirement: { type: 'countriesIdentified', count: 195 },
+            progress: 0
+        },
+        
+        // Classic Game Mode Milestones (5)
+        {
+            id: 'classic-games-5',
+            title: 'Classic Starter',
+            description: 'Complete 5 Classic games',
+            icon: '🎯',
+            rarity: 'common',
+            requirement: { type: 'classicGamesCompleted', count: 5 },
+            progress: 0
+        },
+        {
+            id: 'classic-games-25',
+            title: 'Classic Player',
+            description: 'Complete 25 Classic games',
+            icon: '🎯',
+            rarity: 'uncommon',
+            requirement: { type: 'classicGamesCompleted', count: 25 },
+            progress: 0
+        },
+        {
+            id: 'classic-games-100',
+            title: 'Classic Master',
+            description: 'Complete 100 Classic games',
+            icon: '🎯',
+            rarity: 'rare',
+            requirement: { type: 'classicGamesCompleted', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'classic-ranking-50',
+            title: 'Above Average Ranker',
+            description: 'Achieve average ranking below 50',
+            icon: '📊',
+            rarity: 'uncommon',
+            requirement: { type: 'classicAverageRanking', count: 50, compare: 'less' },
+            progress: 0
+        },
+        {
+            id: 'classic-ranking-20',
+            title: 'Elite Ranker',
+            description: 'Achieve average ranking below 20',
+            icon: '📊',
+            rarity: 'epic',
+            requirement: { type: 'classicAverageRanking', count: 20, compare: 'less' },
+            progress: 0
+        },
+        
+        // Duel Game Mode Milestones (5)
+        {
+            id: 'duel-wins-5',
+            title: 'Duel Beginner',
+            description: 'Win 5 duels',
+            icon: '⚔️',
+            rarity: 'common',
+            requirement: { type: 'duelWins', count: 5 },
+            progress: 0
+        },
+        {
+            id: 'duel-wins-25',
+            title: 'Duel Fighter',
+            description: 'Win 25 duels',
+            icon: '⚔️',
+            rarity: 'uncommon',
+            requirement: { type: 'duelWins', count: 25 },
+            progress: 0
+        },
+        {
+            id: 'duel-wins-100',
+            title: 'Duel Champion',
+            description: 'Win 100 duels',
+            icon: '⚔️',
+            rarity: 'rare',
+            requirement: { type: 'duelWins', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'duel-streak-15',
+            title: 'Winning Streak',
+            description: 'Win 15 duels in a row',
+            icon: '🔥',
+            rarity: 'rare',
+            requirement: { type: 'duelStreak', count: 15 },
+            progress: 0
+        },
+        {
+            id: 'duel-streak-25',
+            title: 'Undefeated Champion',
+            description: 'Win 25 duels in a row',
+            icon: '🔥',
+            rarity: 'legendary',
+            requirement: { type: 'duelStreak', count: 25 },
+            progress: 0
+        },
+        
+        // Reveal Game Mode Milestones (5)
+        {
+            id: 'reveal-flags-5',
+            title: 'Reveal Novice',
+            description: 'Identify 5 flags in Reveal mode',
+            icon: '🧩',
+            rarity: 'common',
+            requirement: { type: 'revealFlagsIdentified', count: 5 },
+            progress: 0
+        },
+        {
+            id: 'reveal-flags-25',
+            title: 'Reveal Pro',
+            description: 'Identify 25 flags in Reveal mode',
+            icon: '🧩',
+            rarity: 'uncommon',
+            requirement: { type: 'revealFlagsIdentified', count: 25 },
+            progress: 0
+        },
+        {
+            id: 'reveal-flags-100',
+            title: 'Reveal Expert',
+            description: 'Identify 100 flags in Reveal mode',
+            icon: '🧩',
+            rarity: 'rare',
+            requirement: { type: 'revealFlagsIdentified', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'reveal-score-medium',
+            title: 'Point Collector',
+            description: 'Reach 200 points in Reveal mode',
+            icon: '🏆',
+            rarity: 'uncommon',
+            requirement: { type: 'revealScore', count: 200 },
+            progress: 0
+        },
+        {
+            id: 'reveal-score-high',
+            title: 'Point Hoarder',
+            description: 'Reach 500 points in Reveal mode',
+            icon: '🏆',
+            rarity: 'legendary',
+            requirement: { type: 'revealScore', count: 500 },
+            progress: 0
+        },
+        
+        // Puzzle Game Mode Milestones (5)
+        {
+            id: 'puzzle-completed-5',
+            title: 'Puzzle Beginner',
+            description: 'Complete 5 puzzles',
+            icon: '🧩',
+            rarity: 'common',
+            requirement: { type: 'puzzleCompleted', count: 5 },
+            progress: 0
+        },
+        {
+            id: 'puzzle-completed-25',
+            title: 'Puzzle Solver',
+            description: 'Complete 25 puzzles',
+            icon: '🧩',
+            rarity: 'uncommon',
+            requirement: { type: 'puzzleCompleted', count: 25 },
+            progress: 0
+        },
+        {
+            id: 'puzzle-completed-100',
+            title: 'Puzzle Master',
+            description: 'Complete 100 puzzles',
+            icon: '🧩',
+            rarity: 'epic',
+            requirement: { type: 'puzzleCompleted', count: 100 },
+            progress: 0
+        },
+        {
+            id: 'puzzle-score-medium',
+            title: 'Puzzle Scorer',
+            description: 'Reach 500 points in Puzzle mode',
+            icon: '🏆',
+            rarity: 'uncommon',
+            requirement: { type: 'puzzleScore', count: 500 },
+            progress: 0
+        },
+        {
+            id: 'puzzle-score-high',
+            title: 'Puzzle Champion',
+            description: 'Reach 1000 points in Puzzle mode',
+            icon: '🏆',
+            rarity: 'legendary',
+            requirement: { type: 'puzzleScore', count: 1000 },
+            progress: 0
+        },
+        
+        // Time-Based Milestones (5)
+        {
+            id: 'consecutive-days-3',
+            title: 'Daily Habit',
+            description: 'Play on 3 consecutive days',
+            icon: '📅',
+            rarity: 'common',
+            requirement: { type: 'consecutiveDays', count: 3 },
+            progress: 0
+        },
+        {
+            id: 'consecutive-days-7',
+            title: 'Weekly Dedication',
+            description: 'Play on 7 consecutive days',
+            icon: '📅',
+            rarity: 'uncommon',
+            requirement: { type: 'consecutiveDays', count: 7 },
+            progress: 0
+        },
+        {
+            id: 'consecutive-days-30',
+            title: 'Monthly Commitment',
+            description: 'Play on 30 consecutive days',
+            icon: '📅',
+            rarity: 'legendary',
+            requirement: { type: 'consecutiveDays', count: 30 },
+            progress: 0
+        },
+        {
+            id: 'total-playtime-1',
+            title: 'Just Warming Up',
+            description: 'Total play time: 1 hour',
+            icon: '⏱️',
+            rarity: 'common',
+            requirement: { type: 'totalPlaytime', count: 60 }, // minutes
+            progress: 0
+        },
+        {
+            id: 'total-playtime-10',
+            title: 'Dedicated Player',
+            description: 'Total play time: 10 hours',
+            icon: '⏱️',
+            rarity: 'epic',
+            requirement: { type: 'totalPlaytime', count: 600 }, // minutes
+            progress: 0
+        }
+    ],
+    
+    // Advanced achievements that are more challenging to complete (23 total)
+    advancedAchievements: [
+        // Classic Flag Game Achievements (5)
+        {
+            id: 'global-perfection',
+            title: 'Global Perfection',
+            description: 'Achieve an average ranking below 10.0 in a complete game',
+            icon: '🌍',
+            rarity: 'legendary',
+            requirement: { type: 'classicAverageRanking', count: 10, compare: 'less' },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'continental-collector',
+            title: 'Continental Collector',
+            description: 'In a single game, place flags from all 7 continents',
+            icon: '🗺️',
+            rarity: 'rare',
+            requirement: { type: 'continentsInGame', count: 7 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'lucky-number-7',
+            title: 'Lucky Number 7',
+            description: 'Get exactly 7th place ranking in any category',
+            icon: '7️⃣',
+            rarity: 'epic',
+            requirement: { type: 'exactRanking', count: 7 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'perfectly-balanced',
+            title: 'Perfectly Balanced',
+            description: 'Complete a game with all rankings between 1-50',
+            icon: '⚖️',
+            rarity: 'epic',
+            requirement: { type: 'allRankingsBelow', count: 50 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'top-of-the-world',
+            title: 'Top of the World',
+            description: 'Place a country with a #1 rank in any category',
+            icon: '🏔️',
+            rarity: 'rare',
+            requirement: { type: 'rankOne', count: 1 },
+            progress: 0,
+            completed: false
+        },
+        
+        // Flag Duel Achievements (4)
+        {
+            id: 'mind-reader',
+            title: 'Mind Reader',
+            description: 'Win 10 duels in a row without making a single mistake',
+            icon: '🧠',
+            rarity: 'epic',
+            requirement: { type: 'perfectDuelStreak', count: 10 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'david-vs-goliath',
+            title: 'David vs Goliath',
+            description: 'Win a duel where the rankings are at least 100 positions apart',
+            icon: '📏',
+            rarity: 'rare',
+            requirement: { type: 'rankingGapWin', count: 100 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'category-master',
+            title: 'Category Master',
+            description: 'Win duels in all available categories',
+            icon: '📊',
+            rarity: 'epic',
+            requirement: { type: 'allCategoriesWin', count: 8 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'century-club',
+            title: 'Century Club',
+            description: 'Achieve a score of 100+ in Flag Duel',
+            icon: '💯',
+            rarity: 'legendary',
+            requirement: { type: 'duelScore', count: 100 },
+            progress: 0,
+            completed: false
+        },
+        
+        // Flag Reveal Achievements (4)
+        {
+            id: 'eagle-eye',
+            title: 'Eagle Eye',
+            description: 'Identify a country after seeing only 3 pieces',
+            icon: '🦅',
+            rarity: 'epic',
+            requirement: { type: 'revealFewPieces', count: 3 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'flawless-reveal',
+            title: 'Flawless Reveal',
+            description: 'Identify 5 consecutive flags without using a single attempt',
+            icon: '✨',
+            rarity: 'legendary',
+            requirement: { type: 'consecutivePerfectReveals', count: 5 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'speedster',
+            title: 'Speedster',
+            description: 'Identify a country in under 3 seconds after the first piece appears',
+            icon: '⏱️',
+            rarity: 'rare',
+            requirement: { type: 'revealQuickIdentify', count: 3 }, // seconds
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'iron-will',
+            title: 'Iron Will',
+            description: 'Reach a score of 300+ without losing a single life',
+            icon: '❤️',
+            rarity: 'epic',
+            requirement: { type: 'revealScoreNoLives', count: 300 },
+            progress: 0,
+            completed: false
+        },
+        
+        // Flag Puzzle Achievements (4)
+        {
+            id: 'puzzle-wizard',
+            title: 'Puzzle Wizard',
+            description: 'Identify all flags in 5 consecutive puzzles without skipping',
+            icon: '🧙',
+            rarity: 'legendary',
+            requirement: { type: 'consecutiveNoSkipPuzzles', count: 5 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'time-master',
+            title: 'Time Master',
+            description: 'Complete a full game (2 minutes) and score 500+ points',
+            icon: '⌛',
+            rarity: 'epic',
+            requirement: { type: 'puzzleScoreFullTime', count: 500 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'speed-demon',
+            title: 'Speed Demon',
+            description: 'Identify both flags in a puzzle within 5 seconds',
+            icon: '🏎️',
+            rarity: 'rare',
+            requirement: { type: 'puzzleQuickIdentify', count: 5 }, // seconds
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'puzzle-marathon',
+            title: 'Puzzle Marathon',
+            description: 'Identify 20 flags in a single puzzle game session',
+            icon: '🏃',
+            rarity: 'epic',
+            requirement: { type: 'puzzleFlagsInSession', count: 20 },
+            progress: 0,
+            completed: false
+        },
+        
+        // Special Achievements (6)
+        {
+            id: 'around-the-world',
+            title: 'Around the World',
+            description: 'Identify all country flags at least once across any game mode',
+            icon: '🌎',
+            rarity: 'legendary',
+            requirement: { type: 'allCountriesIdentified', count: 195 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'flag-aficionado',
+            title: 'Flag Aficionado',
+            description: 'Play all game modes in a single day',
+            icon: '🎭',
+            rarity: 'epic',
+            requirement: { type: 'allGameModesInDay', count: 4 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'night-owl',
+            title: 'Night Owl',
+            description: 'Play the game after midnight',
+            icon: '🦉',
+            rarity: 'uncommon',
+            requirement: { type: 'playAfterHour', count: 0 }, // 12 AM
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'early-bird',
+            title: 'Early Bird',
+            description: 'Play the game before 6am',
+            icon: '🐦',
+            rarity: 'uncommon',
+            requirement: { type: 'playBeforeHour', count: 6 }, // 6 AM
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'gone-viral',
+            title: 'Gone Viral',
+            description: 'Share your high score on social media',
+            icon: '📱',
+            rarity: 'rare',
+            requirement: { type: 'shareScore', count: 1 },
+            progress: 0,
+            completed: false
+        },
+        {
+            id: 'treasure-hunter',
+            title: 'Treasure Hunter',
+            description: 'Discover all achievements in the game',
+            icon: '💎',
+            rarity: 'epic',
+            requirement: { type: 'achievementsUnlocked', count: 58 }, // Total number of achievements
+            progress: 0,
+            completed: false
+        }
+    ]
+};
+
+// Define player stats
+window.playerStats = {
+    gamesPlayed: 0,
+    classicGamesCompleted: 0,
+    duelWins: 0,
+    duelStreak: 0,
+    revealFlagsIdentified: 0,
+    puzzleCompleted: 0,
+    totalPlaytime: 0, // in minutes
+    consecutiveDays: 0,
+    lastPlayedDate: null,
+    identifiedCountries: [], // Array of country names
+    highScores: {
+        flagGame: 0, // Best average ranking
+        flagDuel: 0, // Highest streak
+        flagReveal: 0, // Highest score
+        flagPuzzle: 0 // Highest score
+    }
+};
+
+// Define unlockedAchievements
+window.unlockedAchievements = [];
+
+// Simple milestone element creator function
+function createMilestoneElement(milestone) {
+    const milestoneElement = document.createElement('div');
+    milestoneElement.className = 'milestone-item';
+    
+    if (milestone.completed) {
+        milestoneElement.classList.add('completed');
+    } else {
+        milestoneElement.classList.add('incomplete');
+    }
+    
+    const iconContainer = document.createElement('div');
+    iconContainer.className = `milestone-icon-container rarity-${milestone.rarity}`;
+    iconContainer.textContent = milestone.icon;
+    
+    const title = document.createElement('div');
+    title.className = 'milestone-title';
+    title.textContent = milestone.title;
+    
+    const description = document.createElement('div');
+    description.className = 'milestone-description';
+    description.textContent = milestone.description;
+    
+    const progress = document.createElement('div');
+    progress.className = 'milestone-progress';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'milestone-progress-bar';
+    
+    // Calculate progress percentage (simplified)
+    const requirement = milestone.requirement.count;
+    const currentProgress = milestone.progress || 0;
+    let percentage = Math.min((currentProgress / requirement) * 100, 100);
+    progressBar.style.width = `${percentage}%`;
+    
+    progress.appendChild(progressBar);
+    
+    milestoneElement.appendChild(iconContainer);
+    milestoneElement.appendChild(title);
+    milestoneElement.appendChild(description);
+    milestoneElement.appendChild(progress);
+    
+    // Add completed checkmark for completed milestones
+    if (milestone.completed) {
+        const completedIcon = document.createElement('div');
+        completedIcon.className = 'milestone-completed';
+        completedIcon.textContent = '✓';
+        milestoneElement.appendChild(completedIcon);
+    }
+    
+    return milestoneElement;
+}
+
+// Save milestones data
+function saveMilestonesData() {
+    console.log("Saving milestones data...");
+    
+    try {
+        localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
+        localStorage.setItem('flagGameMilestones', JSON.stringify(milestonesData));
+        localStorage.setItem('flagGameUnlockedAchievements', JSON.stringify(unlockedAchievements));
+        console.log("Data saved successfully");
+    } catch (e) {
+        console.error("Error saving milestones data:", e);
+    }
+}
+
+// Render milestones
+function renderMilestones() {
+    console.log("Rendering milestones...");
+    
+    // Check if milestonesData exists
+    if (!milestonesData) {
+        console.error("milestonesData is not defined!");
+        return;
+    }
+    
+    // Get containers
+    const basicContainer = document.getElementById('basicMilestones');
+    const advancedContainer = document.getElementById('advancedAchievements');
+    
+    if (!basicContainer || !advancedContainer) {
+        console.error("Milestone containers not found!");
+        return;
+    }
+    
+    // Clear containers
+    basicContainer.innerHTML = '';
+    advancedContainer.innerHTML = '';
+    
+    console.log("Rendering basic milestones:", milestonesData.basicMilestones.length);
+    
+    // Render basic milestones
+    milestonesData.basicMilestones.forEach(milestone => {
+        basicContainer.appendChild(createMilestoneElement(milestone));
+    });
+    
+    console.log("Rendering advanced achievements:", milestonesData.advancedAchievements.length);
+    
+    // Render advanced achievements
+    milestonesData.advancedAchievements.forEach(achievement => {
+        advancedContainer.appendChild(createMilestoneElement(achievement));
+    });
+    
+    console.log("Milestones rendered successfully");
+}
+
+// Update high score display
+function updateHighScoreDisplay() {
+    console.log("Updating high score display...");
+    
+    // Get high scores from localStorage
+    const flagGameHS = localStorage.getItem('flagGameHighScore');
+    const flagDuelHS = localStorage.getItem('flagDuelHighScore');  
+    const flagRevealHS = localStorage.getItem('flagRevealHighScore');
+    const flagPuzzleHS = localStorage.getItem('flagPuzzleHighScore');
+    
+    // Update playerStats with localStorage values
+    if (flagGameHS) playerStats.highScores.flagGame = parseFloat(flagGameHS);
+    if (flagDuelHS) playerStats.highScores.flagDuel = parseInt(flagDuelHS);
+    if (flagRevealHS) playerStats.highScores.flagReveal = parseInt(flagRevealHS);
+    if (flagPuzzleHS) playerStats.highScores.flagPuzzle = parseInt(flagPuzzleHS);
+    
+    // Update display
+    if (document.getElementById('flagGameHighScore')) {
+        document.getElementById('flagGameHighScore').textContent = 
+            playerStats.highScores.flagGame ? playerStats.highScores.flagGame.toFixed(2) : "0.00";
+    }
+    
+    if (document.getElementById('flagDuelHighScore')) {
+        document.getElementById('flagDuelHighScore').textContent = 
+            playerStats.highScores.flagDuel || "0";
+    }
+    
+    if (document.getElementById('flagRevealHighScore')) {
+        document.getElementById('flagRevealHighScore').textContent = 
+            playerStats.highScores.flagReveal || "0";
+    }
+    
+    if (document.getElementById('flagPuzzleHighScore')) {
+        document.getElementById('flagPuzzleHighScore').textContent = 
+            playerStats.highScores.flagPuzzle || "0";
+    }
+    
+    console.log("High score display updated");
+}
+
+// Function to open the Milestones tab
+function openMilestonesTab() {
+    console.log("Opening milestones tab...");
+    
+    // Hide all game containers
+    document.querySelectorAll('.game-container').forEach(container => {
+        container.classList.remove('active');
+        container.style.display = 'none';
+    });
+    
+    // Show milestones container
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    if (!milestonesContainer) {
+        console.error("Milestones container not found!");
+        return;
+    }
+    
+    milestonesContainer.style.display = 'block';
+    
+    // Add a short delay before adding the active class for animation
+    setTimeout(() => {
+        milestonesContainer.classList.add('active');
+    }, 50);
+    
+    // Update display
+    console.log("Calling renderMilestones()...");
+    renderMilestones();
+    
+    console.log("Calling updateHighScoreDisplay()...");
+    updateHighScoreDisplay();
+    
+    console.log("Milestones tab opened successfully");
+}
+
+// Initialize the milestones tab when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, setting up milestones tab click handler");
+    
+    const milestonesTab = document.getElementById('milestonesTab');
+    
+    if (milestonesTab) {
+        console.log("Milestones tab found, attaching click event");
+        
+        milestonesTab.addEventListener('click', function() {
+            console.log("Milestones tab clicked");
+            openMilestonesTab();
+        });
+    } else {
+        console.error("Milestones tab element not found!");
+    }
+});
+
+// Hook into existing game functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for page to fully load
+    setTimeout(() => {
+        // Hook into classic game completion
+        const originalResetGame = window.resetGame;
+        if (originalResetGame) {
+            window.resetGame = function() {
+                console.log("Reset game called, checking for completion...");
+                
+                // Check if this was a completed game
+                if (selectedBoxes && selectedBoxes.size === 8) {
+                    console.log("Game completed, updating stats");
+                    
+                    // Update stats
+                    updateStat('gamesPlayed', 1);
+                    updateStat('classicGamesCompleted', 1);
+                    
+                    // Check average ranking
+                    const averageRankingElement = document.getElementById('averageRankingText');
+                    if (averageRankingElement) {
+                        const text = averageRankingElement.textContent;
+                        if (text) {
+                            const match = text.match(/Average\s+Ranking:\s+(\d+\.\d+)/i);
+                            if (match && match[1]) {
+                                const averageRanking = parseFloat(match[1]);
+                                
+                                console.log("Average ranking:", averageRanking);
+                                
+                                // Update high score
+                                if (playerStats.highScores.flagGame === 0 || averageRanking < playerStats.highScores.flagGame) {
+                                    playerStats.highScores.flagGame = averageRanking;
+                                    saveMilestonesData();
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Call original function
+                originalResetGame();
+            };
+            
+            console.log("Successfully hooked into resetGame function");
+        } else {
+            console.warn("resetGame function not found");
+        }
+    }, 2000);
+});
+
+// Add this JavaScript code to attach the click handler
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const checkButton = document.getElementById('checkMilestonesButton');
+        if (checkButton) {
+            checkButton.addEventListener('click', function() {
+                console.log("Manual milestone check requested");
+                checkAllMilestones();
+            });
+        }
+    }, 1000);
+});
