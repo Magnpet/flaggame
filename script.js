@@ -5391,6 +5391,7 @@ function openMilestonesTab() {
     document.querySelectorAll('.game-container').forEach(container => {
         container.classList.remove('active');
         container.style.display = 'none';
+        container.style.opacity = '0'; // Ensure opacity is reset
     });
     
     // Show milestones container
@@ -5400,10 +5401,14 @@ function openMilestonesTab() {
         return;
     }
     
+    // Make sure it's fully visible
     milestonesContainer.style.display = 'block';
+    milestonesContainer.style.visibility = 'visible'; // Add explicit visibility
+    milestonesContainer.style.position = 'relative'; // Normal position in document flow
     
     // Add a short delay before adding the active class for animation
     setTimeout(() => {
+        milestonesContainer.style.opacity = '1';
         milestonesContainer.classList.add('active');
     }, 50);
     
@@ -6910,3 +6915,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000);
 });
+
+// Add this specific listener to handle dropdown clicks
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        // Add event listeners to dropdown items
+        const gameModeBtns = document.querySelectorAll('.dropdown-item');
+        if (gameModeBtns.length > 0) {
+            gameModeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // When switching to any other mode, ensure milestones is completely hidden
+                    const milestonesContainer = document.getElementById('milestonesContainer');
+                    if (milestonesContainer) {
+                        milestonesContainer.style.display = 'none';
+                        milestonesContainer.style.opacity = '0';
+                        milestonesContainer.classList.remove('active');
+                        // Add these to absolutely ensure it's hidden
+                        milestonesContainer.style.visibility = 'hidden';
+                        milestonesContainer.style.position = 'absolute';
+                        milestonesContainer.style.zIndex = '-1';
+                    }
+                });
+            });
+            console.log("Added milestones hiding to game mode buttons");
+        } else {
+            console.warn("No game mode buttons found");
+        }
+    }, 1000);
+});
+
