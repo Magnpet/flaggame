@@ -12,20 +12,22 @@
 </head>
 
 <body>
-    <header>
-        <div class="tab" id="aboutTab">About</div>
-        <h1>Flag Games</h1>
-        <div class="tab" id="changeModeTab">
-            Change Gamemode
-            <div class="dropdown-content" id="gameModeDropdown">
-                <div class="dropdown-item selected" data-mode="classic">Flag Game</div>
-                <div class="dropdown-item" data-mode="duel">Flag Duel</div>
-                <div class="dropdown-item" data-mode="reveal">Flag Reveal</div>
-                <div class="dropdown-item" data-mode="puzzle">Flag Puzzle Guesser</div>
-            </div>
+<!-- Updated header section in index.html -->
+<header>
+    <div class="tab" id="aboutTab">About</div>
+    <div class="tab" id="milestonesTab"><i class="milestone-icon">🏆</i> Milestones</div>
+    <h1>Flag Games</h1>
+    <div class="tab" id="changeModeTab">
+        Change Gamemode
+        <div class="dropdown-content" id="gameModeDropdown">
+            <div class="dropdown-item selected" data-mode="classic">Flag Game</div>
+            <div class="dropdown-item" data-mode="duel">Flag Duel</div>
+            <div class="dropdown-item" data-mode="reveal">Flag Reveal</div>
+            <div class="dropdown-item" data-mode="puzzle">Flag Puzzle Guesser</div>
         </div>
-        <div class="tab" id="settingsTab">Settings ⚙</div>
-    </header>
+    </div>
+    <div class="tab" id="settingsTab">Settings ⚙</div>
+</header>
     
     <div class="main-wrapper">
         <div class="container game-container">
@@ -246,9 +248,76 @@
                 </div>
             </div>
         </div>
+        <div id="milestonesContainer" class="game-container" style="display: none;">
+            <div class="milestones-content">
+                <h2>Milestones</h2>
+                
+                <!-- High Score Overview -->
+                <div class="high-score-overview">
+                    <div class="score-row">
+                        <div class="game-score">
+                            <h3>Flag Game</h3>
+                            <span id="flagGameHighScore">0.00</span>
+                        </div>
+                        <div class="game-score">
+                            <h3>Flag Duel</h3>
+                            <span id="flagDuelHighScore">0</span>
+                        </div>
+                    </div>
+                    <div class="score-row">
+                        <div class="game-score">
+                            <h3>Flag Reveal</h3>
+                            <span id="flagRevealHighScore">0</span>
+                        </div>
+                        <div class="game-score">
+                            <h3>Flag Puzzle</h3>
+                            <span id="flagPuzzleHighScore">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="debug-controls" style="text-align: center; margin-bottom: 20px;">
+                    <button id="checkMilestonesButton" style="padding: 8px 16px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">
+                        Check Milestones
+                    </button>
+                </div>
+                
+                <!-- Milestones Navigation -->
+                <div class="milestones-nav">
+                    <button class="milestone-nav-btn active" data-type="all">All</button>
+                    <button class="milestone-nav-btn" data-type="completed">Completed</button>
+                    <button class="milestone-nav-btn" data-type="in-progress">In Progress</button>
+                </div>
+                
+                <!-- Basic Milestones Section -->
+                <div class="milestones-section">
+                    <h3 class="section-title">Basic Milestones</h3>
+                    <div class="milestones-grid" id="basicMilestones">
+                        <!-- Milestone items will be added by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Advanced Achievements Section -->
+                <div class="milestones-section">
+                    <h3 class="section-title">Advanced Achievements</h3>
+                    <div class="milestones-grid" id="advancedAchievements">
+                        <!-- Achievement items will be added by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Template for achievement notification -->
+        <div id="achievementNotification" class="achievement-notification" style="display: none;">
+            <div class="notification-content">
+                <div class="notification-icon" id="notificationIcon">🏆</div>
+                <div class="notification-text">
+                    <h3>Achievement Unlocked!</h3>
+                    <p id="achievementName">Achievement Name</p>
+                </div>
+            </div>
+        </div>
     <script src="script.js"></script>
 </body>
 
 </html>
-
 
