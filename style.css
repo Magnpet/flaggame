@@ -223,10 +223,15 @@ body.dark-mode .duel-high-score,
 body.dark-mode .reveal-progress, 
 body.dark-mode .reveal-score, 
 body.dark-mode .reveal-high-score,
+body.dark-mode .reveal-lives,
 body.dark-mode .puzzle-timer, 
 body.dark-mode .puzzle-score, 
 body.dark-mode .puzzle-high-score {
     color: var(--score-text);
+}
+
+body.dark-mode .reveal-timer {
+    color: #ff6666 !important; /* Lighter red for dark mode timer */
 }
 
 body.dark-mode .instructions h3,
@@ -829,7 +834,7 @@ button:disabled {
     flex-wrap: wrap;
 }
 
-.reveal-progress, .reveal-score, .reveal-high-score, .reveal-lives {
+.reveal-progress, .reveal-score, .reveal-high-score, .reveal-lives, .reveal-timer {
     font-family: var(--heading-font);
     font-size: 16px;
     font-weight: 600;
@@ -838,6 +843,10 @@ button:disabled {
     padding: 5px 10px;
     background-color: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
+}
+
+.reveal-timer {
+    color: #d9534f; /* Red for timer */
 }
 
 .reveal-input-container {
@@ -1579,6 +1588,7 @@ input:checked + .slider:before {
 .milestone-icon {
     font-size: 16px;
     margin-right: 5px;
+    font-style: normal;
 }
 
 /* Main milestones container */
@@ -1817,7 +1827,6 @@ input:checked + .slider:before {
 /* Achievement notification popup */
 .achievement-notification {
     position: fixed;
-    bottom: 30px;
     right: 30px;
     background-color: white;
     border-radius: 8px;
@@ -1826,7 +1835,10 @@ input:checked + .slider:before {
     z-index: 1000;
     transform: translateY(100px);
     opacity: 0;
-    transition: transform 0.5s ease, opacity 0.5s ease;
+    transition: transform 0.5s ease, opacity 0.5s ease, bottom 0.3s ease;
+    min-height: 80px;
+    width: 300px;
+    box-sizing: border-box;
 }
 
 .achievement-notification.show {

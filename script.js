@@ -1,59 +1,67 @@
 
+// Global ranking data objects - will be loaded from external JSON files
+let hdiRankings = {};
+let olympicRankings = {};
+let populationRankings = {};
+let landAreaRankings = {};
+let lifeExpectancyRankings = {};
+let averageTemperatureRankings = {};
+let highestElevationRankings = {};
+let gdpPerCapitaRankings = {};
+
+// Game initialization flag
+let gameDataLoaded = false;
+
+// Load all ranking data from external JSON files
+async function loadGameData() {
+    try {
+        console.log('Loading ranking data from external files...');
+        
+        const rankingTypes = [
+            'hdi', 'olympic', 'population', 'land-area', 
+            'life-expectancy', 'average-temperature', 
+            'highest-elevation', 'gdp-per-capita'
+        ];
+        
+        const rankings = await dataLoader.loadAllRankings(rankingTypes);
+        
+        // Assign to global variables
+        hdiRankings = rankings.hdiRankings || {};
+        olympicRankings = rankings.olympicRankings || {};
+        populationRankings = rankings.populationRankings || {};
+        landAreaRankings = rankings.landAreaRankings || {};
+        lifeExpectancyRankings = rankings.lifeExpectancyRankings || {};
+        averageTemperatureRankings = rankings.averageTemperatureRankings || {};
+        highestElevationRankings = rankings.highestElevationRankings || {};
+        gdpPerCapitaRankings = rankings.gdpPerCapitaRankings || {};
+        
+        gameDataLoaded = true;
+        console.log('All ranking data loaded successfully');
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Failed to load game data:', error);
+        gameDataLoaded = false;
+        return false;
+    }
+}
+
+// Show error message if data loading fails
+function showDataLoadError() {
+    const errorDiv = document.createElement('div');
+    errorDiv.innerHTML = `
+        <div style="text-align: center; padding: 20px; background: #ffe6e6; border: 1px solid #ff9999; margin: 20px; border-radius: 5px;">
+            <h3>⚠️ Data Loading Error</h3>
+            <p>Unable to load game data. Please check your internet connection and refresh the page.</p>
+            <p><small>The game may not function correctly without this data.</small></p>
+        </div>
+    `;
+    document.body.insertBefore(errorDiv, document.body.firstChild);
+}
+
 // Add this to the top of your script.js file or in a separate troubleshooting section
 
-// Debug click handler for milestones tab
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up milestones tab click handler');
-    
-    const milestonesTab = document.getElementById('milestonesTab');
-    
-    if (milestonesTab) {
-        console.log('Milestones tab found, attaching click event');
-        
-        milestonesTab.addEventListener('click', function(event) {
-            console.log('Milestones tab clicked');
-            openMilestonesTab();
-        });
-    } else {
-        console.error('Milestones tab element not found!');
-    }
-    
-    // Define openMilestonesTab function if it doesn't exist yet
-    if (typeof openMilestonesTab !== 'function') {
-        window.openMilestonesTab = function() {
-            console.log('Opening milestones tab');
-            
-            // Hide all game containers
-            document.querySelectorAll('.game-container').forEach(container => {
-                container.classList.remove('active');
-                container.style.display = 'none';
-            });
-            
-            // Show milestones container
-            const milestonesContainer = document.getElementById('milestonesContainer');
-            if (milestonesContainer) {
-                milestonesContainer.style.display = 'block';
-                
-                // Add a short delay before adding the active class for animation
-                setTimeout(() => {
-                    milestonesContainer.classList.add('active');
-                }, 50);
-                
-                console.log('Milestones container displayed');
-                
-                // Update display
-                if (typeof renderMilestones === 'function') {
-                    renderMilestones();
-                }
-                if (typeof updateHighScoreDisplay === 'function') {
-                    updateHighScoreDisplay();
-                }
-            } else {
-                console.error('Milestones container not found!');
-            }
-        };
-    }
-});
 
 
 // Define the category pairs (highest/lowest for each category type)
@@ -150,2033 +158,6 @@ const categoryPairs = [
 
 // Global variable to store the current game's categories
 let currentGameCategories = [];
-
-const hdiRankings = {
-    "Switzerland": "1st",
-    "Norway": "2nd",
-    "Iceland": "3rd",
-    "Denmark": "4th",
-    "Sweden": "4th",
-    "Ireland": "6th",
-    "Germany": "6th",
-    "Singapore": "8th",
-    "Netherlands": "9th",
-    "Australia": "9th",
-    "Liechtenstein": "11th",
-    "Belgium": "11th",
-    "Finland": "11th",
-    "Monaco": "11th",
-    "United Kingdom": "14th",
-    "New Zealand": "15th",
-    "United Arab Emirates": "16th",
-    "Canada": "17th",
-    "South Korea": "18th",
-    "Luxembourg": "19th",
-    "United States": "19th",
-    "Slovenia": "21st",
-    "Austria": "21st",
-    "Japan": "23rd",
-    "Israel": "24th",
-    "Malta": "24th",
-    "Spain": "26th",
-    "France": "27th",
-    "Cyprus": "28th",
-    "Italy": "29th",
-    "Estonia": "30th",
-    "Czech Republic": "31st",
-    "Greece": "32nd",
-    "Bahrain": "33rd",
-    "Andorra": "34th",
-    "Poland": "35th",
-    "Latvia": "36th",
-    "Lithuania": "36th",
-    "Croatia": "38th",
-    "Qatar": "39th",
-    "Saudi Arabia": "39th",
-    "Portugal": "41st",
-    "San Marino": "42nd",
-    "Chile": "43rd",
-    "Turkey": "44th",
-    "Slovakia": "44th",
-    "Hungary": "46th",
-    "Argentina": "47th",
-    "Kuwait": "48th",
-    "Montenegro": "49th",
-    "Saint Kitts and Nevis": "50th",
-    "Uruguay": "51st",
-    "Romania": "52nd",
-    "Antigua and Barbuda": "53rd",
-    "Brunei": "54th",
-    "Russia": "55th",
-    "Bahamas": "56th",
-    "Panama": "56th",
-    "Oman": "58th",
-    "Trinidad and Tobago": "59th",
-    "Georgia": "59th",
-    "Barbados": "61st",
-    "Malaysia": "62nd",
-    "Costa Rica": "63rd",
-    "Serbia": "64th",
-    "Thailand": "65th",
-    "Seychelles": "66th",
-    "Kazakhstan": "66th",
-    "Belarus": "68th",
-    "Bulgaria": "69th",
-    "Palau": "70th",
-    "Mauritius": "71st",
-    "Grenada": "72nd",
-    "Albania": "73rd",
-    "China": "74th",
-    "Armenia": "75th",
-    "Mexico": "76th",
-    "Iran": "77th",
-    "Sri Lanka": "77th",
-    "Bosnia and Herzegovina": "79th",
-    "Saint Vincent and the Grenadines": "80th",
-    "Dominican Republic": "81st",
-    "Ecuador": "82nd",
-    "North Macedonia": "82nd",
-    "Cuba": "84th",
-    "Moldova": "85th",
-    "Maldives": "86th",
-    "Peru": "86th",
-    "Azerbaijan": "88th",
-    "Brazil": "88th",
-    "Colombia": "90th",
-    "Libya": "91st",
-    "Algeria": "92nd",
-    "Turkmenistan": "93rd",
-    "Guyana": "94th",
-    "Mongolia": "95th",
-    "Dominica": "96th",
-    "Tonga": "97th",
-    "Jordan": "98th",
-    "Ukraine": "99th",
-    "Tunisia": "100th",
-    "Marshall Islands": "101st",
-    "Paraguay": "101st",
-    "Fiji": "103rd",
-    "Egypt": "104th",
-    "Uzbekistan": "105th",
-    "Vietnam": "106th",
-    "Saint Lucia": "107th",
-    "Lebanon": "108th",
-    "South Africa": "109th",
-    "Indonesia": "110th",
-    "Philippines": "111th",
-    "Botswana": "112th",
-    "Jamaica": "113th",
-    "Samoa": "114th",
-    "Kyrgyzstan": "115th",
-    "Belize": "116th",
-    "Venezuela": "117th",
-    "Morocco": "118th",
-    "Bolivia": "118th",
-    "Nauru": "120th",
-    "Gabon": "121st",
-    "Suriname": "122nd",
-    "Bhutan": "123rd",
-    "Tajikistan": "124th",
-    "El Salvador": "125th",
-    "Iraq": "126th",
-    "Bangladesh": "127th",
-    "Nicaragua": "128th",
-    "Cape Verde": "129th",
-    "Tuvalu": "130th",
-    "Equatorial Guinea": "131st",
-    "India": "132nd",
-    "Micronesia": "133rd",
-    "Guatemala": "134th",
-    "Kiribati": "135th",
-    "Honduras": "136th",
-    "Laos": "137th",
-    "Vanuatu": "138th",
-    "Sao Tome and Principe": "139th",
-    "Eswatini": "140th",
-    "Namibia": "140th",
-    "Myanmar": "142nd",
-    "Ghana": "143rd",
-    "Nepal": "144th",
-    "Kenya": "144th",
-    "Cambodia": "146th",
-    "Republic of the Congo": "147th",
-    "Angola": "148th",
-    "Cameroon": "149th",
-    "Comoros": "150th",
-    "Zambia": "151st",
-    "Papua New Guinea": "152nd",
-    "Timor-Leste": "153rd",
-    "Solomon Islands": "154th",
-    "Syria": "155th",
-    "Haiti": "156th",
-    "Uganda": "157th",
-    "Zimbabwe": "157th",
-    "Rwanda": "159th",
-    "Nigeria": "159th",
-    "Togo": "161st",
-    "Pakistan": "162nd",
-    "Mauritania": "162nd",
-    "Ivory Coast": "164th",
-    "Tanzania": "165th",
-    "Lesotho": "166th",
-    "Senegal": "167th",
-    "Sudan": "168th",
-    "Djibouti": "169th",
-    "Malawi": "170th",
-    "Benin": "171st",
-    "Gambia": "172nd",
-    "Eritrea": "173rd",
-    "Ethiopia": "174th",
-    "Liberia": "175th",
-    "Madagascar": "175th",
-    "Guinea-Bissau": "177th",
-    "Democratic Republic of the Congo": "178th",
-    "Guinea": "179th",
-    "Afghanistan": "180th",
-    "Mozambique": "181st",
-    "Sierra Leone": "182nd",
-    "Burkina Faso": "183rd",
-    "Yemen": "184th",
-    "Burundi": "185th",
-    "Mali": "186th",
-    "Niger": "187th",
-    "Chad": "187th",
-    "Central African Republic": "189th",
-    "South Sudan": "190th",
-    "Somalia": "191st"
-};
-
-const militaryRankings = {
-    "United States": "1st",
-    "Russia": "2nd",
-    "China": "3rd",
-    "India": "4th",
-    "South Korea": "5th",
-    "United Kingdom": "6th",
-    "Japan": "7th",
-    "Turkey": "8th",
-    "Pakistan": "9th",
-    "Italy": "10th",
-    "France": "11th",
-    "Brazil": "12th",
-    "Indonesia": "13th",
-    "Iran": "14th",
-    "Egypt": "15th",
-    "Australia": "16th",
-    "Israel": "17th",
-    "Ukraine": "18th",
-    "Germany": "19th",
-    "Spain": "20th",
-    "Poland": "21st",
-    "Vietnam": "22nd",
-    "Saudi Arabia": "23rd",
-    "Taiwan": "24th",
-    "Thailand": "25th",
-    "Algeria": "26th",
-    "Canada": "27th",
-    "Argentina": "28th",
-    "Sweden": "29th",
-    "Singapore": "30th",
-    "Mexico": "31st",
-    "Greece": "32nd",
-    "South Africa": "33rd",
-    "Philippines": "34th",
-    "Myanmar": "35th",
-    "North Korea": "36th",
-    "Bangladesh": "37th",
-    "Portugal": "38th",
-    "Nigeria": "39th",
-    "Netherlands": "40th",
-    "Norway": "41st",
-    "Malaysia": "42nd",
-    "Switzerland": "43rd",
-    "Colombia": "44th",
-    "Iraq": "45th",
-    "Czech Republic": "46th",
-    "Romania": "47th",
-    "Denmark": "48th",
-    "Ethiopia": "49th",
-    "Finland": "50th",
-    "United Arab Emirates": "51st",
-    "Chile": "52nd",
-    "Peru": "53rd",
-    "Hungary": "54th",
-    "Angola": "55th",
-    "Serbia": "56th",
-    "Venezuela": "57th",
-    "Kazakhstan": "58th",
-    "Azerbaijan": "59th",
-    "Syria": "60th",
-    "Morocco": "61st",
-    "Bulgaria": "62nd",
-    "Qatar": "63rd",
-    "Belarus": "64th",
-    "Uzbekistan": "65th",
-    "Croatia": "66th",
-    "New Zealand": "67th",
-    "Cuba": "68th",
-    "Slovakia": "69th",
-    "Belgium": "70th",
-    "Austria": "71st",
-    "Ecuador": "72nd",
-    "Democratic Republic of the Congo": "73rd",
-    "Tunisia": "74th",
-    "Sri Lanka": "75th",
-    "Sudan": "76th",
-    "Kuwait": "77th",
-    "Oman": "78th",
-    "Libya": "79th",
-    "Jordan": "80th",
-    "Yemen": "81st",
-    "Bolivia": "82nd",
-    "Turkmenistan": "83rd",
-    "Georgia": "84th",
-    "Paraguay": "85th",
-    "Bahrain": "86th",
-    "Estonia": "87th",
-    "Lithuania": "88th",
-    "Kenya": "89th",
-    "Albania": "90th",
-    "Slovenia": "91st",
-    "Mozambique": "92nd",
-    "Chad": "93rd",
-    "Ireland": "94th",
-    "Honduras": "95th",
-    "Uruguay": "96th",
-    "Zambia": "97th",
-    "Ivory Coast": "98th",
-    "Latvia": "99th",
-    "Kyrgyzstan": "100th",
-    "Zimbabwe": "101st",
-    "Armenia": "102nd",
-    "Tanzania": "103rd",
-    "Cameroon": "104th",
-    "Mongolia": "105th",
-    "Mali": "106th",
-    "Tajikistan": "107th",
-    "Guatemala": "108th",
-    "Luxembourg": "109th",
-    "North Macedonia": "110th",
-    "Cambodia": "111th",
-    "Laos": "112th",
-    "Ghana": "113th",
-    "Uganda": "114th",
-    "Afghanistan": "115th",
-    "Bosnia and Herzegovina": "116th",
-    "Eritrea": "117th",
-    "Lebanon": "118th",
-    "South Sudan": "119th",
-    "Nicaragua": "120th",
-    "Niger": "121st",
-    "Republic of the Congo": "122nd",
-    "Dominican Republic": "123rd",
-    "Namibia": "124th",
-    "El Salvador": "125th",
-    "Botswana": "126th",
-    "Burkina Faso": "127th",
-    "Nepal": "128th",
-    "Montenegro": "129th",
-    "Senegal": "130th",
-    "Mauritania": "131st",
-    "Gabon": "132nd",
-    "Madagascar": "133rd",
-    "Panama": "134th",
-    "Kosovo": "135th",
-    "Iceland": "136th",
-    "Central African Republic": "137th",
-    "Sierra Leone": "138th",
-    "Belize": "139th",
-    "Liberia": "140th",
-    "Benin": "141st",
-    "Somalia": "142nd",
-    "Suriname": "143rd",
-    "Moldova": "144th",
-    "Bhutan": "145th"
-};
-
-const olympicRankings = {
-    "United States": "1st",
-    "Russia": "2nd",
-    "Germany": "3rd",
-    "United Kingdom": "4th",
-    "China": "5th",
-    "France": "6th",
-    "Italy": "7th",
-    "Sweden": "8th",
-    "Norway": "9th",
-    "Japan": "10th",
-    "Hungary": "11th",
-    "Australia": "12th",
-    "Canada": "13th",
-    "Netherlands": "14th",
-    "Finland": "15th",
-    "South Korea": "16th",
-    "Switzerland": "17th",
-    "Austria": "18th",
-    "Romania": "19th",
-    "Cuba": "20th",
-    "Poland": "21st",
-    "Bulgaria": "22nd",
-    "New Zealand": "23rd",
-    "Spain": "24th",
-    "Denmark": "25th",
-    "Belgium": "26th",
-    "Turkey": "27th",
-    "Ukraine": "28th",
-    "Brazil": "29th",
-    "Greece": "30th",
-    "Kenya": "31st",
-    "Czech Republic": "32nd",
-    "South Africa": "33rd",
-    "Jamaica": "34th",
-    "Iran": "35th",
-    "Ethiopia": "36th",
-    "Belarus": "37th",
-    "Argentina": "38th",
-    "Croatia": "39th",
-    "North Korea": "40th",
-    "Kazakhstan": "41st",
-    "Slovakia": "42nd",
-    "Estonia": "43rd",
-    "Mexico": "44th",
-    "Slovenia": "45th",
-    "Ireland": "46th",
-    "Uzbekistan": "47th",
-    "Georgia": "48th",
-    "India": "49th",
-    "Thailand": "50th",
-    "Indonesia": "51st",
-    "Egypt": "52nd",
-    "Bahamas": "53rd",
-    "Azerbaijan": "54th",
-    "Morocco": "55th",
-    "Lithuania": "56th",
-    "Serbia": "57th",
-    "Latvia": "58th",
-    "Colombia": "59th",
-    "Portugal": "60th",
-    "Algeria": "61st",
-    "Tunisia": "62nd",
-    "Uganda": "63rd",
-    "Nigeria": "64th",
-    "Venezuela": "65th",
-    "Trinidad and Tobago": "66th",
-    "Dominican Republic": "67th",
-    "Zimbabwe": "68th",
-    "Pakistan": "69th",
-    "Ecuador": "70th",
-    "Israel": "71st",
-    "Cameroon": "72nd",
-    "Kosovo": "73rd",
-    "Mongolia": "74th",
-    "Armenia": "75th",
-    "Chile": "76th",
-    "Hong Kong": "77th",
-    "Luxembourg": "78th",
-    "Liechtenstein": "79th",
-    "Puerto Rico": "79th",
-    "Uruguay": "79th",
-    "Qatar": "82nd",
-    "Bahrain": "83rd",
-    "Fiji": "84th",
-    "Philippines": "85th",
-    "Vietnam": "86th",
-    "Peru": "87th",
-    "Singapore": "88th",
-    "Costa Rica": "89th",
-    "Ivory Coast": "89th",
-    "Syria": "89th",
-    "Tajikistan": "89th",
-    "Grenada": "93rd",
-    "Jordan": "93rd",
-    "Burundi": "95th",
-    "Panama": "96th",
-    "Bermuda": "97th",
-    "Mozambique": "97th",
-    "Suriname": "97th",
-    "United Arab Emirates": "97th",
-    "Malaysia": "101st",
-    "Namibia": "102nd",
-    "Kyrgyzstan": "103rd",
-    "Moldova": "104th",
-    "Iceland": "105th",
-    "Lebanon": "105th",
-    "Saudi Arabia": "105th",
-    "Sri Lanka": "108th",
-    "Tanzania": "108th",
-    "Ghana": "110th",
-    "Bohemia": "111th",
-    "San Marino": "112th",
-    "Botswana": "113th",
-    "Haiti": "113th",
-    "Niger": "113th",
-    "North Macedonia": "113th",
-    "Zambia": "113th",
-    "Cyprus": "118th",
-    "Gabon": "118th",
-    "Guatemala": "118th",
-    "Montenegro": "118th",
-    "Netherlands Antilles": "118th",
-    "Paraguay": "118th",
-    "Samoa": "118th",
-    "Senegal": "118th",
-    "Sudan": "118th",
-    "Tonga": "118th",
-    "Turkmenistan": "118th",
-    "Virgin Islands": "118th",
-    "Kuwait": "130th",
-    "Afghanistan": "131st",
-    "British West Indies": "131st",
-    "Barbados": "133rd",
-    "Burkina Faso": "133rd",
-    "Djibouti": "133rd",
-    "Eritrea": "133rd",
-    "Guyana": "133rd",
-    "Iraq": "133rd",
-    "Mauritius": "133rd",
-    "Togo": "133rd"
-};
-
-const landAreaRankings = {
-    "Russia": "1st",
-    "Canada": "2nd",
-    "China": "3rd",
-    "United States": "4th",
-    "Brazil": "5th",
-    "Australia": "6th",
-    "India": "7th",
-    "Argentina": "8th",
-    "Kazakhstan": "9th",
-    "Algeria": "10th",
-    "Democratic Republic of the Congo": "11th",
-    "Denmark": "12th",
-    "Saudi Arabia": "13th",
-    "Mexico": "14th",
-    "Indonesia": "15th",
-    "Sudan": "16th",
-    "Libya": "17th",
-    "Iran": "18th",
-    "Mongolia": "19th",
-    "Peru": "20th",
-    "Chad": "21st",
-    "Niger": "21st",
-    "Angola": "22nd",
-    "Mali": "23rd",
-    "South Africa": "24th",
-    "Colombia": "25th",
-    "Ethiopia": "26th",
-    "Bolivia": "27th",
-    "Mauritania": "28th",
-    "Egypt": "29th",
-    "Tanzania": "30th",
-    "Nigeria": "31st",
-    "Venezuela": "32nd",
-    "Pakistan": "33rd",
-    "Namibia": "34th",
-    "Mozambique": "35th",
-    "Turkey": "36th",
-    "Chile": "37th",
-    "Zambia": "38th",
-    "Myanmar": "39th",
-    "Afghanistan": "40th",
-    "South Sudan": "41st",
-    "France": "42nd",
-    "Somalia": "43rd",
-    "Central African Republic": "44th",
-    "Ukraine": "45th",
-    "Madagascar": "46th",
-    "Botswana": "47th",
-    "Kenya": "48th",
-    "Thailand": "49th",
-    "Spain": "50th",
-    "Turkmenistan": "51st",
-    "Cameroon": "52nd",
-    "Papua New Guinea": "53rd",
-    "Yemen": "54th",
-    "Sweden": "55th",
-    "Uzbekistan": "56th",
-    "Morocco": "57th",
-    "Iraq": "58th",
-    "Paraguay": "59th",
-    "Zimbabwe": "60th",
-    "Norway": "61st",
-    "Japan": "62nd",
-    "Germany": "63rd",
-    "Republic of the Congo": "64th",
-    "Finland": "65th",
-    "Vietnam": "66th",
-    "Malaysia": "67th",
-    "Ivory Coast": "68th",
-    "Poland": "69th",
-    "Oman": "70th",
-    "Italy": "71st",
-    "Philippines": "72nd",
-    "Ecuador": "73rd",
-    "Burkina Faso": "74th",
-    "New Zealand": "75th",
-    "Gabon": "76th",
-    "Guinea": "77th",
-    "United Kingdom": "78th",
-    "Uganda": "79th",
-    "Ghana": "80th",
-    "Romania": "81st",
-    "Laos": "82nd",
-    "Guyana": "83rd",
-    "Belarus": "84th",
-    "Kyrgyzstan": "85th",
-    "Senegal": "86th",
-    "Syria": "87th",
-    "Cambodia": "88th",
-    "Uruguay": "89th",
-    "Suriname": "90th",
-    "Tunisia": "91st",
-    "Bangladesh": "92nd",
-    "Nepal": "93rd",
-    "Tajikistan": "94th",
-    "Greece": "95th",
-    "Nicaragua": "96th",
-    "North Korea": "97th",
-    "Malawi": "98th",
-    "Eritrea": "99th",
-    "Benin": "100th",
-    "Honduras": "101st",
-    "Liberia": "102nd",
-    "Bulgaria": "103rd",
-    "Cuba": "104th",
-    "Guatemala": "105th",
-    "Iceland": "106th",
-    "South Korea": "107th",
-    "Hungary": "108th",
-    "Portugal": "109th",
-    "Jordan": "110th",
-    "Serbia": "111th",
-    "Azerbaijan": "112th",
-    "Austria": "113th",
-    "United Arab Emirates": "114th",
-    "Czech Republic": "115th",
-    "Panama": "116th",
-    "Sierra Leone": "117th",
-    "Ireland": "118th",
-    "Georgia": "119th",
-    "Sri Lanka": "120th",
-    "Lithuania": "121st",
-    "Latvia": "122nd",
-    "Togo": "123rd",
-    "Croatia": "124th",
-    "Bosnia and Herzegovina": "125th",
-    "Costa Rica": "126th",
-    "Slovakia": "127th",
-    "Dominican Republic": "128th",
-    "Estonia": "129th",
-    "Netherlands": "130th",
-    "Switzerland": "131st",
-    "Bhutan": "133rd",
-    "Guinea-Bissau": "134th",
-    "Taiwan": "135th",
-    "Moldova": "136th",
-    "Belgium": "137th",
-    "Lesotho": "138th",
-    "Armenia": "139th",
-    "Solomon Islands": "140th",
-    "Albania": "141st",
-    "Equatorial Guinea": "142nd",
-    "Burundi": "143rd",
-    "Haiti": "144th",
-    "Rwanda": "145th",
-    "North Macedonia": "146th",
-    "Djibouti": "147th",
-    "Belize": "148th",
-    "Israel": "149th",
-    "El Salvador": "150th",
-    "Slovenia": "151st",
-    "Fiji": "152nd",
-    "Kuwait": "153rd",
-    "Eswatini": "154th",
-    "Timor-Leste": "155th",
-    "Bahamas": "156th",
-    "Montenegro": "157th",
-    "Vanuatu": "158th",
-    "Qatar": "159th",
-    "Gambia": "160th",
-    "Jamaica": "161st",
-    "Kosovo": "162nd",
-    "Lebanon": "163rd",
-    "Cyprus": "164th",
-    "Brunei": "165th",
-    "Trinidad and Tobago": "166th",
-    "Cape Verde": "167th",
-    "Samoa": "168th",
-    "Luxembourg": "169th",
-    "Mauritius": "170th",
-    "Comoros": "171st",
-    "Sao Tome and Principe": "172nd",
-    "Kiribati": "173rd",
-    "Bahrain": "174th",
-    "Dominica": "175th",
-    "Tonga": "176th",
-    "Singapore": "177th",
-    "Micronesia": "178th",
-    "Saint Lucia": "179th",
-    "Andorra": "180th",
-    "Palau": "181st",
-    "Seychelles": "182nd",
-    "Antigua and Barbuda": "183rd",
-    "Barbados": "184th",
-    "Saint Vincent and the Grenadines": "185th",
-    "Grenada": "186th",
-    "Malta": "187th",
-    "Maldives": "188th",
-    "Saint Kitts and Nevis": "189th",
-    "Marshall Islands": "190th",
-    "Liechtenstein": "191st",
-    "San Marino": "192nd",
-    "Tuvalu": "193rd",
-    "Nauru": "194th",
-    "Monaco": "195th",
-    "Vatican City": "196th"
-};
-
-const populationRankings = {
-    "India": "1st",
-    "China": "2nd",
-    "United States": "3rd",
-    "Indonesia": "4th",
-    "Pakistan": "5th",
-    "Nigeria": "6th",
-    "Brazil": "7th",
-    "Bangladesh": "8th",
-    "Russia": "9th",
-    "Mexico": "10th",
-    "Japan": "11th",
-    "Philippines": "12th",
-    "Ethiopia": "13th",
-    "Democratic Republic of the Congo": "14th",
-    "Egypt": "15th",
-    "Vietnam": "16th",
-    "Iran": "17th",
-    "Turkey": "18th",
-    "Germany": "19th",
-    "France": "20th",
-    "United Kingdom": "21st",
-    "Thailand": "22nd",
-    "South Africa": "23rd",
-    "Tanzania": "24th",
-    "Italy": "25th",
-    "Colombia": "26th",
-    "Kenya": "27th",
-    "Myanmar": "28th",
-    "South Korea": "29th",
-    "Sudan": "30th",
-    "Spain": "31st",
-    "Algeria": "32nd",
-    "Argentina": "33rd",
-    "Uganda": "34th",
-    "Iraq": "35th",
-    "Afghanistan": "36th",
-    "Canada": "37th",
-    "Uzbekistan": "38th",
-    "Poland": "39th",
-    "Morocco": "40th",
-    "Angola": "41st",
-    "Malaysia": "42nd",
-    "Peru": "43rd",
-    "Mozambique": "44th",
-    "Ghana": "45th",
-    "Ukraine": "46th",
-    "Yemen": "47th",
-    "Saudi Arabia": "48th",
-    "Madagascar": "49th",
-    "Ivory Coast": "50th",
-    "Nepal": "51st",
-    "Cameroon": "52nd",
-    "Venezuela": "53rd",
-    "Australia": "54th",
-    "Niger": "55th",
-    "North Korea": "56th",
-    "Syria": "57th",
-    "Burkina Faso": "58th",
-    "Taiwan": "59th",
-    "Mali": "60th",
-    "Sri Lanka": "61st",
-    "Kazakhstan": "62nd",
-    "Malawi": "63rd",
-    "Chile": "64th",
-    "Zambia": "65th",
-    "Romania": "66th",
-    "Somalia": "67th",
-    "Chad": "68th",
-    "Senegal": "69th",
-    "Netherlands": "70th",
-    "Guatemala": "71st",
-    "Cambodia": "72nd",
-    "Ecuador": "73rd",
-    "Zimbabwe": "74th",
-    "South Sudan": "75th",
-    "Guinea": "76th",
-    "Rwanda": "77th",
-    "Benin": "78th",
-    "Burundi": "79th",
-    "Haiti": "80th",
-    "Tunisia": "81st",
-    "Belgium": "82nd",
-    "Papua New Guinea": "83rd",
-    "Jordan": "84th",
-    "Bolivia": "85th",
-    "Cuba": "86th",
-    "Czech Republic": "87th",
-    "Dominican Republic": "88th",
-    "United Arab Emirates": "89th",
-    "Portugal": "90th",
-    "Sweden": "91st",
-    "Greece": "92nd",
-    "Tajikistan": "93rd",
-    "Azerbaijan": "94th",
-    "Israel": "95th",
-    "Honduras": "96th",
-    "Hungary": "97th",
-    "Austria": "98th",
-    "Belarus": "99th",
-    "Switzerland": "100th",
-    "Sierra Leone": "101st",
-    "Togo": "102nd",
-    "Laos": "103rd",
-    "Libya": "104th",
-    "Kyrgyzstan": "105th",
-    "Turkmenistan": "106th",
-    "Nicaragua": "107th",
-    "Serbia": "108th",
-    "Central African Republic": "109th",
-    "Bulgaria": "110th",
-    "Republic of the Congo": "111th",
-    "Paraguay": "112th",
-    "Singapore": "113th",
-    "El Salvador": "114th",
-    "Denmark": "115th",
-    "Finland": "116th",
-    "Norway": "117th",
-    "Lebanon": "118th",
-    "Slovakia": "119th",
-    "Ireland": "120th",
-    "New Zealand": "121st",
-    "Costa Rica": "122nd",
-    "Oman": "123rd",
-    "Liberia": "124th",
-    "Mauritania": "125th",
-    "Kuwait": "126th",
-    "Panama": "127th",
-    "Croatia": "128th",
-    "Georgia": "129th",
-    "Eritrea": "130th",
-    "Mongolia": "131st",
-    "Uruguay": "132nd",
-    "Bosnia and Herzegovina": "133rd",
-    "Armenia": "134th",
-    "Namibia": "135th",
-    "Lithuania": "136th",
-    "Qatar": "137th",
-    "Jamaica": "138th",
-    "Moldova": "139th",
-    "Gambia": "140th",
-    "Botswana": "141st",
-    "Gabon": "142nd",
-    "Albania": "143rd",
-    "Lesotho": "144th",
-    "Slovenia": "145th",
-    "Latvia": "146th",
-    "North Macedonia": "147th",
-    "Guinea-Bissau": "148th",
-    "Bahrain": "149th",
-    "Kosovo": "150th",
-    "Equatorial Guinea": "151st",
-    "Timor-Leste": "152nd",
-    "Estonia": "153rd",
-    "Trinidad and Tobago": "154th",
-    "Mauritius": "155th",
-    "Eswatini": "156th",
-    "Djibouti": "157th",
-    "Cyprus": "158th",
-    "Fiji": "159th",
-    "Comoros": "160th",
-    "Bhutan": "161st",
-    "Guyana": "162nd",
-    "Solomon Islands": "163rd",
-    "Luxembourg": "164th",
-    "Montenegro": "165th",
-    "Suriname": "166th",
-    "Malta": "167th",
-    "Maldives": "168th",
-    "Cape Verde": "169th",
-    "Brunei": "170th",
-    "Belize": "171st",
-    "Bahamas": "172nd",
-    "Iceland": "173rd",
-    "Vanuatu": "174th",
-    "Barbados": "175th",
-    "Sao Tome and Principe": "176th",
-    "Samoa": "177th",
-    "Saint Lucia": "178th",
-    "Seychelles" : "179th",
-    "Kiribati": "180th",
-    "Grenada": "181th",
-    "Saint Vincent and the Grenadines": "182st",
-    "Micronesia": "183nd",
-    "Antigua and Barbuda": "184rd",
-    "Tonga": "185th",
-    "Andorra": "186th",
-    "Dominica": "187th",
-    "Saint Kitts and Nevis": "188th",
-    "Marshall Islands": "189th",
-    "Liechtenstein": "190th",
-    "Monaco": "191th",
-    "San Marino": "192st",
-    "Palau": "193nd",
-    "Nauru": "194rd",
-    "Tuvalu": "195th",
-    "Vatican City": "196th"
-};
-
-const tourismRankings = {
-    "France": "1st",
-    "Spain": "2nd",
-    "United States": "3rd",
-    "China": "4th",
-    "Italy": "5th",
-    "Turkey": "6th",
-    "Mexico": "7th",
-    "Thailand": "8th",
-    "Germany": "9th",
-    "United Kingdom": "10th",
-    "Austria": "11th",
-    "Japan": "12th",
-    "Greece": "13th",
-    "Malaysia": "14th",
-    "Portugal": "15th",
-    "Russia": "16th",
-    "Hong Kong": "17th",
-    "Canada": "18th",
-    "United Arab Emirates": "19th",
-    "Poland": "20th",
-    "Netherlands": "21st",
-    "Macao": "22nd",
-    "Vietnam": "23rd",
-    "India": "24th",
-    "Saudi Arabia": "25th",
-    "South Korea": "26th",
-    "Croatia": "27th",
-    "Hungary": "28th",
-    "Indonesia": "29th",
-    "Singapore": "30th",
-    "Denmark": "31st",
-    "Ukraine": "32nd",
-    "Morocco": "33rd",
-    "Egypt": "34th",
-    "Switzerland": "35th",
-    "Ireland": "36th",
-    "South Africa": "37th",
-    "Australia": "38th",
-    "Tunisia": "39th",
-    "Belgium": "40th",
-    "Iran": "41st",
-    "Kyrgyzstan": "42nd",
-    "Philippines": "43rd",
-    "Bulgaria": "44th",
-    "Sweden": "45th",
-    "Argentina": "46th",
-    "Uzbekistan": "47th",
-    "Cambodia": "48th",
-    "Dominican Republic": "49th",
-    "Brazil": "50th",
-    "Albania": "51st",
-    "Norway": "52nd",
-    "Slovakia": "53rd",
-    "Georgia": "54th",
-    "Slovenia": "55th",
-    "Israel": "56th",
-    "Chile": "57th",
-    "Jordan": "58th",
-    "Laos": "59th",
-    "Peru": "60th",
-    "Myanmar": "61st",
-    "Cuba": "62nd",
-    "Colombia": "63rd",
-    "Cyprus": "64th",
-    "Bahrain": "65th",
-    "New Zealand": "66th",
-    "Pakistan": "67th",
-    "Estonia": "68th",
-    "Finland": "69th",
-    "Uruguay": "70th",
-    "Costa Rica": "71st",
-    "Andorra": "72nd",
-    "Azerbaijan": "73rd",
-    "Lithuania": "74th",
-    "Malta": "75th",
-    "Jamaica": "76th",
-    "Romania": "77th",
-    "Montenegro": "78th",
-    "Oman": "79th",
-    "Syria": "80th",
-    "Algeria": "81st",
-    "Zimbabwe": "82nd",
-    "Belarus": "83rd",
-    "Qatar": "84th",
-    "Ecuador": "85th",
-    "Ivory Coast": "86th",
-    "Mozambique": "87th",
-    "Iceland": "88th",
-    "Nigeria": "89th",
-    "Lebanon": "90th",
-    "Latvia": "91st",
-    "Sri Lanka": "92nd",
-    "Armenia": "93rd",
-    "Kenya": "94th",
-    "Serbia": "95th",
-    "Bahamas": "96th",
-    "El Salvador": "97th",
-    "Panama": "98th",
-    "Guatemala": "99th",
-    "Maldives": "100th",
-    "Guam": "101st",
-    "Namibia": "102nd",
-    "Rwanda": "103rd",
-    "Uganda": "104th",
-    "Botswana": "105th",
-    "Tanzania": "106th",
-    "Mauritius": "107th",
-    "Nicaragua": "108th",
-    "Zambia": "109th",
-    "Tajikistan": "110th",
-    "Bolivia": "111th",
-    "Paraguay": "112th",
-    "Bosnia and Herzegovina": "113th",
-    "Nepal": "114th",
-    "Ghana": "115th",
-    "Aruba": "116th",
-    "Luxembourg": "117th",
-    "Malawi": "118th",
-    "Fiji": "119th",
-    "Togo": "120th",
-    "Ethiopia": "121st",
-    "Cape Verde": "122nd",
-    "Honduras": "123rd",
-    "Palestine": "124th",
-    "Eswatini": "125th",
-    "Gambia": "126th",
-    "Mongolia": "127th",
-    "Barbados": "128th",
-    "Belize": "129th",
-    "Saint Lucia": "130th",
-    "Trinidad and Tobago": "131st",
-    "Seychelles": "132nd",
-    "Madagascar": "133rd",
-    "Monaco": "134th",
-    "Brunei": "135th",
-    "Bangladesh": "136th",
-    "Bhutan": "137th",
-    "Guyana": "138th",
-    "Benin": "139th",
-    "Antigua and Barbuda": "140th",
-    "Haiti": "141st",
-    "Bermuda": "142nd",
-    "Angola": "143rd",
-    "Mali": "144th",
-    "Niger": "145th",
-    "Grenada": "146th",
-    "Moldova": "147th",
-    "Samoa": "148th",
-    "Papua New Guinea": "149th",
-    "Kuwait": "150th",
-    "Burkina Faso": "151st",
-    "Vanuatu": "152nd",
-    "Saint Kitts and Nevis": "153rd",
-    "San Marino": "154th",
-    "Liechtenstein": "155th",
-    "Palau": "156th",
-    "Dominica": "157th",
-    "Central African Republic": "158th",
-    "Saint Vincent and the Grenadines": "159th",
-    "Chad": "160th",
-    "Timor-Leste": "161st",
-    "Tonga": "162nd",
-    "Sierra Leone": "163rd",
-    "Guinea-Bissau": "164th",
-    "Comoros": "165th",
-    "Sao Tome and Principe": "166th",
-    "Solomon Islands": "167th",
-    "Micronesia": "168th",
-    "Tuvalu": "169th"
-};
-
-const naturalCapitalRankings = {
-    "Uruguay": "1st",
-    "Paraguay": "2nd",
-    "Bhutan": "3rd",
-    "Iceland": "4th",
-    "Canada": "5th",
-    "Brazil": "6th",
-    "Latvia": "7th",
-    "Bolivia": "8th",
-    "Colombia": "9th",
-    "Russia": "10th",
-    "Albania": "11th",
-    "Laos": "12th",
-    "Lithuania": "13th",
-    "Peru": "14th",
-    "Democratic Republic of the Congo": "15th",
-    "Venezuela": "16th",
-    "Croatia": "17th",
-    "Serbia": "18th",
-    "Belarus": "19th",
-    "Bosnia and Herzegovina": "20th",
-    "Sweden": "21st",
-    "Romania": "22nd",
-    "Estonia": "23rd",
-    "Finland": "24th",
-    "Nicaragua": "25th",
-    "Chile": "26th",
-    "Panama": "27th",
-    "Norway": "28th",
-    "Sierra Leone": "29th",
-    "Guyana": "30th",
-    "Cambodia": "31st",
-    "Argentina": "32nd",
-    "Fiji": "33rd",
-    "Burma": "34th",
-    "Slovakia": "35th",
-    "Switzerland": "36th",
-    "Tanzania": "37th",
-    "Ukraine": "38th",
-    "Republic of the Congo": "39th",
-    "USA": "40th",
-    "Papua New Guinea": "41st",
-    "Portugal": "42nd",
-    "Zambia": "43rd",
-    "Bulgaria": "44th",
-    "Ghana": "45th",
-    "Ecuador": "46th",
-    "Kyrgyzstan": "47th",
-    "Ireland": "48th",
-    "Suriname": "49th",
-    "Georgia": "50th",
-    "Equatorial Guinea": "51st",
-    "Poland": "52nd",
-    "Ivory Coast": "53rd",
-    "Austria": "54th",
-    "Zimbabwe": "55th",
-    "Central African Republic": "56th",
-    "South Sudan": "57th",
-    "Cameroon": "58th",
-    "Kazakhstan": "59th",
-    "Belize": "60th",
-    "Denmark": "61st",
-    "Czech Republic": "62nd",
-    "Angola": "63rd",
-    "Tajikistan": "64th",
-    "Mozambique": "65th",
-    "New Zealand": "66th",
-    "Chad": "67th",
-    "Costa Rica": "68th",
-    "Guinea": "69th",
-    "Australia": "70th",
-    "Montenegro": "71st",
-    "Mongolia": "72nd",
-    "Turkey": "73rd",
-    "France": "74th",
-    "United Kingdom": "75th",
-    "El Salvador": "76th",
-    "Gabon": "77th",
-    "Uganda": "78th",
-    "Vietnam": "79th",
-    "Indonesia": "80th",
-    "Italy": "81st",
-    "Nepal": "82nd",
-    "Madagascar": "83rd",
-    "Uzbekistan": "84th",
-    "Solomon Islands": "85th",
-    "Honduras": "86th",
-    "Niger": "87th",
-    "Slovenia": "88th",
-    "Moldova": "89th",
-    "Rwanda": "90th",
-    "Spain": "91st",
-    "Mexico": "92nd",
-    "South Africa": "93rd",
-    "Togo": "94th",
-    "Lesotho": "95th",
-    "Japan": "96th",
-    "Saudi Arabia": "97th",
-    "Bangladesh": "98th",
-    "Cuba": "99th",
-    "Sudan": "100th",
-    "Hungary": "101st",
-    "Tonga": "102nd",
-    "Azerbaijan": "103rd",
-    "North Macedonia": "104th",
-    "Malawi": "105th",
-    "India": "106th",
-    "Burundi": "107th",
-    "Turkmenistan": "108th",
-    "Guatemala": "109th",
-    "Namibia": "110th",
-    "Nigeria": "111th",
-    "Philippines": "112th",
-    "Mali": "113th",
-    "Luxembourg": "114th",
-    "Afghanistan": "115th",
-    "China": "116th",
-    "Guinea-Bissau": "117th",
-    "Germany": "118th",
-    "Liberia": "119th",
-    "Syria": "120th",
-    "Dominican Republic": "121st",
-    "Burkina Faso": "122nd",
-    "Malaysia": "123rd",
-    "Jamaica": "124th",
-    "Senegal": "125th",
-    "Oman": "126th",
-    "St. Vincent and the Grenadines": "127th",
-    "Armenia": "128th",
-    "Dominica": "129th",
-    "Botswana": "130th",
-    "Morocco": "131st",
-    "Samoa": "132nd",
-    "Brunei": "133rd",
-    "Mauritania": "134th",
-    "Algeria": "135th",
-    "Greece": "136th",
-    "Ethiopia": "137th",
-    "Netherlands": "138th",
-    "Sri Lanka": "139th",
-    "Thailand": "140th",
-    "Mauritius": "141st",
-    "Benin": "143rd",
-    "Eswatini": "145th",
-    "Iran": "146th",
-    "Egypt": "147th",
-    "Malta": "148th",
-    "Micronesia": "149th",
-    "Seychelles": "150th",
-    "Djibouti": "151st",
-    "Vanuatu": "152nd",
-    "South Korea": "153rd",
-    "Kiribati": "154th",
-    "Kuwait": "156th",
-    "Gambia": "157th",
-    "Kenya": "158th",
-    "Comoros": "159th",
-    "Haiti": "160th",
-    "United Arab Emirates": "161st",
-    "Bahrain": "162nd",
-    "Maldives": "163rd",
-    "Yemen": "164th",
-    "Pakistan": "165th",
-    "Iraq": "166th",
-    "Timor-Leste": "167th",
-    "Qatar": "168th",
-    "Eritrea": "169th",
-    "Cyprus": "170th",
-    "Sao Tome and Principe": "171st",
-    "Trinidad and Tobago": "172nd",
-    "Jordan": "173rd",
-    "Tunisia": "174th",
-    "Bahamas": "175th",
-    "Belgium": "176th",
-    "Israel": "177th",
-    "Grenada": "178th",
-    "Cape Verde": "179th",
-    "Singapore": "180th"
-};
-
-const gdpPerCapitaRankings = {
-    "Monaco": "1st",
-    "Liechtenstein": "2nd",
-    "Luxembourg": "3rd",
-    "Ireland": "4th",
-    "Switzerland": "5th",
-    "Norway": "6th",
-    "Singapore": "7th",
-    "Iceland": "8th",
-    "United States": "9th",
-    "Qatar": "10th",
-    "Denmark": "11th",
-    "Australia": "12th",
-    "Netherlands": "13th",
-    "San Marino": "14th",
-    "Austria": "15th",
-    "Israel": "16th",
-    "Sweden": "17th",
-    "Belgium": "18th",
-    "Canada": "19th",
-    "Germany": "20th",
-    "Finland": "21st",
-    "United Kingdom": "22nd",
-    "New Zealand": "23rd",
-    "United Arab Emirates": "24th",
-    "Andorra": "25th",
-    "France": "26th",
-    "Malta": "27th",
-    "Italy": "28th",
-    "Cyprus": "29th",
-    "Bahamas": "30th",
-    "South Korea": "31st",
-    "Kuwait": "32nd",
-    "Spain": "33rd",
-    "Japan": "34th",
-    "Brunei": "35th",
-    "Slovenia": "36th",
-    "Saudi Arabia": "37th",
-    "Czech Republic": "38th",
-    "Estonia": "39th",
-    "Bahrain": "40th",
-    "Lithuania": "41st",
-    "Portugal": "42nd",
-    "Slovakia": "43rd",
-    "Barbados": "44th",
-    "Greece": "45th",
-    "Uruguay": "46th",
-    "Saint Kitts and Nevis": "47th",
-    "Latvia": "48th",
-    "Hungary": "49th",
-    "Antigua and Barbuda": "50th",
-    "Croatia": "51st",
-    "Oman": "52nd",
-    "Poland": "53rd",
-    "Guyana": "54th",
-    "Panama": "55th",
-    "Romania": "56th",
-    "Cuba": "57th",
-    "Chile": "58th",
-    "Trinidad and Tobago": "59th",
-    "Costa Rica": "60th",
-    "Seychelles": "61st",
-    "Palau": "62nd",
-    "Bulgaria": "63rd",
-    "Nauru": "64th",
-    "Argentina": "65th",
-    "Mexico": "66th",
-    "Russia": "67th",
-    "Saint Lucia": "68th",
-    "Kazakhstan": "69th",
-    "Turkey": "70th",
-    "Maldives": "71st",
-    "China": "72nd",
-    "Montenegro": "73rd",
-    "Malaysia": "74th",
-    "Mauritius": "75th",
-    "Grenada": "76th",
-    "Serbia": "77th",
-    "Saint Vincent and the Grenadines": "78th",
-    "Dominican Republic": "79th",
-    "Brazil": "80th",
-    "Dominica": "81st",
-    "Bosnia and Herzegovina": "82nd",
-    "North Macedonia": "83rd",
-    "Armenia": "84th",
-    "Albania": "85th",
-    "Turkmenistan": "86th",
-    "Gabon": "87th",
-    "Georgia": "88th",
-    "Peru": "89th",
-    "Belarus": "90th",
-    "Botswana": "91st",
-    "Belize": "92nd",
-    "Thailand": "93rd",
-    "Azerbaijan": "94th",
-    "Marshall Islands": "95th",
-    "Colombia": "96th",
-    "Tuvalu": "97th",
-    "Jamaica": "98th",
-    "Ecuador": "99th",
-    "Equatorial Guinea": "100th",
-    "Paraguay": "101st",
-    "Kosovo": "102nd",
-    "Libya": "103rd",
-    "South Africa": "103rd",
-    "Suriname": "103rd",
-    "Fiji": "106th",
-    "Mongolia": "107th",
-    "Guatemala": "108th",
-    "Moldova": "109th",
-    "El Salvador": "110th",
-    "Algeria": "111th",
-    "Iraq": "112th",
-    "Cape Verde": "113th",
-    "Venezuela": "114th",
-    "Indonesia": "115th",
-    "Tonga": "116th",
-    "Samoa": "117th",
-    "Lebanon": "118th",
-    "Ukraine": "119th",
-    "Jordan": "120th",
-    "Iran": "121st",
-    "Vietnam": "122nd",
-    "Namibia": "123rd",
-    "Micronesia": "124th",
-    "Tunisia": "125th",
-    "Bhutan": "126th",
-    "Morocco": "127th",
-    "Philippines": "128th",
-    "Eswatini": "129th",
-    "Bolivia": "130th",
-    "Sri Lanka": "131st",
-    "Vanuatu": "132nd",
-    "Djibouti": "133rd",
-    "Honduras": "134th",
-    "Papua New Guinea": "135th",
-    "Sao Tome and Principe": "136th",
-    "Egypt": "137th",
-    "Nicaragua": "138th",
-    "Uzbekistan": "139th",
-    "Ivory Coast": "140th",
-    "India": "141st",
-    "Angola": "142nd",
-    "Bangladesh": "142nd",
-    "Cambodia": "144th",
-    "Republic of the Congo": "145th",
-    "Ghana": "146th",
-    "Kiribati": "147th",
-    "Mauritania": "148th",
-    "Solomon Islands": "149th",
-    "Kyrgyzstan": "150th",
-    "Laos": "151st",
-    "Kenya": "152nd",
-    "Zimbabwe": "153rd",
-    "Cameroon": "154th",
-    "Haiti": "155th",
-    "Comoros": "156th",
-    "Senegal": "157th",
-    "Nigeria": "158th",
-    "Guinea": "159th",
-    "Timor-Leste": "160th",
-    "Benin": "161st",
-    "Nepal": "162nd",
-    "Zambia": "163rd",
-    "Ethiopia": "164th",
-    "Syria": "165th",
-    "Pakistan": "166th",
-    "Tanzania": "167th",
-    "Tajikistan": "168th",
-    "Myanmar": "169th",
-    "Uganda": "170th",
-    "Rwanda": "171st",
-    "Togo": "172nd",
-    "Liberia": "173rd",
-    "Lesotho": "174th",
-    "Chad": "175th",
-    "Gambia": "176th",
-    "Burkina Faso": "177th",
-    "Guinea-Bissau": "178th",
-    "Mali": "179th",
-    "Sierra Leone": "180th",
-    "Sudan": "181st",
-    "Eritrea": "182nd",
-    "Democratic Republic of the Congo": "183rd",
-    "Niger": "184th",
-    "North Korea": "185th",
-    "Mozambique": "186th",
-    "Madagascar": "187th",
-    "Somalia": "188th",
-    "Malawi": "189th",
-    "Central African Republic": "190th",
-    "South Sudan": "191st",
-    "Afghanistan": "192nd",
-    "Burundi": "193rd",
-    "Yemen": "194th"
-};
-// Highest Elevation rankings data
-const highestElevationRankings = {
-    "China": "1st",
-    "Nepal": "1st",
-    "Pakistan": "3rd",
-    "India": "4th",
-    "Bhutan": "5th",
-    "Tajikistan": "6th",
-    "Afghanistan": "7th",
-    "Kyrgyzstan": "8th",
-    "Kazakhstan": "9th",
-    "Argentina": "10th",
-    "Chile": "11th",
-    "Peru": "12th",
-    "Bolivia": "13th",
-    "Ecuador": "14th",
-    "United States": "15th",
-    "Canada": "16th",
-    "Tanzania": "17th",
-    "Myanmar": "18th",
-    "Colombia": "19th",
-    "Russia": "20th",
-    "Mexico": "21st",
-    "Iran": "22nd",
-    "Georgia": "23rd",
-    "Kenya": "24th",
-    "Turkey": "25th",
-    "Democratic Republic of the Congo": "26th",
-    "Uganda": "26th",
-    "Venezuela": "28th",
-    "Indonesia": "29th",
-    "France": "30th",
-    "Italy": "30th",
-    "Uzbekistan": "32nd",
-    "Switzerland": "33rd",
-    "Ethiopia": "34th",
-    "Papua New Guinea": "35th",
-    "Rwanda": "36th",
-    "Azerbaijan": "37th",
-    "Mongolia": "38th",
-    "Guatemala": "39th",
-    "Morocco": "40th",
-    "Malaysia": "41st",
-    "Armenia": "42nd",
-    "Cameroon": "43rd",
-    "Taiwan": "44th",
-    "Costa Rica": "45th",
-    "Austria": "46th",
-    "Japan": "47th",
-    "New Zealand": "48th",
-    "Spain": "49th",
-    "Yemen": "50th",
-    "Iraq": "51st",
-    "Lesotho": "52nd",
-    "Panama": "53rd",
-    "Chad": "54th",
-    "South Africa": "55th",
-    "South Sudan": "56th",
-    "Vietnam": "57th",
-    "Turkmenistan": "58th",
-    "Dominican Republic": "59th",
-    "Lebanon": "60th",
-    "Sudan": "61st",
-    "Eritrea": "62nd",
-    "Oman": "62nd",
-    "Saudi Arabia": "64th",
-    "Equatorial Guinea": "65th",
-    "Malawi": "66th",
-    "Brazil": "67th",
-    "Timor-Leste": "68th",
-    "Germany": "69th",
-    "Philippines": "70th",
-    "Andorra": "71st",
-    "Bulgaria": "72nd",
-    "Greece": "73rd",
-    "Algeria": "74th",
-    "Madagascar": "75th",
-    "Honduras": "76th",
-    "Slovenia": "77th",
-    "Laos": "78th",
-    "Cape Verde": "79th",
-    "Syria": "80th",
-    "Guyana": "81st",
-    "Albania": "82nd",
-    "North Macedonia": "82nd",
-    "North Korea": "84th",
-    "El Salvador": "85th",
-    "Burundi": "86th",
-    "Haiti": "87th",
-    "Kosovo": "88th",
-    "Slovakia": "89th",
-    "Egypt": "90th",
-    "Angola": "91st",
-    "Liechtenstein": "92nd",
-    "Zimbabwe": "93rd",
-    "Namibia": "94th",
-    "Thailand": "95th",
-    "Romania": "96th",
-    "Montenegro": "97th",
-    "Sri Lanka": "98th",
-    "Poland": "99th",
-    "Norway": "100th",
-    "Somalia": "101st",
-    "Mozambique": "102nd",
-    "Nigeria": "103rd",
-    "Bosnia and Herzegovina": "104th",
-    "Comoros": "105th",
-    "Portugal": "106th",
-    "Zambia": "107th",
-    "Solomon Islands": "108th",
-    "Libya": "109th",
-    "Jamaica": "110th",
-    "Australia": "111th",
-    "Serbia": "112th",
-    "Iceland": "113th",
-    "Sweden": "114th",
-    "Nicaragua": "115th",
-    "Ukraine": "116th",
-    "Sao Tome and Principe": "117th",
-    "Djibouti": "118th",
-    "Niger": "119th",
-    "Cuba": "120th",
-    "Cyprus": "121st",
-    "South Korea": "122nd",
-    "Sierra Leone": "123rd",
-    "United Arab Emirates": "124th",
-    "Vanuatu": "125th",
-    "Brunei": "126th",
-    "Eswatini": "127th",
-    "Samoa": "128th",
-    "Jordan": "129th",
-    "Croatia": "130th",
-    "Cambodia": "131st",
-    "Guinea": "132nd",
-    "Ivory Coast": "132nd",
-    "Czech Republic": "134th",
-    "Tunisia": "135th",
-    "Botswana": "136th",
-    "Dominica": "137th",
-    "Liberia": "137th",
-    "Central African Republic": "139th",
-    "Finland": "140th",
-    "United Kingdom": "141st",
-    "Fiji": "142nd",
-    "Suriname": "143rd",
-    "Saint Vincent and the Grenadines": "144th",
-    "Israel": "145th",
-    "Saint Kitts and Nevis": "146th",
-    "Mali": "147th",
-    "Belize": "148th",
-    "Gabon": "149th",
-    "Bangladesh": "150th",
-    "Ireland": "151st",
-    "Tonga": "152nd",
-    "Republic of the Congo": "153rd",
-    "Hungary": "154th",
-    "Togo": "155th",
-    "Saint Lucia": "156th",
-    "Trinidad and Tobago": "157th",
-    "Mauritania": "158th",
-    "Seychelles": "159th",
-    "Ghana": "160th",
-    "Netherlands": "161st",
-    "Paraguay": "162nd",
-    "Grenada": "163rd",
-    "Mauritius": "164th",
-    "Burkina Faso": "165th",
-    "San Marino": "166th",
-    "Belgium": "167th",
-    "Benin": "168th",
-    "Senegal": "169th",
-    "Luxembourg": "170th",
-    "Uruguay": "171st",
-    "Moldova": "172nd",
-    "Antigua and Barbuda": "173rd",
-    "Barbados": "174th",
-    "Estonia": "175th",
-    "Latvia": "176th",
-    "Lithuania": "177th",
-    "Kuwait": "178th",
-    "Guinea-Bissau": "179th",
-    "Malta": "180th",
-    "Palau": "181st",
-    "Denmark": "182nd",
-    "Singapore": "183rd",
-    "Monaco": "184th",
-    "Bahrain": "185th",
-    "Qatar": "186th",
-    "Kiribati": "187th",
-    "Vatican City": "188th",
-    "Nauru": "189th",
-    "Bahamas": "190th",
-    "Gambia": "191st",
-    "Marshall Islands": "192nd",
-    "Maldives": "193rd",
-    "Tuvalu": "193rd"
-};
-// Highest life expectancy rankings
-
-const lifeExpectancyRankings = {
-    "Japan": "1st",
-    "South Korea": "2nd",
-    "Andorra": "3rd",
-    "Switzerland": "4th",
-    "Liechtenstein": "4th",
-    "Australia": "5th",
-    "Singapore": "6th",
-    "Italy": "7th",
-    "San Marino": "7th",
-    "Spain": "8th",
-    "France": "9th",
-    "Monaco": "9th",
-    "Norway": "10th",
-    "Malta": "11th",
-    "Sweden": "12th",
-    "United Arab Emirates": "13th",
-    "Iceland": "14th",
-    "Canada": "15th",
-    "Israel": "16th",
-    "Ireland": "16th",
-    "Qatar": "18th",
-    "Portugal": "19th",
-    "Luxembourg": "20th",
-    "Netherlands": "21st",
-    "Belgium": "22nd",
-    "New Zealand": "23rd",
-    "Austria": "24th",
-    "Denmark": "25th",
-    "Finland": "26th",
-    "Greece": "27th",
-    "Cyprus": "28th",
-    "Slovenia": "29th",
-    "Germany": "30th",
-    "United Kingdom": "31st",
-    "Bahrain": "32nd",
-    "Chile": "33rd",
-    "Maldives": "34th",
-    "Costa Rica": "35th",
-    "Taiwan": "36th",
-    "Kuwait": "37th",
-    "Oman": "38th",
-    "Czech Republic": "39th",
-    "Albania": "40th",
-    "Panama": "41st",
-    "United States": "42nd",
-    "Estonia": "43rd",
-    "China": "44th",
-    "Saudi Arabia": "45th",
-    "Poland": "46th",
-    "Croatia": "47th",
-    "Slovakia": "48th",
-    "Uruguay": "49th",
-    "Cuba": "50th",
-    "Kosovo": "51st",
-    "Bosnia and Herzegovina": "52nd",
-    "Lebanon": "53rd",
-    "Jordan": "54th",
-    "Peru": "55th",
-    "Colombia": "56th",
-    "Iran": "57th",
-    "Antigua and Barbuda": "58th",
-    "Sri Lanka": "59th",
-    "Argentina": "60th",
-    "North Macedonia": "60th",
-    "Ecuador": "60th",
-    "Turkey": "63rd",
-    "Montenegro": "64th",
-    "Hungary": "65th",
-    "Serbia": "66th",
-    "Malaysia": "67th",
-    "Tunisia": "68th",
-    "Thailand": "69th",
-    "Algeria": "70th",
-    "Latvia": "71st",
-    "Barbados": "72nd",
-    "Cape Verde": "73rd",
-    "Lithuania": "74th",
-    "Romania": "75th",
-    "Brazil": "76th",
-    "Armenia": "77th",
-    "Bulgaria": "78th",
-    "Brunei": "79th",
-    "Morocco": "80th",
-    "Grenada": "81st",
-    "Mexico": "82nd",
-    "Nicaragua": "83rd",
-    "Mauritius": "84th",
-    "Bangladesh": "85th",
-    "Vietnam": "86th",
-    "Bahamas": "87th",
-    "Georgia": "88th",
-    "Belarus": "89th",
-    "Azerbaijan": "89th",
-    "Kazakhstan": "91st",
-    "Paraguay": "92nd",
-    "Dominican Republic": "93rd",
-    "North Korea": "94th",
-    "Suriname": "95th",
-    "Belize": "96th",
-    "Trinidad and Tobago": "97th",
-    "Ukraine": "98th",
-    "Russia": "99th",
-    "Bhutan": "100th",
-    "Tonga": "101st",
-    "Honduras": "102nd",
-    "Seychelles": "103rd",
-    "Saint Lucia": "104th",
-    "Guatemala": "105th",
-    "Venezuela": "106th",
-    "Uzbekistan": "107th",
-    "Iraq": "108th",
-    "Syria": "109th",
-    "El Salvador": "110th",
-    "Saint Kitts and Nevis": "111th",
-    "India": "112th",
-    "Tajikistan": "113th",
-    "Mongolia": "114th",
-    "Samoa": "115th",
-    "Kyrgyzstan": "116th",
-    "Egypt": "117th",
-    "Jamaica": "118th",
-    "Vanuatu": "118th",
-    "Saint Vincent and the Grenadines": "120th",
-    "Moldova": "121st",
-    "Indonesia": "122nd",
-    "Dominica": "123rd",
-    "Cambodia": "124th",
-    "Solomon Islands": "125th",
-    "Nepal": "126th",
-    "Guyana": "127th",
-    "Turkmenistan": "128th",
-    "Philippines": "129th",
-    "Sao Tome and Principe": "130th",
-    "Libya": "131st",
-    "Yemen": "132nd",
-    "Botswana": "133rd",
-    "Laos": "134th",
-    "Senegal": "135th",
-    "Eritrea": "136th",
-    "Bolivia": "137th",
-    "Mauritania": "138th",
-    "Gabon": "139th",
-    "Uganda": "140th",
-    "Rwanda": "141st",
-    "Timor-Leste": "142nd",
-    "Pakistan": "143rd",
-    "Namibia": "144th",
-    "Malawi": "145th",
-    "Fiji": "146th",
-    "Ethiopia": "147th",
-    "Micronesia": "148th",
-    "Tanzania": "149th",
-    "Myanmar": "150th",
-    "Comoros": "151st",
-    "Marshall Islands": "152nd",
-    "Nauru": "153rd",
-    "Palau": "154th",
-    "Kiribati": "155th",
-    "Zambia": "156th",
-    "Sudan": "157th",
-    "South Africa": "158th",
-    "Papua New Guinea": "159th",
-    "Afghanistan": "160th",
-    "Djibouti": "161st",
-    "Tuvalu": "162nd",
-    "Gambia": "163rd",
-    "Republic of the Congo": "164th",
-    "Ghana": "165th",
-    "Haiti": "166th",
-    "Angola": "167th",
-    "Eswatini": "168th",
-    "Guinea-Bissau": "169th",
-    "Equatorial Guinea": "170th",
-    "Cameroon": "171st",
-    "Burundi": "172nd",
-    "Kenya": "172nd",
-    "Madagascar": "174th",
-    "Mozambique": "175th",
-    "Zimbabwe": "176th",
-    "Togo": "177th",
-    "Liberia": "178th",
-    "Ivory Coast": "179th",
-    "Democratic Republic of the Congo": "180th",
-    "Sierra Leone": "181st",
-    "Niger": "182nd",
-    "Burkina Faso": "183rd",
-    "Benin": "184th",
-    "Guinea": "185th",
-    "Mali": "186th",
-    "Somalia": "187th",
-    "South Sudan": "188th",
-    "Central African Republic": "189th",
-    "Lesotho": "190th",
-    "Chad": "191st",
-    "Nigeria": "192nd"
-};
-
-// Average temperature rankings
-const averageTemperatureRankings = {
-    "Burkina Faso": "1st",
-    "Mali": "2nd",
-    "Senegal": "3rd",
-    "Mauritania": "4th",
-    "Tuvalu": "5th",
-    "Djibouti": "6th",
-    "Gambia": "7th",
-    "United Arab Emirates": "8th",
-    "Maldives": "9th",
-    "Niger": "10th",
-    "Benin": "11th",
-    "Qatar": "11th",
-    "Marshall Islands": "13th",
-    "Guinea-Bissau": "14th",
-    "South Sudan": "15th",
-    "Sudan": "16th",
-    "Palau": "17th",
-    "Nauru": "18th",
-    "Kiribati": "19th",
-    "Bahrain": "20th",
-    "Singapore": "21st",
-    "Ghana": "22nd",
-    "Oman": "23rd",
-    "Chad": "24th",
-    "Samoa": "25th",
-    "Saint Kitts and Nevis": "26th",
-    "Cambodia": "27th",
-    "Togo": "28th",
-    "Nigeria": "29th",
-    "Micronesia": "30th",
-    "Sri Lanka": "31st",
-    "Antigua and Barbuda": "32nd",
-    "Seychelles": "33rd",
-    "Saint Lucia": "34th",
-    "Brunei": "35th",
-    "Somalia": "35th",
-    "Thailand": "37th",
-    "Dominica": "38th",
-    "Ivory Coast": "39th",
-    "Eritrea": "40th",
-    "Barbados": "41st",
-    "Suriname": "42nd",
-    "Trinidad and Tobago": "43rd",
-    "Sierra Leone": "44th",
-    "Grenada": "45th",
-    "Malaysia": "46th",
-    "Kuwait": "47th",
-    "Philippines": "48th",
-    "Saint Vincent and the Grenadines": "49th",
-    "Guyana": "50th",
-    "Indonesia": "51st",
-    "Saudi Arabia": "52nd",
-    "Solomon Islands": "53rd",
-    "Jamaica": "54th",
-    "Nicaragua": "55th",
-    "Guinea": "56th",
-    "Cuba": "57th",
-    "Bangladesh": "58th",
-    "Venezuela": "58th",
-    "Belize": "60th",
-    "Panama": "61st",
-    "Bahamas": "62nd",
-    "Yemen": "63rd",
-    "Central African Republic": "64th",
-    "Liberia": "65th",
-    "Brazil": "66th",
-    "El Salvador": "67th",
-    "Gabon": "68th",
-    "Kenya": "69th",
-    "Tonga": "70th",
-    "Colombia": "71st",
-    "Haiti": "72nd",
-    "India": "73rd",
-    "Costa Rica": "74th",
-    "Cameroon": "75th",
-    "Vietnam": "76th",
-    "Republic of the Congo": "77th",
-    "Papua New Guinea": "77th",
-    "Honduras": "79th",
-    "Fiji": "80th",
-    "Equatorial Guinea": "81st",
-    "Timor-Leste": "82nd",
-    "Dominican Republic": "83rd",
-    "Sao Tome and Principe": "84th",
-    "Vanuatu": "85th",
-    "Mozambique": "86th",
-    "Democratic Republic of the Congo": "87th",
-    "Laos": "88th",
-    "Paraguay": "89th",
-    "Myanmar": "90th",
-    "Comoros": "91st",
-    "Guatemala": "92nd",
-    "Algeria": "93rd",
-    "Ethiopia": "94th",
-    "Mauritius": "95th",
-    "Uganda": "96th",
-    "Egypt": "97th",
-    "Iraq": "98th",
-    "Tanzania": "99th",
-    "Libya": "100th",
-    "Malawi": "101st",
-    "Madagascar": "102nd",
-    "Cape Verde": "103rd",
-    "Zambia": "104th",
-    "Botswana": "105th",
-    "Australia": "106th",
-    "Zimbabwe": "107th",
-    "Angola": "108th",
-    "Israel": "109th",
-    "Ecuador": "110th",
-    "Pakistan": "111th",
-    "Mexico": "112th",
-    "Bolivia": "113th",
-    "Eswatini": "114th",
-    "Tunisia": "115th",
-    "Burundi": "116th",
-    "Namibia": "117th",
-    "Peru": "118th",
-    "Malta": "119th",
-    "Jordan": "120th",
-    "Rwanda": "121st",
-    "Cyprus": "122nd",
-    "Syria": "123rd",
-    "Iran": "124th",
-    "South Africa": "125th",
-    "Morocco": "126th",
-    "Uruguay": "127th",
-    "Turkmenistan": "128th",
-    "Argentina": "129th",
-    "Portugal": "130th",
-    "Lebanon": "131st",
-    "Vatican City": "132nd",
-    "Greece": "133rd",
-    "Spain": "134th",
-    "Uzbekistan": "135th",
-    "Monaco": "136th",
-    "Afghanistan": "137th",
-    "Italy": "138th",
-    "Azerbaijan": "139th",
-    "San Marino": "140th",
-    "Albania": "141st",
-    "Lesotho": "142nd",
-    "South Korea": "143rd",
-    "Croatia": "144th",
-    "Japan": "145th",
-    "Turkey": "146th",
-    "France": "147th",
-    "Hungary": "148th",
-    "Serbia": "149th",
-    "Bulgaria": "150th",
-    "Moldova": "151st",
-    "North Macedonia": "152nd",
-    "Belgium": "153rd",
-    "Netherlands": "154th",
-    "New Zealand": "155th",
-    "Bhutan": "156th",
-    "Bosnia and Herzegovina": "157th",
-    "Romania": "158th",
-    "Kosovo": "159th",
-    "Luxembourg": "159th",
-    "Montenegro": "161st",
-    "Slovenia": "162nd",
-    "Ireland": "163rd",
-    "Germany": "164th",
-    "United States": "165th",
-    "Chile": "166th",
-    "Ukraine": "167th",
-    "United Kingdom": "168th",
-    "Georgia": "169th",
-    "Denmark": "170th",
-    "Slovakia": "171st",
-    "Poland": "172nd",
-    "Czech Republic": "173rd",
-    "Andorra": "174th",
-    "Armenia": "175th",
-    "China": "176th",
-    "Liechtenstein": "177th",
-    "Belarus": "178th",
-    "Austria": "179th",
-    "Lithuania": "180th",
-    "Kazakhstan": "181st",
-    "North Korea": "182nd",
-    "Latvia": "183rd",
-    "Switzerland": "184th",
-    "Estonia": "185th",
-    "Tajikistan": "186th",
-    "Sweden": "187th",
-    "Kyrgyzstan": "188th",
-    "Finland": "189th",
-    "Norway": "190th",
-    "Iceland": "191st",
-    "Mongolia": "192nd",
-    "Russia": "193rd",
-    "Canada": "194th"
-};
 
 const flags = [
     'flags_images/andorra.png',
@@ -2746,8 +727,31 @@ const countryAliases = {
 
 // Function to get the official country name from an input (which might be an alias)
 function getOfficialCountryName(input) {
+    // Input validation
+    if (typeof input !== 'string') {
+        console.warn('getOfficialCountryName received non-string input:', input);
+        return null;
+    }
+    
+    // Additional security check for potential XSS
+    if (input.includes('<') || input.includes('>') || input.includes('script')) {
+        console.warn('Potentially unsafe input detected:', input);
+        return null;
+    }
+    
     // Normalize input: trim whitespace and convert to lowercase
     const normalizedInput = input.trim().toLowerCase();
+    
+    // Check for empty input
+    if (normalizedInput.length === 0) {
+        return null;
+    }
+    
+    // Check for excessively long input (prevent potential DoS)
+    if (normalizedInput.length > 100) {
+        console.warn('Input too long:', normalizedInput.length);
+        return null;
+    }
     
     // Check if the input is a direct match for an official country
     const directMatch = filteredCountryNames.find(country => 
@@ -2792,17 +796,65 @@ let currentRoll = null; // Track the current country
 let isRolling = false; // Flag to prevent double clicks
 let selectedBoxes = new Set(); // Make this global so it's accessible everywhere
 
+// Session tracking for playtime
+let sessionStartTime = null;
+let currentSessionPlaytime = 0;
+
+// Function to start a play session
+function startPlaySession() {
+    if (!sessionStartTime) {
+        sessionStartTime = Date.now();
+        console.log('Play session started');
+        
+        // Check time-based achievements when starting any game session
+        checkTimeBasedAchievements();
+    }
+}
+
+// Function to end a play session and update playtime
+function endPlaySession() {
+    if (sessionStartTime) {
+        const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 60000); // Convert to minutes
+        if (sessionDuration > 0) {
+            currentSessionPlaytime += sessionDuration;
+            updateStat('totalPlaytime', sessionDuration);
+            console.log(`Session ended. Duration: ${sessionDuration} minutes`);
+        }
+        sessionStartTime = null;
+    }
+}
+
+// Function to update current session playtime (called periodically)
+function updateSessionPlaytime() {
+    if (sessionStartTime) {
+        const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 60000);
+        currentSessionPlaytime = sessionDuration;
+    }
+}
+
 function rollFlag() {
-    // Prevent multiple rapid clicks
-    if (isRolling) return;
-    isRolling = true;
-    
-    const flagBox = document.getElementById('flagBox');
-    const countryNameDiv = document.getElementById('countryName');
-    const containerDiv = document.querySelector('.container');
-    const pickText = document.getElementById('pickText');
-    const rollButton = document.querySelector('button');
-    const rollDuration = 2000;
+    try {
+        // Start session tracking when user begins playing
+        startPlaySession();
+        
+        // Prevent multiple rapid clicks
+        if (isRolling) return;
+        isRolling = true;
+        
+        const flagBox = document.getElementById('flagBox');
+        const countryNameDiv = document.getElementById('countryName');
+        const containerDiv = document.querySelector('.container');
+        const pickText = document.getElementById('pickText');
+        const rollButton = document.querySelector('button');
+        
+        // Check if all required elements exist
+        if (!flagBox || !countryNameDiv || !containerDiv || !pickText || !rollButton) {
+            console.error('Required DOM elements not found for rollFlag');
+            isRolling = false;
+            return;
+        }
+        
+        const rollDuration = 2000;
 
     // Handle skips
     if (currentRoll !== null && selectedBox === null) {
@@ -2893,6 +945,10 @@ function rollFlag() {
     }
 
     animationFrameId = requestAnimationFrame(animateFlag);
+    } catch (error) {
+        console.error('Error in rollFlag function:', error);
+        isRolling = false;
+    }
 }
 
 // Function to shuffle array (Fisher-Yates algorithm)
@@ -2924,17 +980,143 @@ function selectRandomCategories() {
 }
 
 // Function to set up the game board with the selected categories
+// Function to initialize classic game mode
+function initClassicGame() {
+    console.log('🎮 INIT: Starting initClassicGame');
+    console.log('🎮 INIT: Timestamp:', Date.now());
+    console.log('🎮 INIT: gameDataLoaded:', gameDataLoaded);
+    console.log('🎮 INIT: populationRankings keys:', Object.keys(populationRankings).length);
+    
+    // Track that classic game mode was played today
+    trackGameModeToday('classic');
+    
+    // Ensure game data is loaded
+    if (!gameDataLoaded || Object.keys(populationRankings).length === 0) {
+        console.log('🎮 INIT: Game data not yet loaded for classic mode, waiting...');
+        setTimeout(initClassicGame, 500);
+        return;
+    }
+    
+    console.log('🎮 INIT: Data is loaded, proceeding with setup');
+    
+    // Check if classic container is visible with multiple selectors
+    const classicContainer = document.querySelector('.container.game-container') || document.querySelector('.container');
+    const allContainers = document.querySelectorAll('.container');
+    const gameContainers = document.querySelectorAll('.game-container');
+    
+    console.log('🎮 INIT: Container analysis:');
+    console.log('  - Classic container found:', !!classicContainer);
+    console.log('  - All .container elements:', allContainers.length);
+    console.log('  - All .game-container elements:', gameContainers.length);
+    console.log('  - Classic container display:', classicContainer?.style.display);
+    console.log('  - Classic container opacity:', classicContainer?.style.opacity);
+    console.log('  - Classic container visibility:', classicContainer?.style.visibility);
+    
+    if (!classicContainer) {
+        console.error('🎮 INIT: ERROR - No classic container found during initialization!');
+        console.log('🎮 INIT: Available containers:', Array.from(allContainers).map(c => c.className));
+        return;
+    }
+    
+    // Verify essential DOM elements exist
+    const categoriesDiv = document.querySelector('.categories');
+    const flagColumn = document.querySelector('.flag-column');
+    const flagBox = document.getElementById('flagBox');
+    const countryName = document.getElementById('countryName');
+    
+    console.log('🎮 INIT: DOM elements check:');
+    console.log('  - Categories div:', !!categoriesDiv);
+    console.log('  - Flag column:', !!flagColumn);
+    console.log('  - Flag box:', !!flagBox);
+    console.log('  - Country name:', !!countryName);
+    
+    // Initialize the game board
+    console.log('🎮 INIT: Calling setupGameBoard');
+    try {
+        setupGameBoard();
+        console.log('🎮 INIT: setupGameBoard completed successfully');
+    } catch (error) {
+        console.error('🎮 INIT: Error in setupGameBoard:', error);
+        return;
+    }
+    
+    // Reset any existing game state
+    if (typeof resetGame === 'function') {
+        console.log('🎮 INIT: Calling resetGame');
+        try {
+            resetGame();
+            console.log('🎮 INIT: resetGame completed successfully');
+        } catch (error) {
+            console.error('🎮 INIT: Error in resetGame:', error);
+        }
+    } else {
+        console.log('🎮 INIT: resetGame function not found');
+    }
+    
+    // Ensure the roll button is enabled and ready
+    const rollButton = document.querySelector('button[onclick="rollFlag()"]') || document.querySelector('button');
+    console.log('🎮 INIT: Roll button found:', !!rollButton);
+    console.log('🎮 INIT: Roll button text:', rollButton?.textContent);
+    console.log('🎮 INIT: Roll button onclick:', rollButton?.onclick);
+    
+    if (rollButton) {
+        rollButton.disabled = false;
+        rollButton.style.opacity = '1';
+        rollButton.style.cursor = 'pointer';
+        rollButton.textContent = 'Roll';
+        console.log('🎮 INIT: Roll button configured');
+    } else {
+        console.error('🎮 INIT: ERROR - Roll button not found!');
+    }
+    
+    // Check category boxes
+    const categoryBoxes = document.querySelectorAll('.category-box');
+    const categoryElements = document.querySelectorAll('.category');
+    console.log('🎮 INIT: Category elements found:');
+    console.log('  - Category boxes (.category-box):', categoryBoxes.length);
+    console.log('  - Category elements (.category):', categoryElements.length);
+    
+    // Log current game categories if available
+    if (typeof currentGameCategories !== 'undefined') {
+        console.log('🎮 INIT: Current game categories:', currentGameCategories.length);
+    }
+    
+    console.log('🎮 INIT: Classic Flag Game initialization complete');
+}
+
 function setupGameBoard() {
+    console.log('🏗️ SETUP: Starting setupGameBoard');
+    
     // Select random variants for each category
-    selectRandomCategories();
+    try {
+        selectRandomCategories();
+        console.log('🏗️ SETUP: selectRandomCategories completed');
+    } catch (error) {
+        console.error('🏗️ SETUP: Error in selectRandomCategories:', error);
+        throw error;
+    }
+    
+    if (!currentGameCategories || currentGameCategories.length === 0) {
+        console.error('🏗️ SETUP: ERROR - No currentGameCategories available');
+        return;
+    }
+    
+    console.log('🏗️ SETUP: Setting up', currentGameCategories.length, 'categories');
     
     // Update each category box title
-    currentGameCategories.forEach(category => {
+    currentGameCategories.forEach((category, index) => {
+        console.log(`🏗️ SETUP: Processing category ${index + 1}:`, category.name, category.boxId);
+        
         const categoryBox = document.getElementById(category.boxId);
+        console.log(`🏗️ SETUP: Category box ${category.boxId} found:`, !!categoryBox);
+        
         if (categoryBox) {
             const titleElement = categoryBox.querySelector('h2');
+            console.log(`🏗️ SETUP: Title element found for ${category.boxId}:`, !!titleElement);
+            
             if (titleElement) {
                 titleElement.textContent = category.name;
+                console.log(`🏗️ SETUP: Set title to "${category.name}"`);
             }
             
             // Store the category id on the box element for later reference
@@ -2942,6 +1124,8 @@ function setupGameBoard() {
             
             // Clear any previous rank
             const rankElement = document.getElementById(category.rankElement);
+            console.log(`🏗️ SETUP: Rank element ${category.rankElement} found:`, !!rankElement);
+            
             if (rankElement) {
                 rankElement.textContent = '';
                 rankElement.style.color = '#333';
@@ -2949,11 +1133,17 @@ function setupGameBoard() {
             
             // Clear any previous flag
             const categoryBoxElement = categoryBox.querySelector('.category-box');
+            console.log(`🏗️ SETUP: Category box element found:`, !!categoryBoxElement);
+            
             if (categoryBoxElement) {
                 categoryBoxElement.style.background = 'none';
             }
+        } else {
+            console.error(`🏗️ SETUP: ERROR - Category box ${category.boxId} not found!`);
         }
     });
+    
+    console.log('🏗️ SETUP: setupGameBoard completed');
 }
 
 // Function to evaluate rank based on whether higher or lower is better
@@ -3098,30 +1288,59 @@ function getAdjustedRankValue(rankText, categoryId) {
     return rankNum;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Create skips counter display
-    const flagContainer = document.querySelector('.flag-container');
-    const skipsCounter = document.createElement('div');
-    skipsCounter.id = 'skipsCounter';
-    skipsCounter.className = 'skips-counter';
-    skipsCounter.textContent = `Skips: ${skipsRemaining}/${MAX_SKIPS}`;
+document.addEventListener('DOMContentLoaded', async function () {
+    // Load game data first
+    const dataLoaded = await loadGameData();
+    if (!dataLoaded) {
+        console.error('Failed to load game data - some features may not work');
+        // Show error message to user
+        showDataLoadError();
+    }
     
-    // Insert after the roll button
-    const rollButton = document.querySelector('button');
-    rollButton.parentNode.insertBefore(skipsCounter, rollButton.nextSibling);
+    try {
+        // Create skips counter display
+        const flagContainer = document.querySelector('.flag-container');
+        if (flagContainer) {
+            const skipsCounter = document.createElement('div');
+            skipsCounter.id = 'skipsCounter';
+            skipsCounter.className = 'skips-counter';
+            skipsCounter.textContent = `Skips: ${skipsRemaining}/${MAX_SKIPS}`;
+            
+            // Insert after the roll button
+            const rollButton = document.querySelector('button');
+            if (rollButton && rollButton.parentNode) {
+                rollButton.parentNode.insertBefore(skipsCounter, rollButton.nextSibling);
+            } else {
+                console.error('Roll button not found');
+            }
+        } else {
+            console.error('Flag container not found');
+        }
 
-    // Create high score display
-    const highScoreDisplay = document.createElement('div');
-    highScoreDisplay.id = 'highScoreDisplay';
-    highScoreDisplay.className = 'high-score';
-    highScoreDisplay.textContent = `High Score: ${getHighScore() || 'None'}`;
-    
-    // Set up the game board with random categories
-setupGameBoard();
-    
-    // Add high score at the bottom of the page
-    const container = document.querySelector('.container');
-    container.appendChild(highScoreDisplay);
+        // Create high score display
+        const highScoreDisplay = document.createElement('div');
+        highScoreDisplay.id = 'highScoreDisplay';
+        highScoreDisplay.className = 'high-score';
+        highScoreDisplay.textContent = `High Score: ${getHighScore() || 'None'}`;
+        
+        // Set up the game board with random categories (after data loads)
+        if (gameDataLoaded && Object.keys(populationRankings).length > 0) {
+            setupGameBoard();
+        } else {
+            // Data not loaded yet, classic game will be initialized when switching to it
+            console.log('Deferring classic game setup until data is loaded');
+        }
+        
+        // Add high score at the bottom of the page
+        const container = document.querySelector('.container');
+        if (container) {
+            container.appendChild(highScoreDisplay);
+        } else {
+            console.error('Container not found');
+        }
+    } catch (error) {
+        console.error('Error during DOM initialization:', error);
+    }
 
     const categoryBoxes = document.querySelectorAll('.category-box');
     const hdiBox = document.getElementById('hdiBox');
@@ -3142,18 +1361,23 @@ setupGameBoard();
     const gdpPerCapitaRank = document.getElementById('gdpPerCapitaRank');
     
     const averageRankingText = document.getElementById('averageRankingText');
+    const rollButton = document.querySelector('button');
 
-    rollButton.addEventListener('click', function () {
+    if (rollButton) {
+        rollButton.addEventListener('click', function () {
         if (selectedBoxes.size === categoryBoxes.length) {
-            resetGame();
+            console.log('🎯 RESET BUTTON: Game completed, calling window.resetGame. selectedBoxes.size:', selectedBoxes.size);
+            window.resetGame();
         } else {
             // Always allow rolling, the rollFlag function will handle skips
             rollFlag();
         }
     });
+    }
 
     categoryBoxes.forEach(box => {
         box.addEventListener('click', function () {
+            
             // Only allow clicking if we're not in the middle of rolling
             if (!isRolling && !selectedBoxes.has(box) && currentRoll !== null) {
                 selectedBox = box;
@@ -3193,7 +1417,14 @@ setupGameBoard();
                     
                     if (rankElement) {
                         // Set the rank text
-                        rankElement.textContent = evaluateRank(countryName, categoryId);
+                        const rankText = evaluateRank(countryName, categoryId);
+                        rankElement.textContent = rankText;
+                        
+                        // Check for lucky number 7 achievement
+                        if (rankText === "7th") {
+                            playerStats.exactRankSeven = 1;
+                            updateAchievementProgress('lucky-number-7', 1);
+                        }
                         
                         // Colorize the rank
                         colorizeRank(rankElement, categoryId);
@@ -3208,6 +1439,7 @@ setupGameBoard();
                 currentRoll = null;
     
                 if (selectedBoxes.size === categoryBoxes.length) {
+                    console.log('🎯 GAME COMPLETE: Setting button to Reset, selectedBoxes.size:', selectedBoxes.size);
                     rollButton.textContent = 'Reset';
                     displayAverageRanking();
                 }
@@ -3244,12 +1476,23 @@ function colorizeRank(rankElement, categoryId) {
 }
 
     function getHighScore() {
-        return localStorage.getItem('flagGameHighScore');
+        try {
+            return localStorage.getItem('flagGameHighScore');
+        } catch (error) {
+            console.error('Error reading from localStorage:', error);
+            return null;
+        }
     }
 
     function setHighScore(score) {
-        localStorage.setItem('flagGameHighScore', score);
-        highScoreDisplay.textContent = `High Score: ${score}`;
+        try {
+            localStorage.setItem('flagGameHighScore', score);
+            if (highScoreDisplay) {
+                highScoreDisplay.textContent = `High Score: ${score}`;
+            }
+        } catch (error) {
+            console.error('Error writing to localStorage:', error);
+        }
     }
 
     function displayAverageRanking() {
@@ -3288,6 +1531,57 @@ function colorizeRank(rankElement, categoryId) {
             
             document.getElementById('averageRankingText').appendChild(document.createElement('br'));
             document.getElementById('averageRankingText').appendChild(newHighScoreMsg);
+        }
+        
+        // Update player stats and check milestones
+        if (typeof playerStats !== 'undefined' && playerStats) {
+            console.log('🎯 GAME COMPLETED: Starting milestone updates');
+            
+            // Update game stats
+            updateStat('gamesPlayed', 1);
+            updateStat('classicGamesCompleted', 1);
+            
+            // Track identified countries from Classic mode
+            const currentSelectedBoxes = new Set(selectedBoxes);
+            currentSelectedBoxes.forEach(box => {
+                const backgroundImage = box.style.backgroundImage;
+                if (backgroundImage) {
+                    // Extract country code from URL like "url(flags_images/us.png)"
+                    const match = backgroundImage.match(/flags_images\/([a-z-]+)\.png/);
+                    if (match) {
+                        const countryCode = match[1];
+                        const flagPath = `flags_images/${countryCode}.png`;
+                        const flagIndex = flags.indexOf(flagPath);
+                        
+                        if (flagIndex !== -1) {
+                            const countryName = countryNames[flagIndex];
+                            if (countryName && !playerStats.identifiedCountries.includes(countryName)) {
+                                playerStats.identifiedCountries.push(countryName);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Check country achievements after adding new countries
+            checkAllCountriesAchievement();
+            
+            // Update high score in player stats
+            if (!playerStats.highScores.flagGame || parseFloat(formattedAverage) < playerStats.highScores.flagGame) {
+                playerStats.highScores.flagGame = parseFloat(formattedAverage);
+            }
+            
+            // Check ranking achievements
+            console.log(`Checking ranking achievements for average: ${formattedAverage}`);
+            updateAchievementProgress('classic-ranking-50', parseFloat(formattedAverage));
+            updateAchievementProgress('classic-ranking-20', parseFloat(formattedAverage));
+            updateAchievementProgress('global-perfection', parseFloat(formattedAverage));
+            
+            // End the play session when game completes
+            endPlaySession();
+            
+            // Save data
+            saveMilestonesData();
         }
     }
 
@@ -3407,59 +1701,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Function to switch between game modes
-    function switchGameMode(mode) {
-        currentGameMode = mode;
-        
-        // Hide all game containers
-        classicContainer.classList.remove('active');
-        duelContainer.classList.remove('active');
-        const revealContainer = document.getElementById('flagRevealContainer');
-        const puzzleContainer = document.getElementById('flagPuzzleContainer');
-        
-        if (revealContainer) {
-            revealContainer.classList.remove('active');
-            revealContainer.style.display = 'none';
-        }
-        
-        if (puzzleContainer) {
-            puzzleContainer.classList.remove('active');
-            puzzleContainer.style.display = 'none';
-        }
-        
-        // Show the selected game container
-        if (mode === 'classic') {
-            classicContainer.classList.add('active');
-            classicContainer.style.display = 'block';
-            // Reset the classic game if needed
-            if (typeof resetGame === 'function') {
-                resetGame();
-            }
-        } else if (mode === 'duel') {
-            duelContainer.classList.add('active');
-            duelContainer.style.display = 'block';
-            // Initialize the duel game
-            if (typeof initFlagDuel === 'function') {
-                initFlagDuel();
-            }
-        } else if (mode === 'reveal' && revealContainer) {
-            revealContainer.classList.add('active');
-            revealContainer.style.display = 'block';
-            // Initialize the reveal game
-            if (typeof initFlagReveal === 'function') {
-                initFlagReveal();
-            }
-        } else if (mode === 'puzzle' && puzzleContainer) {
-            puzzleContainer.classList.add('active');
-            puzzleContainer.style.display = 'block';
-            // Initialize the puzzle game
-            if (typeof initFlagPuzzle === 'function') {
-                initFlagPuzzle();
-            }
-        }
-    // After switching modes, re-setup the settings button
-    setTimeout(setupSettingsButton, 50);
-    }
 });
 
 // Flag Duel variables
@@ -3468,26 +1709,44 @@ let duelHighScore = 0;
 let leftCountry, rightCountry;
 let currentCategory;
 let answeredCorrectly = false;
-let categories = [
-    { name: "Population", rankings: populationRankings },
-    { name: "Life Expectancy", rankings: lifeExpectancyRankings },
-    { name: "Olympic Medals", rankings: olympicRankings },
-    { name: "Land Area", rankings: landAreaRankings },
-    { name: "HDI", rankings: hdiRankings },
-    { name: "Average Temperature", rankings: averageTemperatureRankings },
-    { name: "Highest Elevation", rankings: highestElevationRankings },
-    { name: "GDP per Capita", rankings: gdpPerCapitaRankings }
-];
+// Function to get categories with current ranking data
+function getCategories() {
+    return [
+        { name: "Population", rankings: populationRankings },
+        { name: "Life Expectancy", rankings: lifeExpectancyRankings },
+        { name: "Olympic Medals", rankings: olympicRankings },
+        { name: "Land Area", rankings: landAreaRankings },
+        { name: "HDI", rankings: hdiRankings },
+        { name: "Average Temperature", rankings: averageTemperatureRankings },
+        { name: "Highest Elevation", rankings: highestElevationRankings },
+        { name: "GDP per Capita", rankings: gdpPerCapitaRankings }
+    ];
+}
+
+// Legacy variable for backward compatibility
+let categories = [];
 
 // Function to load high score from localStorage
 function getDuelHighScore() {
-    return localStorage.getItem('flagDuelHighScore') || 0;
+    try {
+        return localStorage.getItem('flagDuelHighScore') || 0;
+    } catch (error) {
+        console.error('Error reading duel high score from localStorage:', error);
+        return 0;
+    }
 }
 
 // Function to save high score to localStorage
 function setDuelHighScore(score) {
-    localStorage.setItem('flagDuelHighScore', score);
-    document.getElementById('duelHighScore').textContent = `High Score: ${score}`;
+    try {
+        localStorage.setItem('flagDuelHighScore', score);
+        const duelHighScoreElement = document.getElementById('duelHighScore');
+        if (duelHighScoreElement) {
+            duelHighScoreElement.textContent = `High Score: ${score}`;
+        }
+    } catch (error) {
+        console.error('Error saving duel high score to localStorage:', error);
+    }
 }
 
 // Function to display the new high score message
@@ -3513,6 +1772,17 @@ function displayNewHighScoreMessage() {
 // Function to initialize Flag Duel game
 function initFlagDuel() {
     console.log('Flag Duel mode initialized');
+    startPlaySession();
+    
+    // Track that duel game mode was played today
+    trackGameModeToday('duel');
+    
+    // Check if game data is loaded
+    if (!gameDataLoaded || Object.keys(populationRankings).length === 0) {
+        console.log('Game data not yet loaded for Flag Duel, waiting...');
+        setTimeout(initFlagDuel, 500); // Try again in 500ms
+        return;
+    }
     
     // Get DOM elements
     const leftFlag = document.getElementById('leftFlag');
@@ -3544,6 +1814,13 @@ function initFlagDuel() {
 
 // Function to set up a new duel
 function setupNewDuel() {
+    // Check if game data is loaded
+    if (!gameDataLoaded || Object.keys(populationRankings).length === 0) {
+        console.log('Game data not yet loaded, waiting...');
+        setTimeout(setupNewDuel, 500); // Try again in 500ms
+        return;
+    }
+    
     // Reset flags
     const leftFlag = document.getElementById('leftFlag');
     const rightFlag = document.getElementById('rightFlag');
@@ -3561,6 +1838,7 @@ function setupNewDuel() {
     }
     
     // Select two different random countries
+    const categories = getCategories(); // Get current categories with loaded data
     const availableCountries = filteredCountryNames.filter(country => {
         // Filter to only include countries that have data for all categories
         return categories.every(category => 
@@ -3645,6 +1923,29 @@ function handleFlagClick(side) {
             displayNewHighScoreMessage();
         }
         
+        // Update player stats and check milestones
+        if (typeof playerStats !== 'undefined' && playerStats) {
+            // Update games played
+            playerStats.gamesPlayed = (playerStats.gamesPlayed || 0) + 1;
+            
+            // Update duel-specific stats
+            playerStats.duelGamesPlayed = (playerStats.duelGamesPlayed || 0) + 1;
+            
+            // Update high score in player stats
+            if (currentScore > (playerStats.highScores.flagDuel || 0)) {
+                playerStats.highScores.flagDuel = currentScore;
+                playerStats.duelScore = currentScore;
+            }
+            
+            // Save player stats to localStorage
+            localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
+            
+            // Trigger milestone checks
+            if (typeof checkAllMilestones === 'function') {
+                checkAllMilestones();
+            }
+        }
+        
         answeredCorrectly = true;
     } else {
         // Incorrect answer
@@ -3689,7 +1990,7 @@ window.initFlagDuel = initFlagDuel;
 
 // Add this at the very bottom of your script.js file
 document.addEventListener('DOMContentLoaded', function() {
-    setupSettingsButton();
+    // setupSettingsButton(); // Function not defined, commenting out
     // Fix for all game mode options
     const modeItems = document.querySelectorAll('.dropdown-item');
     
@@ -3719,6 +2020,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (mode === 'classic') {
                 classicContainer.classList.add('active');
                 classicContainer.style.display = 'block';
+                classicContainer.style.opacity = '1';
                 duelContainer.classList.remove('active');
                 duelContainer.style.display = 'none';
                 revealContainer.classList.remove('active');
@@ -3733,6 +2035,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 classicContainer.style.display = 'none';
                 duelContainer.classList.add('active');
                 duelContainer.style.display = 'block';
+                duelContainer.style.opacity = '1';
                 revealContainer.classList.remove('active');
                 revealContainer.style.display = 'none';
                 
@@ -3747,6 +2050,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 duelContainer.style.display = 'none';
                 revealContainer.classList.add('active');
                 revealContainer.style.display = 'block';
+                revealContainer.style.opacity = '1';
                 
                 // Initialize Flag Reveal
                 if (typeof initFlagReveal === 'function') {
@@ -3766,12 +2070,13 @@ let totalPieces = 16; // 4x4 grid
 let revealedPieces = 0;
 let revealTimer = null;
 let revealInterval = 1500; // Time in ms between piece reveals (1.5 seconds)
+let revealGameTimer = null; // 2-minute countdown timer
+let revealTimeRemaining = 120; // 2 minutes in seconds
 let isGameActive = false;
 let currentDifficulty = 'medium'; // 'easy', 'medium', 'hard'
 let scoreMultiplier = 1;
 let lastIncorrectGuessTime = 0; // Track time of last incorrect guess
-let alreadyPenalized = false;
-let isProcessingGuess = false;
+let isProcessingGuess = false; // Prevent multiple simultaneous guess processing
 
 // Function to load high score from localStorage
 function getRevealHighScore() {
@@ -3787,6 +2092,10 @@ function setRevealHighScore(score) {
 // Function to initialize Flag Reveal game
 function initFlagReveal() {
     console.log('Flag Reveal mode initialized');
+    startPlaySession();
+    
+    // Track that reveal game mode was played today
+    trackGameModeToday('reveal');
     
     // Get DOM elements
     const revealFlag = document.getElementById('revealFlag');
@@ -3802,13 +2111,21 @@ function initFlagReveal() {
     document.getElementById('revealScore').textContent = revealScore;
     document.getElementById('revealHighScore').textContent = revealHighScore;
     
-    // Reset lives
+    // Reset lives and processing flag
     revealLives = 3;
     document.getElementById('revealLives').textContent = revealLives;
+    isProcessingGuess = false;
     
-    // Set up event listeners
-    submitGuessButton.addEventListener('click', handleGuessSubmit);
-    countryGuessInput.addEventListener('keypress', function(e) {
+    // Remove any existing event listeners to prevent duplicates
+    submitGuessButton.replaceWith(submitGuessButton.cloneNode(true));
+    const newSubmitButton = document.getElementById('submitGuessButton');
+    
+    countryGuessInput.replaceWith(countryGuessInput.cloneNode(true));
+    const newCountryInput = document.getElementById('countryGuessInput');
+    
+    // Set up fresh event listeners
+    newSubmitButton.addEventListener('click', handleGuessSubmit);
+    newCountryInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             handleGuessSubmit();
         }
@@ -3832,6 +2149,14 @@ function initFlagReveal() {
         // Start a new round
         setupNewReveal();
     });
+    
+    // Set up the 2-minute countdown timer
+    revealTimeRemaining = 120; // 2 minutes
+    document.getElementById('revealTimer').textContent = '2:00';
+    if (revealGameTimer) {
+        clearInterval(revealGameTimer);
+    }
+    revealGameTimer = setInterval(updateRevealTimer, 1000);
     
     // Start the first round
     setupNewReveal();
@@ -3905,6 +2230,7 @@ function setupNewReveal() {
         
         // Start revealing pieces
         isGameActive = true;
+        isProcessingGuess = false; // Reset processing flag for new round
         if (revealTimer) {
             clearInterval(revealTimer);
         }
@@ -3975,14 +2301,24 @@ function revealRandomPiece() {
 
 // Function to handle guess submission
 function handleGuessSubmit() {
-    if (!isGameActive) return;
+    // Prevent multiple simultaneous processing
+    if (!isGameActive || isProcessingGuess) return;
+    
+    isProcessingGuess = true;
     
     const countryGuessInput = document.getElementById('countryGuessInput');
     const submittedGuess = countryGuessInput.value.trim();
+    
+    // Don't process empty guesses
+    if (!submittedGuess) {
+        isProcessingGuess = false;
+        return;
+    }
+    
     const officialCountryName = getOfficialCountryName(submittedGuess);
     const correctAnswer = currentRevealCountry;
     
-    // Stop the timer
+    // Stop the piece reveal timer (keep countdown timer running)
     clearInterval(revealTimer);
     
     if (officialCountryName === correctAnswer) {
@@ -3992,6 +2328,11 @@ function handleGuessSubmit() {
         // Incorrect answer
         handleIncorrectGuess();
     }
+    
+    // Reset processing flag after a short delay
+    setTimeout(() => {
+        isProcessingGuess = false;
+    }, 100);
 }
 
 // Function to handle correct guess
@@ -3999,12 +2340,20 @@ function handleCorrectGuess() {
     const revealMessage = document.getElementById('revealMessage');
     const countryGuessInput = document.getElementById('countryGuessInput');
     
-    // Calculate score based on pieces revealed
-    const scoreGain = Math.round(100 * (1 - revealedPieces / totalPieces) * scoreMultiplier);
+    // Calculate score: base score + bonus for guessing with fewer pieces revealed
+    const baseScore = 50; // Base points for getting it right
+    const speedBonus = Math.round((totalPieces - revealedPieces) * 10 * scoreMultiplier); // 10 points per unrevealed piece
+    const lifeBonus = revealLives * 20; // 20 points per life remaining
+    const scoreGain = baseScore + speedBonus + lifeBonus;
+    
     revealScore += scoreGain;
     
-    // Update UI
-    revealMessage.textContent = `Correct! +${scoreGain} points`;
+    // Update UI with breakdown
+    let bonusText = '';
+    if (speedBonus > 0) bonusText += ` (+${speedBonus} speed bonus)`;
+    if (lifeBonus > 0) bonusText += ` (+${lifeBonus} life bonus)`;
+    
+    revealMessage.textContent = `Correct! +${scoreGain} points${bonusText}`;
     revealMessage.className = 'reveal-message correct';
     document.getElementById('revealScore').textContent = revealScore;
     
@@ -4021,6 +2370,29 @@ function handleCorrectGuess() {
         
         // Display high score message
         displayRevealHighScoreMessage();
+    }
+    
+    // Update player stats and check milestones
+    if (typeof playerStats !== 'undefined' && playerStats) {
+        // Update games played
+        playerStats.gamesPlayed = (playerStats.gamesPlayed || 0) + 1;
+        
+        // Update reveal-specific stats
+        playerStats.revealGamesPlayed = (playerStats.revealGamesPlayed || 0) + 1;
+        
+        // Update high score in player stats
+        if (revealScore > (playerStats.highScores.flagReveal || 0)) {
+            playerStats.highScores.flagReveal = revealScore;
+            playerStats.revealScore = revealScore;
+        }
+        
+        // Save player stats to localStorage
+        localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
+        
+        // Trigger milestone checks
+        if (typeof checkAllMilestones === 'function') {
+            checkAllMilestones();
+        }
     }
     
     // Wait just a very short moment to show the correct answer, then go to next flag
@@ -4043,26 +2415,22 @@ function handleCorrectGuess() {
     }, 300); // Only 300ms delay - very quick transition
 }
 
-// Function to handle incorrect guess - FIXED VERSION
+// Function to handle incorrect guess
 function handleIncorrectGuess() {
-    console.log("BEFORE decreasing: lives =", revealLives);
     // Decrease lives
     revealLives--;
-    console.log("AFTER decreasing: lives =", revealLives);
     document.getElementById('revealLives').textContent = revealLives;
     
     const revealMessage = document.getElementById('revealMessage');
     const countryGuessInput = document.getElementById('countryGuessInput');
     
     if (revealLives <= 0) {
-        console.log("NO LIVES LEFT - calling handleGameOver");
         // Game over
         isGameActive = false;
         handleGameOver();
     } else {
-        console.log("Still have lives left:", revealLives);
         // Still have lives left
-        revealMessage.textContent = `Incorrect. ${revealLives} attempts left.`;
+        revealMessage.textContent = `Incorrect. ${revealLives} attempt${revealLives === 1 ? '' : 's'} left.`;
         revealMessage.className = 'reveal-message incorrect';
         
         // Continue revealing pieces
@@ -4100,6 +2468,14 @@ function handleOutOfTime() {
 function handleGameOver() {
     isGameActive = false;
     
+    // Stop both timers
+    if (revealTimer) {
+        clearInterval(revealTimer);
+    }
+    if (revealGameTimer) {
+        clearInterval(revealGameTimer);
+    }
+    
     const revealMessage = document.getElementById('revealMessage');
     const nextRevealButton = document.getElementById('nextRevealButton');
     const countryGuessInput = document.getElementById('countryGuessInput');
@@ -4123,6 +2499,14 @@ function handleGameOver() {
         document.getElementById('revealScore').textContent = revealScore;
         revealLives = 3;
         document.getElementById('revealLives').textContent = revealLives;
+        
+        // Reset the timer
+        revealTimeRemaining = 120; // Reset to 2 minutes
+        document.getElementById('revealTimer').textContent = '2:00';
+        if (revealGameTimer) {
+            clearInterval(revealGameTimer);
+        }
+        revealGameTimer = setInterval(updateRevealTimer, 1000);
         
         // Remove any high score message
         const highScoreMessage = document.querySelector('.reveal-high-score-message');
@@ -4152,6 +2536,64 @@ function displayRevealHighScoreMessage() {
     messageContainer.insertBefore(newHighScoreMsg, document.getElementById('nextRevealButton'));
 }
 
+// Function to update the countdown timer
+function updateRevealTimer() {
+    if (!isGameActive) return;
+    
+    // Decrease time
+    revealTimeRemaining--;
+    
+    // Format time as M:SS
+    const minutes = Math.floor(revealTimeRemaining / 60);
+    const seconds = revealTimeRemaining % 60;
+    const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    
+    // Update display
+    document.getElementById('revealTimer').textContent = formattedTime;
+    
+    // Check for time up
+    if (revealTimeRemaining <= 0) {
+        handleRevealTimeUp();
+    }
+}
+
+// Function to handle when the 2-minute countdown expires
+function handleRevealTimeUp() {
+    isGameActive = false;
+    
+    // Stop both timers
+    if (revealTimer) {
+        clearInterval(revealTimer);
+    }
+    if (revealGameTimer) {
+        clearInterval(revealGameTimer);
+    }
+    
+    const revealMessage = document.getElementById('revealMessage');
+    const countryGuessInput = document.getElementById('countryGuessInput');
+    const submitGuessButton = document.getElementById('submitGuessButton');
+    
+    // Update UI
+    revealMessage.textContent = `Time's up! Final score: ${revealScore}`;
+    revealMessage.className = 'reveal-message incorrect';
+    
+    // Disable input
+    countryGuessInput.disabled = true;
+    submitGuessButton.disabled = true;
+    
+    // Show play again button
+    const nextRevealButton = document.getElementById('nextRevealButton');
+    nextRevealButton.style.display = 'inline-block';
+    nextRevealButton.textContent = 'Play Again';
+    
+    // Check for new high score
+    if (revealScore > revealHighScore) {
+        revealHighScore = revealScore;
+        setRevealHighScore(revealHighScore);
+        displayRevealHighScoreMessage();
+    }
+}
+
 // Expose the initFlagReveal function globally
 window.initFlagReveal = initFlagReveal;
 
@@ -4179,6 +2621,10 @@ function setPuzzleHighScore(score) {
 // Function to initialize Flag Puzzle game
 function initFlagPuzzle() {
     console.log('Flag Puzzle mode initialized');
+    startPlaySession();
+    
+    // Track that puzzle game mode was played today
+    trackGameModeToday('puzzle');
     
     // Get DOM elements
     const puzzleContainer = document.getElementById('flagPuzzleContainer');
@@ -4240,6 +2686,7 @@ function initFlagPuzzle() {
 
 // Function to start a new game
 function startPuzzleGame() {
+    startPlaySession();
     // Reset game state
     puzzleScore = 0;
     document.getElementById('puzzleScore').textContent = puzzleScore;
@@ -4278,6 +2725,7 @@ function startPuzzleGame() {
 
 // Function to restart the game
 function restartPuzzleGame() {
+    startPlaySession();
     // Hide restart button and show start button
     document.getElementById('restartPuzzleButton').style.display = 'none';
     document.getElementById('startPuzzleButton').style.display = 'block';
@@ -4577,6 +3025,32 @@ function endPuzzleGame() {
         displayPuzzleHighScoreMessage();
     }
     
+    // Update player stats and check milestones
+    if (typeof playerStats !== 'undefined' && playerStats) {
+        console.log('🎯 PUZZLE COMPLETED: Starting milestone updates. Score:', puzzleScore);
+        
+        // Update game stats
+        updateStat('gamesPlayed', 1);
+        updateStat('puzzleCompleted', 1);
+        
+        // Update high score in player stats
+        if (puzzleScore > (playerStats.highScores.flagPuzzle || 0)) {
+            playerStats.highScores.flagPuzzle = puzzleScore;
+            playerStats.puzzleScore = puzzleScore;
+        }
+        
+        // Check puzzle score milestones
+        console.log(`Checking puzzle score achievements for score: ${puzzleScore}`);
+        updateAchievementProgress('puzzle-score-medium', puzzleScore);
+        updateAchievementProgress('puzzle-score-high', puzzleScore);
+        
+        // End the play session when game completes
+        endPlaySession();
+        
+        // Save data
+        saveMilestonesData();
+    }
+    
     // Reveal any remaining countries
     const unguessedCountries = mergedFlags.filter(flag => 
         !Array.from(guessedCountries).includes(flag.country)
@@ -4779,45 +3253,109 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function switchGameMode(mode) {
+    console.log('🔄 SWITCH: switchGameMode called with mode:', mode);
+    console.log('🔄 SWITCH: DOM ready state:', document.readyState);
+    console.log('🔄 SWITCH: Current timestamp:', Date.now());
+    
     currentGameMode = mode;
     
-    // Get all game containers
-    const classicContainer = document.querySelector('.container');
+    // Get all game containers with more specific targeting
+    const classicContainer = document.querySelector('.container.game-container');
+    const classicContainerBackup = document.querySelector('.container');
     const duelContainer = document.getElementById('flagDuelContainer');
     const revealContainer = document.getElementById('flagRevealContainer');
     const puzzleContainer = document.getElementById('flagPuzzleContainer');
+    const milestonesContainer = document.getElementById('milestonesContainer');
     
-    // Fade out all containers
-    [classicContainer, duelContainer, revealContainer, puzzleContainer].forEach(container => {
+    console.log('🔄 SWITCH: Container detailed check:');
+    console.log('  - Classic (specific):', !!classicContainer, classicContainer?.id || 'no-id');
+    console.log('  - Classic (backup):', !!classicContainerBackup, classicContainerBackup?.id || 'no-id');
+    console.log('  - Duel:', !!duelContainer, duelContainer?.style.display);
+    console.log('  - Reveal:', !!revealContainer, revealContainer?.style.display);
+    console.log('  - Puzzle:', !!puzzleContainer, puzzleContainer?.style.display);
+    console.log('  - Milestones:', !!milestonesContainer, milestonesContainer?.style.display);
+    
+    // Use the most appropriate classic container
+    const finalClassicContainer = classicContainer || classicContainerBackup;
+    console.log('🔄 SWITCH: Using classic container:', !!finalClassicContainer);
+    
+    if (!finalClassicContainer) {
+        console.error('🔄 SWITCH: ERROR - No classic container found!');
+        console.log('🔄 SWITCH: All containers:', document.querySelectorAll('.container').length);
+        console.log('🔄 SWITCH: Game containers:', document.querySelectorAll('.game-container').length);
+        return;
+    }
+    
+    // Fade out all containers including milestones
+    [finalClassicContainer, duelContainer, revealContainer, puzzleContainer, milestonesContainer].forEach(container => {
         if (container) {
+            console.log('🔄 SWITCH: Fading out container:', container.id || container.className);
             container.style.opacity = '0';
         }
     });
     
     // Add a slight delay before changing display property
     setTimeout(() => {
-        // Hide all containers
-        classicContainer.style.display = 'none';
-        duelContainer.style.display = 'none';
+        console.log('🔄 SWITCH: Starting container display changes');
+        
+        // Hide all game containers with null checking
+        if (finalClassicContainer) {
+            finalClassicContainer.style.display = 'none';
+            console.log('🔄 SWITCH: Classic container hidden');
+        }
+        if (duelContainer) {
+            duelContainer.style.display = 'none';
+            console.log('🔄 SWITCH: Duel container hidden');
+        }
         
         if (revealContainer) {
             revealContainer.style.display = 'none';
+            console.log('🔄 SWITCH: Reveal container hidden');
         }
         
         if (puzzleContainer) {
             puzzleContainer.style.display = 'none';
+            console.log('🔄 SWITCH: Puzzle container hidden');
+        }
+        
+        // Hide milestones container when switching to any game mode
+        if (milestonesContainer) {
+            milestonesContainer.style.display = 'none';
+            milestonesContainer.classList.remove('active');
+            milestonesContainer.style.visibility = 'hidden';
+            console.log('🔄 SWITCH: Milestones container hidden');
         }
         
         // Show and fade in the selected container
         if (mode === 'classic') {
-            classicContainer.style.display = 'block';
-            setTimeout(() => {
-                classicContainer.style.opacity = '1';
-            }, 50);
+            console.log('🎮 CLASSIC MODE: Starting classic mode switch');
+            console.log('🎮 CLASSIC MODE: Final classic container:', !!finalClassicContainer);
+            console.log('🎮 CLASSIC MODE: Container class names:', finalClassicContainer?.className);
+            console.log('🎮 CLASSIC MODE: Container current display:', finalClassicContainer?.style.display);
             
-            if (typeof resetGame === 'function') {
-                resetGame();
+            if (!finalClassicContainer) {
+                console.error('🎮 CLASSIC MODE: ERROR - No classic container available!');
+                return;
             }
+            
+            console.log('🎮 CLASSIC MODE: Setting display to block');
+            finalClassicContainer.style.display = 'block';
+            finalClassicContainer.style.visibility = 'visible';
+            
+            setTimeout(() => {
+                console.log('🎮 CLASSIC MODE: Setting opacity to 1');
+                finalClassicContainer.style.opacity = '1';
+                
+                // Verify container is now visible
+                const computedStyle = window.getComputedStyle(finalClassicContainer);
+                console.log('🎮 CLASSIC MODE: Computed display:', computedStyle.display);
+                console.log('🎮 CLASSIC MODE: Computed opacity:', computedStyle.opacity);
+                console.log('🎮 CLASSIC MODE: Computed visibility:', computedStyle.visibility);
+                
+                console.log('🎮 CLASSIC MODE: About to call initClassicGame');
+                // Ensure classic game is properly initialized
+                initClassicGame();
+            }, 50);
         } else if (mode === 'duel') {
             duelContainer.style.display = 'block';
             setTimeout(() => {
@@ -4846,6 +3384,13 @@ function switchGameMode(mode) {
                 initFlagPuzzle();
             }
         }
+        
+        // After switching modes, re-setup the settings button
+        setTimeout(() => {
+            if (typeof setupSettingsButton === 'function') {
+                setupSettingsButton();
+            }
+        }, 100);
     }, 300); // Wait for fade out to complete
 }
 // COMPLETE SETTINGS REBUILD
@@ -5334,14 +3879,12 @@ function loadMilestonesData() {
     
     // Check for consecutive days
     checkConsecutiveDays();
+    
+    // Sync countries identified achievements progress
+    checkAllCountriesAchievement();
 }
 
-// Function to save milestones data to localStorage
-function saveMilestonesData() {
-    localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
-    localStorage.setItem('flagGameMilestones', JSON.stringify(milestonesData));
-    localStorage.setItem('flagGameUnlockedAchievements', JSON.stringify(unlockedAchievements));
-}
+// Removed duplicate saveMilestonesData function - using the one with error handling later in the file
 
 // Function to check consecutive days
 function checkConsecutiveDays() {
@@ -5372,13 +3915,15 @@ function checkConsecutiveDays() {
 function checkTimeBasedAchievements() {
     const currentHour = new Date().getHours();
     
-    // Night Owl (after midnight)
+    // Night Owl (midnight to 6am: 0-5)
     if (currentHour >= 0 && currentHour < 6) {
+        playerStats.playInNightTime = 1;
         updateAchievementProgress('night-owl', 1);
     }
     
-    // Early Bird (before 6am)
-    if (currentHour < 6) {
+    // Early Bird (7am to 10am: 7-9)  
+    if (currentHour >= 7 && currentHour <= 10) {
+        playerStats.playInMorningTime = 1;
         updateAchievementProgress('early-bird', 1);
     }
 }
@@ -5472,46 +4017,79 @@ function updateHighScoreDisplay() {
     document.getElementById('flagPuzzleHighScore').textContent = playerStats.highScores.flagPuzzle;
 }
 
+// Set up periodic playtime tracking
+setInterval(() => {
+    updateSessionPlaytime();
+    // Update milestone progress for playtime every 5 minutes if there's an active session
+    if (sessionStartTime && currentSessionPlaytime > 0) {
+        const totalMinutes = playerStats.totalPlaytime + currentSessionPlaytime;
+        updateStat('totalPlaytime', 0); // This will update milestones with current total
+    }
+}, 300000); // Every 5 minutes
+
+// Handle page visibility changes for session tracking
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Page is hidden, end current session
+        endPlaySession();
+    } else {
+        // Page is visible again, potentially start new session if user interacts
+        // Session will start when user actually plays
+    }
+});
+
+// Handle page unload to end session
+window.addEventListener('beforeunload', () => {
+    endPlaySession();
+});
+
 // Function to set up milestone checkpoints throughout the game
 function setupMilestoneCheckpoints() {
-    // Classic game completion checkpoint
-    const originalResetGame = window.resetGame;
-    window.resetGame = function() {
-        // This is called at the end of a classic game
-        if (selectedBoxes && selectedBoxes.size === 8) {
-            // Game was completed
-            updateStat('gamesPlayed', 1);
-            updateStat('classicGamesCompleted', 1);
+    // Wait for resetGame function to be available
+    const waitForResetGame = () => {
+        if (typeof window.resetGame === 'function') {
+            console.log('Found resetGame function, setting up milestone checkpoints');
             
-            // Check current average ranking
-            const averageRanking = parseFloat(document.getElementById('averageRankingText').textContent.split(':')[1]);
-            if (!isNaN(averageRanking)) {
-                // Check for best score
-                if (playerStats.highScores.flagGame === 0 || averageRanking < playerStats.highScores.flagGame) {
-                    playerStats.highScores.flagGame = averageRanking;
-                }
+            // Classic game completion checkpoint
+            const originalResetGame = window.resetGame;
+            window.resetGame = function() {
+                // Capture the selectedBoxes size BEFORE the original function clears it
+                const completedBoxes = selectedBoxes ? selectedBoxes.size : 0;
+                console.log('🎯 HOOKED RESETGAME: Function called, selectedBoxes size:', completedBoxes);
+                console.log('🎯 HOOKED RESETGAME: Call stack:', new Error().stack);
                 
-                // Check ranking achievements
-                const rankingAchievements = [
-                    { id: 'classic-ranking-50', threshold: 50 },
-                    { id: 'classic-ranking-20', threshold: 20 },
-                    { id: 'global-perfection', threshold: 10 }
-                ];
-                
-                rankingAchievements.forEach(achievement => {
-                    if (averageRanking < achievement.threshold) {
-                        updateAchievementProgress(achievement.id, achievement.threshold);
-                    }
-                });
-            }
-            
-            // Save data
-            saveMilestonesData();
-        }
+                // This is called when the game is being reset
+                // Milestone logic has been moved to displayAverageRanking() where it belongs
+                console.log('Game reset called - no milestone processing needed here');
         
-        // Call original reset function
-        originalResetGame();
+                // Call original reset function
+                originalResetGame();
+            };
+            
+            return true; // Successfully set up
+        } else {
+            console.log('resetGame function not available yet, will retry...');
+            return false; // Not ready yet
+        }
     };
+    
+    // Try to set up the checkpoint immediately
+    if (!waitForResetGame()) {
+        // If not available, poll for it
+        console.log('Setting up polling for resetGame function...');
+        const pollInterval = setInterval(() => {
+            if (waitForResetGame()) {
+                console.log('Successfully set up resetGame checkpoint after polling');
+                clearInterval(pollInterval);
+            }
+        }, 100); // Check every 100ms
+        
+        // Give up after 10 seconds
+        setTimeout(() => {
+            clearInterval(pollInterval);
+            console.warn('Gave up waiting for resetGame function after 10 seconds');
+        }, 10000);
+    }
     
     // Flag Duel checkpoints
     const originalHandleFlagClick = handleFlagClick;
@@ -5526,6 +4104,17 @@ function setupMilestoneCheckpoints() {
         if (answeredCorrectly) {
             // Increment duel wins
             updateStat('duelWins', 1);
+            
+            // Track identified countries from Flag Duel mode
+            if (leftCountry && !playerStats.identifiedCountries.includes(leftCountry)) {
+                playerStats.identifiedCountries.push(leftCountry);
+            }
+            if (rightCountry && !playerStats.identifiedCountries.includes(rightCountry)) {
+                playerStats.identifiedCountries.push(rightCountry);
+            }
+            
+            // Check country achievements after adding new countries
+            checkAllCountriesAchievement();
             
             // Check for new best streak
             if (currentScore > playerStats.highScores.flagDuel) {
@@ -5576,6 +4165,14 @@ function setupMilestoneCheckpoints() {
             playerStats.highScores.flagReveal = revealScore;
         }
         
+        // Check point milestones for Reveal mode
+        if (revealScore >= 200) {
+            updateAchievementProgress('reveal-score-medium', revealScore);
+        }
+        if (revealScore >= 500) {
+            updateAchievementProgress('reveal-score-high', revealScore);
+        }
+        
         // Call original function
         originalHandleCorrectGuess();
         
@@ -5606,6 +4203,14 @@ function setupMilestoneCheckpoints() {
                 // Check high score
                 if (puzzleScore > playerStats.highScores.flagPuzzle) {
                     playerStats.highScores.flagPuzzle = puzzleScore;
+                }
+                
+                // Check point milestones for Puzzle mode
+                if (puzzleScore >= 500) {
+                    updateAchievementProgress('puzzle-score-medium', puzzleScore);
+                }
+                if (puzzleScore >= 1000) {
+                    updateAchievementProgress('puzzle-score-high', puzzleScore);
                 }
             }
             
@@ -5639,12 +4244,18 @@ function setupMilestoneCheckpoints() {
 // Function to update a player stat and check relevant milestones
 function updateStat(statName, increment) {
     console.log(`Updating stat: ${statName} by ${increment}`);
+    console.log(`Current ${statName} before update:`, playerStats[statName]);
     
     // Make sure playerStats is loaded from localStorage first
     const savedStats = localStorage.getItem('flagGamePlayerStats');
     if (savedStats) {
         try {
-            playerStats = JSON.parse(savedStats);
+            const parsedStats = JSON.parse(savedStats);
+            // Only update if the saved version is newer
+            if (JSON.stringify(parsedStats) !== JSON.stringify(playerStats)) {
+                console.log('Loading updated stats from localStorage');
+                playerStats = parsedStats;
+            }
         } catch (e) {
             console.error("Error parsing player stats:", e);
         }
@@ -5696,6 +4307,13 @@ function updateStat(statName, increment) {
     // Save the updated data
     saveMilestonesData();
     
+    // Refresh UI if milestones tab is active
+    const milestonesContainer = document.querySelector('.milestones-container');
+    if (milestonesContainer && (milestonesContainer.style.display === 'block' || milestonesContainer.style.display === '')) {
+        console.log('Refreshing milestone UI after stat update');
+        renderMilestones();
+    }
+    
     return playerStats[statName]; // Return the new value
 }
 
@@ -5708,24 +4326,23 @@ function updateAchievementProgress(achievementId, amount) {
     }
     
     if (achievement) {
-        if (achievement.requirement.compare === 'less') {
-            // For "less than" requirements
-            achievement.progress = amount;
-            if (amount < achievement.requirement.count) {
-                // Achievement completed
-                if (!achievement.completed) {
-                    achievement.completed = true;
-                    showAchievementNotification(achievement);
-                    unlockedAchievements.push(achievement.id);
-                }
-            }
-        } else {
-            // For standard "greater than" requirements
-            achievement.progress = amount;
-            checkMilestone(achievement);
-        }
+        console.log(`Updating achievement ${achievement.title} progress from ${achievement.progress} to ${amount}`);
+        // Update progress
+        achievement.progress = amount;
+        
+        // Use checkMilestone for all types of achievements for consistency
+        checkMilestone(achievement);
         
         saveMilestonesData();
+        
+        // Refresh UI if milestones tab is active
+        const milestonesContainer = document.querySelector('.milestones-container');
+        if (milestonesContainer && (milestonesContainer.style.display === 'block' || milestonesContainer.style.display === '')) {
+            console.log('Refreshing milestone UI after achievement update');
+            renderMilestones();
+        }
+    } else {
+        console.warn(`Achievement with ID ${achievementId} not found`);
     }
 }
 
@@ -5764,11 +4381,42 @@ function checkMilestone(milestone) {
             unlockedAchievements.push(milestone.id);
         }
         
-        // Show notification
-        showAchievementNotification(milestone);
+        // Show notification with slight delay to ensure proper stacking
+        setTimeout(() => {
+            showAchievementNotification(milestone);
+        }, unlockedAchievements.length * 100); // Stagger notifications by 100ms
         
         // Save immediately
         saveMilestonesData();
+        
+        // Refresh UI if milestones tab is active
+        const milestonesContainer = document.querySelector('.milestones-container');
+        if (milestonesContainer && (milestonesContainer.style.display === 'block' || milestonesContainer.style.display === '')) {
+            console.log('Refreshing milestone UI after achievement update');
+            renderMilestones();
+        }
+    }
+}
+
+// Function to track game modes played today
+function trackGameModeToday(gameMode) {
+    const today = new Date().toDateString();
+    
+    // Reset game modes if it's a new day
+    if (playerStats.lastGameModeDate !== today) {
+        playerStats.gameModesToday = [];
+        playerStats.lastGameModeDate = today;
+    }
+    
+    // Add game mode if not already played today
+    if (!playerStats.gameModesToday.includes(gameMode)) {
+        playerStats.gameModesToday.push(gameMode);
+        playerStats.allGameModesInDay = playerStats.gameModesToday.length;
+        
+        // Check flag aficionado achievement (all 4 game modes in one day)
+        if (playerStats.allGameModesInDay >= 4) {
+            updateAchievementProgress('flag-aficionado', playerStats.allGameModesInDay);
+        }
     }
 }
 
@@ -5777,7 +4425,10 @@ function checkAllCountriesAchievement() {
     // Count unique countries identified
     const uniqueCountries = new Set(playerStats.identifiedCountries);
     
-    // Update countries identified milestones
+    // Update the allCountriesIdentified stat
+    playerStats.allCountriesIdentified = uniqueCountries.size;
+    
+    // Update countries identified milestones - ALWAYS update progress for all
     const countryMilestones = [
         { id: 'countries-identified-25', count: 25 },
         { id: 'countries-identified-50', count: 50 },
@@ -5787,15 +4438,12 @@ function checkAllCountriesAchievement() {
     ];
     
     countryMilestones.forEach(milestone => {
-        if (uniqueCountries.size >= milestone.count) {
-            updateAchievementProgress(milestone.id, uniqueCountries.size);
-        }
+        // Always update progress, not just when milestone is reached
+        updateAchievementProgress(milestone.id, uniqueCountries.size);
     });
     
     // Check for "Around the World" achievement
-    if (uniqueCountries.size >= 195) {
-        updateAchievementProgress('around-the-world', uniqueCountries.size);
-    }
+    updateAchievementProgress('around-the-world', uniqueCountries.size);
 }
 
 // Add this function to manually check all milestones (useful for debugging)
@@ -5866,33 +4514,85 @@ function checkTreasureHunterAchievement() {
 }
 
 // Function to show achievement notification
+// Array to track active notifications for stacking
+let activeNotifications = [];
+
 function showAchievementNotification(achievement) {
     console.log("Achievement unlocked:", achievement.title);
     
-    const notification = document.getElementById('achievementNotification');
-    const icon = document.getElementById('notificationIcon');
-    const name = document.getElementById('achievementName');
+    // Create a new notification element
+    const notification = document.createElement('div');
+    notification.className = 'achievement-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">${achievement.icon}</div>
+            <div class="notification-text">
+                <h3>Achievement Unlocked!</h3>
+                <p>${achievement.title}</p>
+            </div>
+        </div>
+    `;
     
-    if (!notification) {
-        console.error("Achievement notification element not found!");
-        return;
-    }
+    // Add to active notifications array
+    activeNotifications.push(notification);
     
-    // Set content
-    icon.textContent = achievement.icon;
-    name.textContent = achievement.title;
+    // Position the notification based on existing notifications
+    updateNotificationPositions();
     
-    // Show notification
-    notification.style.display = 'block';
-    notification.classList.add('show');
+    // Add to DOM
+    document.body.appendChild(notification);
+    
+    // Trigger show animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
     
     // Hide after 3 seconds
     setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => {
-            notification.style.display = 'none';
+            // Remove from DOM and active notifications array
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+            const index = activeNotifications.indexOf(notification);
+            if (index > -1) {
+                activeNotifications.splice(index, 1);
+                // Reposition remaining notifications
+                updateNotificationPositions();
+            }
         }, 500);
     }, 3000);
+}
+
+// Function to update positions of all active notifications
+function updateNotificationPositions() {
+    const baseBottom = 30; // Base distance from bottom
+    const notificationHeight = 120; // Height including padding (80px min-height + 40px padding)
+    const spacing = 10; // Spacing between notifications
+    
+    activeNotifications.forEach((notification, index) => {
+        // Newer notifications (higher index) appear above older ones
+        const bottomPosition = baseBottom + (index * (notificationHeight + spacing));
+        notification.style.bottom = bottomPosition + 'px';
+        // Set z-index so newer notifications appear on top
+        notification.style.zIndex = 1000 + index;
+    });
+}
+
+// Test function to demonstrate multiple notifications (for debugging purposes)
+function testMultipleNotifications() {
+    const testAchievements = [
+        { title: "First Achievement", icon: "🏆" },
+        { title: "Second Achievement", icon: "🎯" },
+        { title: "Third Achievement", icon: "⭐" }
+    ];
+    
+    testAchievements.forEach((achievement, index) => {
+        setTimeout(() => {
+            showAchievementNotification(achievement);
+        }, index * 500); // Delay each notification by 500ms
+    });
 }
 
 // Initialize milestones on page load
@@ -5930,20 +4630,6 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
         
-        const milestonesTab = document.getElementById('milestonesTab');
-        if (milestonesTab) {
-            milestonesTab.addEventListener('click', function() {
-                // First open the tab
-                openMilestonesTab();
-                
-                // Force rendering
-                setTimeout(() => {
-                    console.log("Force rendering milestones...");
-                    debugMilestonesDisplay();
-                    updateHighScoreDisplay();
-                }, 500);
-            });
-        }
         
         // Override the high score retrieval to sync with milestones system
         const originalGetHighScore = getHighScore || function() { return localStorage.getItem('flagGameHighScore'); };
@@ -6276,19 +4962,19 @@ window.milestonesData = {
         {
             id: 'reveal-score-medium',
             title: 'Point Collector',
-            description: 'Reach 200 points in Reveal mode',
+            description: 'Reach 2000 points in Reveal mode',
             icon: '🏆',
             rarity: 'uncommon',
-            requirement: { type: 'revealScore', count: 200 },
+            requirement: { type: 'revealScore', count: 2000 },
             progress: 0
         },
         {
             id: 'reveal-score-high',
             title: 'Point Hoarder',
-            description: 'Reach 500 points in Reveal mode',
+            description: 'Reach 3800 points in Reveal mode',
             icon: '🏆',
             rarity: 'legendary',
-            requirement: { type: 'revealScore', count: 500 },
+            requirement: { type: 'revealScore', count: 3800 },
             progress: 0
         },
         
@@ -6323,19 +5009,19 @@ window.milestonesData = {
         {
             id: 'puzzle-score-medium',
             title: 'Puzzle Scorer',
-            description: 'Reach 500 points in Puzzle mode',
+            description: 'Reach 600 points in Puzzle mode',
             icon: '🏆',
             rarity: 'uncommon',
-            requirement: { type: 'puzzleScore', count: 500 },
+            requirement: { type: 'puzzleScore', count: 600 },
             progress: 0
         },
         {
             id: 'puzzle-score-high',
             title: 'Puzzle Champion',
-            description: 'Reach 1000 points in Puzzle mode',
+            description: 'Reach 1200 points in Puzzle mode',
             icon: '🏆',
             rarity: 'legendary',
-            requirement: { type: 'puzzleScore', count: 1000 },
+            requirement: { type: 'puzzleScore', count: 1200 },
             progress: 0
         },
         
@@ -6387,9 +5073,9 @@ window.milestonesData = {
         }
     ],
     
-    // Advanced achievements that are more challenging to complete (23 total)
+    // Advanced achievements that are more challenging to complete (16 total)
     advancedAchievements: [
-        // Classic Flag Game Achievements (5)
+        // Classic Flag Game Achievements (4)
         {
             id: 'global-perfection',
             title: 'Global Perfection',
@@ -6403,40 +5089,30 @@ window.milestonesData = {
         {
             id: 'continental-collector',
             title: 'Continental Collector',
-            description: 'In a single game, place flags from all 7 continents',
+            description: 'Identify flags from 100 different countries',
             icon: '🗺️',
             rarity: 'rare',
-            requirement: { type: 'continentsInGame', count: 7 },
+            requirement: { type: 'allCountriesIdentified', count: 100 },
             progress: 0,
             completed: false
         },
         {
             id: 'lucky-number-7',
             title: 'Lucky Number 7',
-            description: 'Get exactly 7th place ranking in any category',
+            description: 'Place a country with exactly 7th place ranking in any category',
             icon: '7️⃣',
             rarity: 'epic',
-            requirement: { type: 'exactRanking', count: 7 },
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'perfectly-balanced',
-            title: 'Perfectly Balanced',
-            description: 'Complete a game with all rankings between 1-50',
-            icon: '⚖️',
-            rarity: 'epic',
-            requirement: { type: 'allRankingsBelow', count: 50 },
+            requirement: { type: 'exactRankSeven', count: 1 },
             progress: 0,
             completed: false
         },
         {
             id: 'top-of-the-world',
             title: 'Top of the World',
-            description: 'Place a country with a #1 rank in any category',
+            description: 'Achieve an average ranking below 5 in classic games',
             icon: '🏔️',
             rarity: 'rare',
-            requirement: { type: 'rankOne', count: 1 },
+            requirement: { type: 'classicAverageRanking', count: 5, compare: 'less' },
             progress: 0,
             completed: false
         },
@@ -6445,129 +5121,79 @@ window.milestonesData = {
         {
             id: 'mind-reader',
             title: 'Mind Reader',
-            description: 'Win 10 duels in a row without making a single mistake',
+            description: 'Win 50 duels total',
             icon: '🧠',
             rarity: 'epic',
-            requirement: { type: 'perfectDuelStreak', count: 10 },
+            requirement: { type: 'duelWins', count: 50 },
             progress: 0,
             completed: false
         },
         {
             id: 'david-vs-goliath',
             title: 'David vs Goliath',
-            description: 'Win a duel where the rankings are at least 100 positions apart',
+            description: 'Win 200 duels total',
             icon: '📏',
             rarity: 'rare',
-            requirement: { type: 'rankingGapWin', count: 100 },
+            requirement: { type: 'duelWins', count: 200 },
             progress: 0,
             completed: false
         },
         {
             id: 'category-master',
             title: 'Category Master',
-            description: 'Win duels in all available categories',
+            description: 'Achieve a duel streak of 50 wins',
             icon: '📊',
             rarity: 'epic',
-            requirement: { type: 'allCategoriesWin', count: 8 },
+            requirement: { type: 'duelStreak', count: 50 },
             progress: 0,
             completed: false
         },
         {
             id: 'century-club',
             title: 'Century Club',
-            description: 'Achieve a score of 100+ in Flag Duel',
+            description: 'Win 100 duels total',
             icon: '💯',
             rarity: 'legendary',
-            requirement: { type: 'duelScore', count: 100 },
+            requirement: { type: 'duelWins', count: 100 },
             progress: 0,
             completed: false
         },
         
-        // Flag Reveal Achievements (4)
+        // Flag Reveal Achievements (3)
         {
             id: 'eagle-eye',
             title: 'Eagle Eye',
-            description: 'Identify a country after seeing only 3 pieces',
+            description: 'Identify 200 flags in Reveal mode',
             icon: '🦅',
             rarity: 'epic',
-            requirement: { type: 'revealFewPieces', count: 3 },
+            requirement: { type: 'revealFlagsIdentified', count: 200 },
             progress: 0,
             completed: false
         },
         {
             id: 'flawless-reveal',
             title: 'Flawless Reveal',
-            description: 'Identify 5 consecutive flags without using a single attempt',
+            description: 'Reach 4000 points in Reveal mode',
             icon: '✨',
             rarity: 'legendary',
-            requirement: { type: 'consecutivePerfectReveals', count: 5 },
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'speedster',
-            title: 'Speedster',
-            description: 'Identify a country in under 3 seconds after the first piece appears',
-            icon: '⏱️',
-            rarity: 'rare',
-            requirement: { type: 'revealQuickIdentify', count: 3 }, // seconds
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'iron-will',
-            title: 'Iron Will',
-            description: 'Reach a score of 300+ without losing a single life',
-            icon: '❤️',
-            rarity: 'epic',
-            requirement: { type: 'revealScoreNoLives', count: 300 },
+            requirement: { type: 'revealScore', count: 4000 },
             progress: 0,
             completed: false
         },
         
-        // Flag Puzzle Achievements (4)
+        // Flag Puzzle Achievements (1)
         {
             id: 'puzzle-wizard',
             title: 'Puzzle Wizard',
-            description: 'Identify all flags in 5 consecutive puzzles without skipping',
+            description: 'Complete 200 puzzles',
             icon: '🧙',
             rarity: 'legendary',
-            requirement: { type: 'consecutiveNoSkipPuzzles', count: 5 },
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'time-master',
-            title: 'Time Master',
-            description: 'Complete a full game (2 minutes) and score 500+ points',
-            icon: '⌛',
-            rarity: 'epic',
-            requirement: { type: 'puzzleScoreFullTime', count: 500 },
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'speed-demon',
-            title: 'Speed Demon',
-            description: 'Identify both flags in a puzzle within 5 seconds',
-            icon: '🏎️',
-            rarity: 'rare',
-            requirement: { type: 'puzzleQuickIdentify', count: 5 }, // seconds
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'puzzle-marathon',
-            title: 'Puzzle Marathon',
-            description: 'Identify 20 flags in a single puzzle game session',
-            icon: '🏃',
-            rarity: 'epic',
-            requirement: { type: 'puzzleFlagsInSession', count: 20 },
+            requirement: { type: 'puzzleCompleted', count: 200 },
             progress: 0,
             completed: false
         },
         
-        // Special Achievements (6)
+        // Special Achievements (5)
         {
             id: 'around-the-world',
             title: 'Around the World',
@@ -6591,30 +5217,20 @@ window.milestonesData = {
         {
             id: 'night-owl',
             title: 'Night Owl',
-            description: 'Play the game after midnight',
+            description: 'Play the game between midnight and 6am',
             icon: '🦉',
             rarity: 'uncommon',
-            requirement: { type: 'playAfterHour', count: 0 }, // 12 AM
+            requirement: { type: 'playInNightTime', count: 1 },
             progress: 0,
             completed: false
         },
         {
             id: 'early-bird',
             title: 'Early Bird',
-            description: 'Play the game before 6am',
+            description: 'Play the game between 7am and 10am',
             icon: '🐦',
             rarity: 'uncommon',
-            requirement: { type: 'playBeforeHour', count: 6 }, // 6 AM
-            progress: 0,
-            completed: false
-        },
-        {
-            id: 'gone-viral',
-            title: 'Gone Viral',
-            description: 'Share your high score on social media',
-            icon: '📱',
-            rarity: 'rare',
-            requirement: { type: 'shareScore', count: 1 },
+            requirement: { type: 'playInMorningTime', count: 1 },
             progress: 0,
             completed: false
         },
@@ -6624,7 +5240,7 @@ window.milestonesData = {
             description: 'Discover all achievements in the game',
             icon: '💎',
             rarity: 'epic',
-            requirement: { type: 'achievementsUnlocked', count: 58 }, // Total number of achievements
+            requirement: { type: 'achievementsUnlocked', count: 51 }, // Total number of achievements
             progress: 0,
             completed: false
         }
@@ -6635,14 +5251,27 @@ window.milestonesData = {
 window.playerStats = {
     gamesPlayed: 0,
     classicGamesCompleted: 0,
+    classicAverageRanking: 0, // Average ranking in classic games
     duelWins: 0,
     duelStreak: 0,
+    duelScore: 0, // Highest duel score
     revealFlagsIdentified: 0,
+    revealScore: 0, // Highest reveal score
     puzzleCompleted: 0,
+    puzzleScore: 0, // Highest puzzle score
     totalPlaytime: 0, // in minutes
     consecutiveDays: 0,
     lastPlayedDate: null,
     identifiedCountries: [], // Array of country names
+    allCountriesIdentified: 0, // Count of unique countries identified
+    allGameModesInDay: 0, // Count of different game modes played today
+    gameModesToday: [], // Array of game modes played today
+    lastGameModeDate: null, // Date when game modes were last tracked
+    exactRankSeven: 0, // For lucky number 7 achievement
+    rankOne: 0, // For top of the world achievement
+    allRankingsBelow: 0, // For perfectly balanced achievement
+    playInNightTime: 0, // For night owl achievement (midnight to 6am)
+    playInMorningTime: 0, // For early bird achievement (7am to 10am)
     highScores: {
         flagGame: 0, // Best average ranking
         flagDuel: 0, // Highest streak
@@ -6683,10 +5312,28 @@ function createMilestoneElement(milestone) {
     const progressBar = document.createElement('div');
     progressBar.className = 'milestone-progress-bar';
     
-    // Calculate progress percentage (simplified)
+    // Calculate progress percentage
     const requirement = milestone.requirement.count;
     const currentProgress = milestone.progress || 0;
-    let percentage = Math.min((currentProgress / requirement) * 100, 100);
+    let percentage = 0;
+    
+    if (milestone.completed) {
+        // For completed milestones, show full progress bar
+        percentage = 100;
+    } else {
+        // For incomplete milestones, calculate based on requirement type
+        if (milestone.requirement.compare === 'less') {
+            // For "less than" requirements, show progress towards the goal
+            if (currentProgress > 0 && currentProgress <= requirement) {
+                // Show how close we are to the target (inverted)
+                percentage = Math.max(0, Math.min(((requirement - currentProgress) / requirement) * 100, 100));
+            }
+        } else {
+            // For standard "greater than or equal" requirements
+            percentage = Math.min((currentProgress / requirement) * 100, 100);
+        }
+    }
+    
     progressBar.style.width = `${percentage}%`;
     
     progress.appendChild(progressBar);
@@ -6710,12 +5357,24 @@ function createMilestoneElement(milestone) {
 // Save milestones data
 function saveMilestonesData() {
     console.log("Saving milestones data...");
+    console.log("Current playerStats:", JSON.stringify(playerStats, null, 2));
     
     try {
         localStorage.setItem('flagGamePlayerStats', JSON.stringify(playerStats));
         localStorage.setItem('flagGameMilestones', JSON.stringify(milestonesData));
         localStorage.setItem('flagGameUnlockedAchievements', JSON.stringify(unlockedAchievements));
         console.log("Data saved successfully");
+        
+        // Verify the save worked
+        const verification = localStorage.getItem('flagGamePlayerStats');
+        if (verification) {
+            const parsed = JSON.parse(verification);
+            console.log("Verified saved data:", {
+                classicGamesCompleted: parsed.classicGamesCompleted,
+                gamesPlayed: parsed.gamesPlayed,
+                totalPlaytime: parsed.totalPlaytime
+            });
+        }
     } catch (e) {
         console.error("Error saving milestones data:", e);
     }
@@ -6801,109 +5460,13 @@ function updateHighScoreDisplay() {
     console.log("High score display updated");
 }
 
-// Function to open the Milestones tab
-function openMilestonesTab() {
-    console.log("Opening milestones tab...");
-    
-    // Hide all game containers
-    document.querySelectorAll('.game-container').forEach(container => {
-        container.classList.remove('active');
-        container.style.display = 'none';
-    });
-    
-    // Show milestones container
-    const milestonesContainer = document.getElementById('milestonesContainer');
-    if (!milestonesContainer) {
-        console.error("Milestones container not found!");
-        return;
-    }
-    
-    milestonesContainer.style.display = 'block';
-    
-    // Add a short delay before adding the active class for animation
-    setTimeout(() => {
-        milestonesContainer.classList.add('active');
-    }, 50);
-    
-    // Update display
-    console.log("Calling renderMilestones()...");
-    renderMilestones();
-    
-    console.log("Calling updateHighScoreDisplay()...");
-    updateHighScoreDisplay();
-    
-    console.log("Milestones tab opened successfully");
-}
 
-// Initialize the milestones tab when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM loaded, setting up milestones tab click handler");
-    
-    const milestonesTab = document.getElementById('milestonesTab');
-    
-    if (milestonesTab) {
-        console.log("Milestones tab found, attaching click event");
-        
-        milestonesTab.addEventListener('click', function() {
-            console.log("Milestones tab clicked");
-            openMilestonesTab();
-        });
-    } else {
-        console.error("Milestones tab element not found!");
-    }
-});
 
-// Hook into existing game functions
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait for page to fully load
-    setTimeout(() => {
-        // Hook into classic game completion
-        const originalResetGame = window.resetGame;
-        if (originalResetGame) {
-            window.resetGame = function() {
-                console.log("Reset game called, checking for completion...");
-                
-                // Check if this was a completed game
-                if (selectedBoxes && selectedBoxes.size === 8) {
-                    console.log("Game completed, updating stats");
-                    
-                    // Update stats
-                    updateStat('gamesPlayed', 1);
-                    updateStat('classicGamesCompleted', 1);
-                    
-                    // Check average ranking
-                    const averageRankingElement = document.getElementById('averageRankingText');
-                    if (averageRankingElement) {
-                        const text = averageRankingElement.textContent;
-                        if (text) {
-                            const match = text.match(/Average\s+Ranking:\s+(\d+\.\d+)/i);
-                            if (match && match[1]) {
-                                const averageRanking = parseFloat(match[1]);
-                                
-                                console.log("Average ranking:", averageRanking);
-                                
-                                // Update high score
-                                if (playerStats.highScores.flagGame === 0 || averageRanking < playerStats.highScores.flagGame) {
-                                    playerStats.highScores.flagGame = averageRanking;
-                                    saveMilestonesData();
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Call original function
-                originalResetGame();
-            };
-            
-            console.log("Successfully hooked into resetGame function");
-        } else {
-            console.warn("resetGame function not found");
-        }
-    }, 2000);
-});
+// This duplicate hook has been removed - the main hook is in setupMilestoneCheckpoints()
 
 // Add this JavaScript code to attach the click handler
+// DEBUG BUTTONS REMOVED - Uncomment below to add back for testing:
+/*
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         const checkButton = document.getElementById('checkMilestonesButton');
@@ -6913,8 +5476,80 @@ document.addEventListener('DOMContentLoaded', function() {
                 checkAllMilestones();
             });
         }
+        
+        // Add reset button functionality
+        const resetButton = document.getElementById('resetMilestonesButton');
+        if (resetButton) {
+            resetButton.addEventListener('click', function() {
+                if (confirm('⚠️ This will reset ALL milestone progress and stats. Are you sure? This is for testing purposes only.')) {
+                    resetMilestoneProgress();
+                }
+            });
+        }
     }, 1000);
 });
+*/
+
+// DEBUG FUNCTION REMOVED - Uncomment below to add back for testing:
+/*
+// Function to reset milestone progress for testing
+function resetMilestoneProgress() {
+    console.log('Resetting milestone progress...');
+    
+    // Clear localStorage
+    localStorage.removeItem('flagGamePlayerStats');
+    localStorage.removeItem('flagGameMilestones');
+    localStorage.removeItem('flagGameHighScore');
+    localStorage.removeItem('flagDuelHighScore');
+    localStorage.removeItem('flagRevealHighScore');
+    localStorage.removeItem('flagPuzzleHighScore');
+    
+    // Reset global variables
+    if (typeof playerStats !== 'undefined') {
+        playerStats = {
+            gamesPlayed: 0,
+            classicGamesCompleted: 0,
+            duelWins: 0,
+            duelStreak: 0,
+            revealFlagsIdentified: 0,
+            puzzleCompleted: 0,
+            totalPlaytime: 0,
+            consecutiveDays: 0,
+            lastPlayedDate: null,
+            identifiedCountries: [],
+            highScores: {
+                flagGame: 0,
+                flagDuel: 0,
+                flagReveal: 0,
+                flagPuzzle: 0
+            }
+        };
+    }
+    
+    // Reset milestones data
+    if (typeof milestonesData !== 'undefined') {
+        milestonesData.basicMilestones.forEach(milestone => {
+            milestone.progress = 0;
+            milestone.completed = false;
+        });
+        milestonesData.advancedAchievements.forEach(achievement => {
+            achievement.progress = 0;
+            achievement.completed = false;
+        });
+    }
+    
+    // Clear unlocked achievements
+    if (typeof unlockedAchievements !== 'undefined') {
+        unlockedAchievements.length = 0;
+    }
+    
+    console.log('Milestone progress reset complete!');
+    
+    // Reload the page to ensure everything is fresh
+    alert('✅ Milestone progress reset! Page will reload to apply changes.');
+    location.reload();
+}
+*/
 
 // Add this specific listener to handle dropdown clicks
 document.addEventListener('DOMContentLoaded', function() {
@@ -6924,16 +5559,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (gameModeBtns.length > 0) {
             gameModeBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    // When switching to any other mode, ensure milestones is completely hidden
-                    const milestonesContainer = document.getElementById('milestonesContainer');
-                    if (milestonesContainer) {
-                        milestonesContainer.style.display = 'none';
-                        milestonesContainer.style.opacity = '0';
-                        milestonesContainer.classList.remove('active');
-                        // Add these to absolutely ensure it's hidden
-                        milestonesContainer.style.visibility = 'hidden';
-                        milestonesContainer.style.position = 'absolute';
-                        milestonesContainer.style.zIndex = '-1';
+                    // Only hide milestones when switching to actual game modes
+                    // Don't interfere when clicking milestones tab
+                    const mode = this.getAttribute('data-mode');
+                    if (mode) {
+                        const milestonesContainer = document.getElementById('milestonesContainer');
+                        if (milestonesContainer) {
+                            milestonesContainer.style.display = 'none';
+                            milestonesContainer.classList.remove('active');
+                        }
                     }
                 });
             });

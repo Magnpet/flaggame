@@ -186,7 +186,6 @@
                     
                     <!-- Timer and progress -->
                     <div class="reveal-info">
-                        <div class="reveal-timer">Time: <span id="revealTimer">2:00</span></div>
                         <div class="reveal-progress">Pieces Revealed: <span id="revealProgress">0</span>/16</div>
                         <div class="reveal-score">Score: <span id="revealScore">0</span></div>
                         <div class="reveal-high-score">High Score: <span id="revealHighScore">0</span></div>
@@ -277,8 +276,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- DEBUG BUTTONS REMOVED - Uncomment below to add back for testing:
                 <div class="debug-controls" style="text-align: center; margin-bottom: 20px;">
                     <button id="checkMilestonesButton" style="padding: 8px 16px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; margin-right: 10px;">
                         Check Milestones
@@ -287,7 +284,6 @@
                         Reset Progress (Test Mode)
                     </button>
                 </div>
-                -->
                 
                 <!-- Milestones Navigation -->
                 <div class="milestones-nav">
@@ -314,7 +310,16 @@
             </div>
         </div>
         
-        <!-- Achievement notifications are now created dynamically -->
+        <!-- Template for achievement notification -->
+        <div id="achievementNotification" class="achievement-notification" style="display: none;">
+            <div class="notification-content">
+                <div class="notification-icon" id="notificationIcon">🏆</div>
+                <div class="notification-text">
+                    <h3>Achievement Unlocked!</h3>
+                    <p id="achievementName">Achievement Name</p>
+                </div>
+            </div>
+        </div>
     <script src="script.js"></script>
 </body>
 
