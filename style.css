@@ -1927,38 +1927,50 @@ body.dark-mode .milestone-description {
 /* Large phones and small tablets (up to 768px) */
 @media screen and (max-width: 768px) {
     
-    /* Header adjustments - keep original positioning but smaller */
+    /* Header adjustments - fix overlapping text */
     header {
-        padding: 5px 0;
-        height: 50px;
+        padding: 3px 0;
+        height: 45px;
+        position: relative;
     }
     
     header h1 {
-        font-size: 18px;
+        font-size: 16px;
         margin: 0;
+        line-height: 1;
     }
     
     header .tab {
-        padding: 6px 12px;
-        font-size: 11px;
+        padding: 4px 6px;
+        font-size: 9px;
+        line-height: 1;
+        white-space: nowrap;
     }
     
-    /* Specific positioning adjustments for mobile */
+    /* Specific positioning to prevent overlap */
     #aboutTab {
-        left: 5px;
+        left: 2px;
+        top: 50%;
+        transform: translateY(-50%);
     }
     
     #milestonesTab {
-        left: 70px;
+        left: 45px;
+        top: 50%;
+        transform: translateY(-50%);
     }
     
     #changeModeTab {
-        right: 80px;
+        right: 45px;
+        top: 50%;
+        transform: translateY(-50%);
     }
     
     #settingsTab {
-        right: 5px;
-        padding: 6px 8px; /* Make settings button smaller */
+        right: 2px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 4px 5px;
     }
     
     /* Container adjustments - keep original layout but more compact */
@@ -1968,15 +1980,27 @@ body.dark-mode .milestone-description {
         max-width: 100%;
     }
     
-    /* Classic Game Mode - keep 3-column but more compact */
+    /* Classic Game Mode - fix proportions and symmetry */
     .categories {
         margin: 5px auto;
-        transform: scale(0.85); /* Scale down the entire layout */
+        transform: scale(0.85);
         transform-origin: top center;
+        width: 100%;
+        max-width: 1200px;
+    }
+    
+    .category-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
     }
     
     .category {
         margin: 5px 0;
+        width: 90%; /* Ensure consistent width */
+        max-width: 200px; /* Prevent boxes from getting too wide */
     }
     
     .category h2 {
@@ -1984,16 +2008,24 @@ body.dark-mode .milestone-description {
         margin: 4px 0;
         padding: 0 2px;
         line-height: 1.1;
+        text-align: center;
+        height: 32px; /* Fixed height for consistency */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .category-box {
         height: 60px;
         margin: 4px 0;
+        width: 100%; /* Ensure boxes fill their containers */
+        aspect-ratio: auto; /* Maintain proportions */
     }
     
     .rank {
         font-size: 11px;
         margin: 2px 0;
+        text-align: center;
     }
     
     /* Flag adjustments - more compact */
@@ -2027,6 +2059,14 @@ body.dark-mode .milestone-description {
         margin-top: 10px !important;
         font-size: 12px;
         padding: 0 5px;
+    }
+    
+    /* How to Play button - fix oversized button */
+    .how-to-play-button {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+        margin: 8px 0 !important;
+        border-radius: 4px;
     }
     
     /* Duel Game Mode - more compact */
@@ -2100,22 +2140,38 @@ body.dark-mode .milestone-description {
     .puzzle-grid {
         width: 200px !important;
         height: 120px !important;
-        position: relative;
-        overflow: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        pointer-events: none;
     }
     
     .puzzle-piece {
         width: 33.33px !important; /* 200px / 6 pieces */
         height: 20px !important;   /* 120px / 6 rows */
         position: absolute;
-        background-color: #ddd;
-        border: 1px solid #999;
-        display: block;
+        background-color: #ccc !important;
+        border: 1px solid #666 !important;
+        display: block !important;
+        opacity: 1 !important;
     }
     
     .puzzle-piece.revealed {
-        background-color: transparent !important;
-        border: 1px solid transparent;
+        display: none !important; /* Completely hide revealed pieces */
+    }
+    
+    /* Ensure reveal flag container has proper positioning */
+    .reveal-flag-container {
+        position: relative;
+        margin: 0 auto;
+    }
+    
+    .reveal-flag {
+        width: 200px;
+        height: 120px;
+        position: relative;
+        z-index: 1;
     }
     
     .reveal-stats {
@@ -2337,20 +2393,33 @@ body.dark-mode .milestone-description {
 /* Extra small phones (up to 480px) */
 @media screen and (max-width: 480px) {
     header {
-        height: 45px;
+        height: 40px;
     }
     
     header h1 {
-        font-size: 16px;
+        font-size: 14px;
     }
     
     header .tab {
-        font-size: 10px;
-        padding: 4px 6px;
+        font-size: 8px;
+        padding: 3px 4px;
+    }
+    
+    #aboutTab {
+        left: 1px;
+    }
+    
+    #milestonesTab {
+        left: 35px;
+    }
+    
+    #changeModeTab {
+        right: 35px;
     }
     
     #settingsTab {
-        padding: 4px 5px !important;
+        right: 1px;
+        padding: 3px 4px !important;
     }
     
     /* Scale down even more for very small screens */
@@ -2367,6 +2436,7 @@ body.dark-mode .milestone-description {
     
     .category h2 {
         font-size: 12px;
+        height: 28px; /* Smaller fixed height */
     }
     
     .flag-box {
@@ -2378,6 +2448,14 @@ body.dark-mode .milestone-description {
         font-size: 12px;
     }
     
+    /* How to Play button for small phones */
+    .how-to-play-button {
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+        margin: 6px 0 !important;
+    }
+    
+    /* Fix reveal game for small phones */
     .reveal-flag, .puzzle-grid {
         width: 180px !important;
         height: 110px !important;
