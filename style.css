@@ -1921,3 +1921,495 @@ body.dark-mode .milestone-description {
         box-shadow: 0 0 20px 5px var(--primary);
     }
 }
+
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Large phones and small tablets (up to 768px) */
+@media screen and (max-width: 768px) {
+    
+    /* Header adjustments */
+    header {
+        padding: 8px 5px;
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 60px;
+    }
+    
+    header h1 {
+        font-size: 20px;
+        margin: 5px 0;
+        order: 1;
+        width: 100%;
+    }
+    
+    header .tab {
+        position: static;
+        transform: none;
+        padding: 5px 10px;
+        font-size: 12px;
+        margin: 2px;
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    #aboutTab {
+        order: 2;
+    }
+    
+    #milestonesTab {
+        order: 3;
+    }
+    
+    #changeModeTab {
+        order: 4;
+    }
+    
+    #settingsTab {
+        order: 5;
+    }
+    
+    /* Container adjustments */
+    .container {
+        margin: 10px auto 0 auto;
+        padding: 0 10px 20px 10px;
+        max-width: 100%;
+    }
+    
+    /* Classic Game Mode - Stack categories vertically */
+    .categories {
+        flex-direction: column;
+        margin: 10px auto;
+        gap: 15px;
+    }
+    
+    .category-column {
+        width: 100%;
+        gap: 15px;
+    }
+    
+    .flag-column {
+        order: -1; /* Put flag at top */
+        margin-bottom: 20px;
+    }
+    
+    .category {
+        margin: 0;
+        width: 100%;
+        max-width: 350px;
+        margin: 0 auto;
+    }
+    
+    .category h2 {
+        font-size: 16px;
+        margin: 8px 0;
+        padding: 0 5px;
+        line-height: 1.2;
+    }
+    
+    .category-box {
+        width: 100%;
+        height: 80px;
+        margin: 8px 0;
+    }
+    
+    .rank {
+        font-size: 14px;
+        margin: 5px 0;
+    }
+    
+    /* Flag adjustments */
+    .flag-box {
+        width: 150px;
+        height: 100px;
+        margin: 10px auto;
+    }
+    
+    .flag-container {
+        margin-top: 10px;
+    }
+    
+    .country-name {
+        font-size: 16px;
+        margin: 10px 0;
+    }
+    
+    .flag-container button {
+        font-size: 16px;
+        padding: 10px 20px;
+        margin: 10px 0;
+    }
+    
+    #pickText {
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    
+    #averageRankingText {
+        margin-top: 20px !important;
+        font-size: 14px;
+        padding: 0 10px;
+    }
+    
+    /* Duel Game Mode */
+    .duel-content {
+        padding: 10px;
+    }
+    
+    .duel-content h2 {
+        font-size: 20px;
+        margin: 10px 0;
+    }
+    
+    .duel-flags-container {
+        flex-direction: column;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .duel-flag-container {
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .duel-flag {
+        width: 150px;
+        height: 100px;
+    }
+    
+    .vs-container {
+        order: 2;
+        margin: 10px 0;
+        font-size: 20px;
+    }
+    
+    .duel-country-name {
+        font-size: 14px;
+        margin: 8px 0;
+    }
+    
+    .duel-score-container {
+        flex-direction: column;
+        gap: 10px;
+        margin: 15px 0;
+    }
+    
+    .duel-score, .duel-high-score {
+        font-size: 14px;
+        margin: 5px 0;
+    }
+    
+    /* Reveal Game Mode */
+    .reveal-content {
+        padding: 10px;
+    }
+    
+    .reveal-content h2 {
+        font-size: 20px;
+        margin: 10px 0;
+    }
+    
+    .reveal-game-area {
+        flex-direction: column;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .reveal-flag-container {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+    
+    .reveal-flag {
+        width: 250px;
+        height: 150px;
+    }
+    
+    .puzzle-grid {
+        width: 250px !important;
+        height: 150px !important;
+    }
+    
+    .puzzle-piece {
+        width: 41.6px !important; /* 250px / 6 pieces */
+        height: 25px !important;   /* 150px / 6 rows */
+    }
+    
+    .reveal-stats {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .reveal-progress, .reveal-score, .reveal-high-score, .reveal-lives, .reveal-timer {
+        font-size: 14px;
+        margin: 5px;
+        padding: 5px 8px;
+    }
+    
+    .reveal-input-container {
+        flex-direction: column;
+        width: 95%;
+        max-width: 300px;
+        gap: 10px;
+        margin: 15px auto;
+    }
+    
+    #countryGuessInput {
+        width: 100%;
+        border-radius: 4px;
+        margin: 0;
+    }
+    
+    #submitGuessButton {
+        width: 100%;
+        border-radius: 4px;
+        margin: 0;
+    }
+    
+    /* Puzzle Game Mode */
+    .puzzle-content {
+        padding: 10px;
+    }
+    
+    .puzzle-content h2 {
+        font-size: 20px;
+        margin: 10px 0;
+    }
+    
+    .puzzle-game-area {
+        flex-direction: column;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .puzzle-flag-container {
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .puzzle-merged-flag {
+        width: 200px;
+        height: 120px;
+    }
+    
+    .puzzle-stats {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .puzzle-timer, .puzzle-score, .puzzle-high-score {
+        font-size: 14px;
+        margin: 5px;
+        padding: 5px 8px;
+    }
+    
+    .puzzle-input-container {
+        flex-direction: column;
+        width: 95%;
+        max-width: 300px;
+        gap: 10px;
+        margin: 15px auto;
+    }
+    
+    #countryPuzzleInput {
+        width: 100%;
+        border-radius: 4px;
+        margin: 0;
+    }
+    
+    #submitPuzzleButton {
+        width: 100%;
+        border-radius: 4px;
+        margin: 0;
+    }
+    
+    .puzzle-guessed-flags {
+        margin: 10px 0;
+        gap: 5px;
+        justify-content: center;
+    }
+    
+    .guessed-flag {
+        font-size: 12px;
+        padding: 3px 6px;
+        margin: 2px;
+    }
+    
+    /* Milestones adjustments */
+    #milestonesContainer {
+        padding: 10px;
+        margin: 10px auto;
+    }
+    
+    .milestones-nav {
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 10px 0;
+    }
+    
+    .milestone-nav-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin: 2px;
+    }
+    
+    .milestones-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 10px 0;
+    }
+    
+    .milestone-item {
+        padding: 15px;
+        margin: 5px 0;
+    }
+    
+    .milestone-icon-container {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .milestone-title {
+        font-size: 16px;
+    }
+    
+    .milestone-description {
+        font-size: 13px;
+        line-height: 1.3;
+    }
+    
+    .milestone-progress-text {
+        font-size: 12px;
+    }
+    
+    /* Achievement notifications */
+    .achievement-notification {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        min-height: 60px;
+        padding: 15px;
+    }
+    
+    .notification-icon {
+        font-size: 30px;
+        margin-right: 15px;
+    }
+    
+    .notification-text h3 {
+        font-size: 16px;
+    }
+    
+    .notification-text p {
+        font-size: 14px;
+    }
+    
+    /* Modal adjustments */
+    .modal-content {
+        width: 95%;
+        max-width: 400px;
+        margin: 10px;
+        padding: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+        margin: 0 0 15px 0;
+    }
+    
+    .instructions p {
+        font-size: 14px;
+        margin: 8px 0;
+        line-height: 1.4;
+    }
+    
+    /* Settings modal */
+    .setting-item {
+        padding: 10px;
+        margin: 8px 0;
+    }
+    
+    .setting-label {
+        font-size: 14px;
+    }
+    
+    /* How to play button */
+    .how-to-play-button {
+        font-size: 14px;
+        padding: 8px 16px;
+        margin: 15px 0;
+    }
+    
+    /* Dropdown adjustments */
+    .dropdown-content {
+        width: 180px;
+        right: 0;
+        left: auto;
+    }
+    
+    .dropdown-item {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+}
+
+/* Extra small phones (up to 480px) */
+@media screen and (max-width: 480px) {
+    header h1 {
+        font-size: 18px;
+    }
+    
+    header .tab {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    
+    .category h2 {
+        font-size: 14px;
+    }
+    
+    .flag-box {
+        width: 120px;
+        height: 80px;
+    }
+    
+    .country-name {
+        font-size: 14px;
+    }
+    
+    .reveal-flag, .puzzle-grid {
+        width: 200px !important;
+        height: 120px !important;
+    }
+    
+    .puzzle-piece {
+        width: 33.3px !important; /* 200px / 6 pieces */
+        height: 20px !important;   /* 120px / 6 rows */
+    }
+    
+    .puzzle-merged-flag {
+        width: 160px;
+        height: 100px;
+    }
+    
+    .milestone-icon-container {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    .milestone-title {
+        font-size: 15px;
+    }
+    
+    .milestone-description {
+        font-size: 12px;
+    }
+}
