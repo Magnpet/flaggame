@@ -2586,6 +2586,30 @@ function handleRevealTimeUp() {
     nextRevealButton.style.display = 'inline-block';
     nextRevealButton.textContent = 'Play Again';
     
+    // Add event to reset the game on next button click
+    nextRevealButton.addEventListener('click', function resetGame() {
+        revealScore = 0;
+        document.getElementById('revealScore').textContent = revealScore;
+        revealLives = 3;
+        document.getElementById('revealLives').textContent = revealLives;
+        
+        // Reset the timer
+        revealTimeRemaining = 120; // Reset to 2 minutes
+        document.getElementById('revealTimer').textContent = '2:00';
+        if (revealGameTimer) {
+            clearInterval(revealGameTimer);
+        }
+        revealGameTimer = setInterval(updateRevealTimer, 1000);
+        
+        // Remove any high score message
+        const highScoreMessage = document.querySelector('.reveal-high-score-message');
+        if (highScoreMessage) {
+            highScoreMessage.remove();
+        }
+        
+        nextRevealButton.removeEventListener('click', resetGame);
+    }, { once: true });
+    
     // Check for new high score
     if (revealScore > revealHighScore) {
         revealHighScore = revealScore;
