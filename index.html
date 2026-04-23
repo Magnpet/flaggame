@@ -1,322 +1,1337 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Flag Game</title>
-    <script src="data-loader.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flag Game — Redesign</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="data-loader.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; }
+
+    @keyframes flagDeal {
+      0%   { transform: perspective(700px) rotateY(88deg) scale(0.82); filter: blur(5px) brightness(1.3); opacity: 0.2; }
+      55%  { transform: perspective(700px) rotateY(-7deg) scale(1.04); filter: blur(0) brightness(1); opacity: 1; }
+      75%  { transform: perspective(700px) rotateY(3deg) scale(1.01); }
+      90%  { transform: perspective(700px) rotateY(-1deg) scale(1); }
+      100% { transform: perspective(700px) rotateY(0) scale(1); filter: blur(0); opacity: 1; }
+    }
+    @keyframes catPop {
+      0%   { transform: scale(1); }
+      30%  { transform: translateY(-2px) scale(1.07); }
+      60%  { transform: translateY(1px) scale(0.97); }
+      80%  { transform: translateY(-1px) scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    @keyframes pickPulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%     { opacity:0.7; transform:scale(0.97); }
+    }
+    @keyframes fadeSlideUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity:0; }
+      to   { opacity:1; }
+    }
+    @keyframes duelCorrect {
+      0%   { transform:scale(1); }
+      40%  { transform:scale(1.06); }
+      100% { transform:scale(1); }
+    }
+    @keyframes duelWrong {
+      0%,100% { transform:translateX(0); }
+      20% { transform:translateX(-6px); }
+      40% { transform:translateX(6px); }
+      60% { transform:translateX(-4px); }
+      80% { transform:translateX(4px); }
+    }
+    .flag-deal-anim { animation: flagDeal 0.55s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+    .cat-popping    { animation: catPop 0.38s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .duel-correct   { animation: duelCorrect 0.4s ease; }
+    .duel-wrong     { animation: duelWrong 0.4s ease; }
+    @keyframes fireFlare {
+      0%   { text-shadow: 0 0 8px #fb923c, 0 0 20px #f97316, 0 0 40px #ea580c; transform:scale(1); }
+      25%  { text-shadow: 0 0 12px #fbbf24, 0 0 30px #f97316, 0 0 60px #dc2626; transform:scale(1.1); }
+      50%  { text-shadow: 0 0 8px #fb923c, 0 0 24px #ea580c; transform:scale(1.05); }
+      75%  { text-shadow: 0 0 14px #fbbf24, 0 0 28px #f97316; transform:scale(1.12); }
+      100% { text-shadow: 0 0 8px #fb923c, 0 0 20px #f97316; transform:scale(1); }
+    }
+    @keyframes fireSettle {
+      0%,100% { text-shadow: 0 0 6px #fb923c, 0 0 14px #f97316; }
+      50%     { text-shadow: 0 0 10px #fbbf24, 0 0 20px #f97316; }
+    }
+    .streak-fire { animation: fireFlare 0.22s ease-in-out 6 forwards; }
+    .streak-glow { animation: fireSettle 2s ease-in-out infinite; }
+    .cat-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+    .cat-card.can-place:hover { transform: translateY(-4px) scale(1.015); }
+    .cat-card.can-place { cursor: pointer; }
+    select { outline: none; }
+  </style>
 </head>
-
 <body>
-<!-- Updated header section in index.html -->
-<header>
-    <div class="tab" id="aboutTab">About</div>
-    <div class="tab" id="milestonesTab"><i class="milestone-icon">🏆</i> Milestones</div>
-    <h1>Flag Games</h1>
-    <div class="tab" id="changeModeTab">
-        Change Gamemode
-        <div class="dropdown-content" id="gameModeDropdown">
-            <div class="dropdown-item selected" data-mode="classic">Flag Game</div>
-            <div class="dropdown-item" data-mode="duel">Flag Duel</div>
-            <div class="dropdown-item" data-mode="reveal">Flag Reveal</div>
-            <div class="dropdown-item" data-mode="puzzle">Flag Puzzle Guesser</div>
-        </div>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── TWEAK DEFAULTS ────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "dark",
+  "flagSize": 270,
+  "showHighScore": true,
+  "cardWatermark": true,
+  "lang": "en"
+}/*EDITMODE-END*/;
+
+// ── COUNTRY DATA ──────────────────────────────────────────────────
+const COUNTRY_PAIRS = [
+  ['Andorra','ad'],['United Arab Emirates','ae'],['Afghanistan','af'],
+  ['Antigua and Barbuda','ag'],['Albania','al'],['Armenia','am'],
+  ['Angola','ao'],['Argentina','ar'],['Austria','at'],['Australia','au'],
+  ['Azerbaijan','az'],['Bosnia and Herzegovina','ba'],['Barbados','bb'],
+  ['Bangladesh','bd'],['Belgium','be'],['Burkina Faso','bf'],['Bulgaria','bg'],
+  ['Bahrain','bh'],['Burundi','bi'],['Benin','bj'],['Bolivia','bo'],
+  ['Brazil','br'],['Bahamas','bs'],['Bhutan','bt'],['Botswana','bw'],
+  ['Belarus','by'],['Belize','bz'],['Canada','ca'],
+  ['Democratic Republic of the Congo','cd'],['Central African Republic','cf'],
+  ['Republic of the Congo','cg'],['Switzerland','ch'],['Ivory Coast','ci'],
+  ['Chile','cl'],['Cameroon','cm'],['China','cn'],['Colombia','co'],
+  ['Costa Rica','cr'],['Cuba','cu'],['Cyprus','cy'],['Czech Republic','cz'],
+  ['Germany','de'],['Djibouti','dj'],['Denmark','dk'],['Dominica','dm'],
+  ['Dominican Republic','do'],['Algeria','dz'],['Ecuador','ec'],
+  ['Estonia','ee'],['Egypt','eg'],['Eritrea','er'],['Spain','es'],
+  ['Ethiopia','et'],['Finland','fi'],['Fiji','fj'],['France','fr'],
+  ['Gabon','ga'],['United Kingdom','gb'],['Grenada','gd'],['Georgia','ge'],
+  ['Ghana','gh'],['Gambia','gm'],['Guinea','gn'],['Equatorial Guinea','gq'],
+  ['Greece','gr'],['Guatemala','gt'],['Guinea-Bissau','gw'],['Guyana','gy'],
+  ['Honduras','hn'],['Croatia','hr'],['Haiti','ht'],['Hungary','hu'],
+  ['Indonesia','id'],['Ireland','ie'],['Israel','il'],['India','in'],
+  ['Iraq','iq'],['Iran','ir'],['Iceland','is'],['Italy','it'],
+  ['Jamaica','jm'],['Jordan','jo'],['Japan','jp'],['Kenya','ke'],
+  ['Kyrgyzstan','kg'],['Cambodia','kh'],['Kiribati','ki'],['Comoros','km'],
+  ['Saint Kitts and Nevis','kn'],['North Korea','kp'],['South Korea','kr'],
+  ['Kuwait','kw'],['Kazakhstan','kz'],['Laos','la'],['Lebanon','lb'],
+  ['Saint Lucia','lc'],['Liechtenstein','li'],['Sri Lanka','lk'],
+  ['Liberia','lr'],['Lesotho','ls'],['Lithuania','lt'],['Luxembourg','lu'],
+  ['Latvia','lv'],['Libya','ly'],['Morocco','ma'],['Monaco','mc'],
+  ['Moldova','md'],['Montenegro','me'],['Madagascar','mg'],
+  ['Marshall Islands','mh'],['North Macedonia','mk'],['Mali','ml'],
+  ['Myanmar','mm'],['Mongolia','mn'],['Mauritania','mr'],['Malta','mt'],
+  ['Mauritius','mu'],['Maldives','mv'],['Malawi','mw'],['Mexico','mx'],
+  ['Malaysia','my'],['Mozambique','mz'],['Namibia','na'],['Niger','ne'],
+  ['Nigeria','ng'],['Nicaragua','ni'],['Netherlands','nl'],['Norway','no'],
+  ['Nepal','np'],['Nauru','nr'],['New Zealand','nz'],['Oman','om'],
+  ['Palau','pw'],['Panama','pa'],['Peru','pe'],['Papua New Guinea','pg'],
+  ['Philippines','ph'],['Pakistan','pk'],['Poland','pl'],['Portugal','pt'],
+  ['Paraguay','py'],['Qatar','qa'],['Romania','ro'],['Serbia','rs'],
+  ['Russia','ru'],['Rwanda','rw'],['Saudi Arabia','sa'],
+  ['Solomon Islands','sb'],['Seychelles','sc'],['Sudan','sd'],['Sweden','se'],
+  ['Singapore','sg'],['Slovenia','si'],['Slovakia','sk'],['Sierra Leone','sl'],
+  ['San Marino','sm'],['Senegal','sn'],['Somalia','so'],['Suriname','sr'],
+  ['South Sudan','ss'],['Sao Tome and Principe','st'],['El Salvador','sv'],
+  ['Syria','sy'],['Eswatini','sz'],['Chad','td'],['Togo','tg'],
+  ['Thailand','th'],['Tajikistan','tj'],['Timor-Leste','tl'],
+  ['Turkmenistan','tm'],['Tunisia','tn'],['Tonga','to'],['Turkey','tr'],
+  ['Trinidad and Tobago','tt'],['Tuvalu','tv'],['Tanzania','tz'],
+  ['Ukraine','ua'],['Uganda','ug'],['United States','us'],['Uruguay','uy'],
+  ['Uzbekistan','uz'],['Saint Vincent and the Grenadines','vc'],
+  ['Venezuela','ve'],['Vietnam','vn'],['Vanuatu','vu'],['Samoa','ws'],
+  ['Kosovo','xk'],['Yemen','ye'],['South Africa','za'],['Zambia','zm'],
+  ['Zimbabwe','zw'],
+];
+const COUNTRIES = COUNTRY_PAIRS.map(([name,code]) => ({ name, code, flagUrl:`flags_images/${code}.png` }));
+
+// ── CATEGORY DEFINITIONS ──────────────────────────────────────────
+const CATEGORY_PAIRS = [
+  { key:'hdi',   dataType:'hdi',                 variants:[{id:'hdiHigh',  name:'Highest HDI',            higher:true},{id:'hdiLow',   name:'Lowest HDI',             higher:false}]},
+  { key:'olym',  dataType:'olympic',              variants:[{id:'olymMost', name:'Most Olympic Medals',    higher:true},{id:'olymLeast',name:'Fewest Olympic Medals',   higher:false}]},
+  { key:'pop',   dataType:'population',           variants:[{id:'popHigh',  name:'Largest Population',     higher:true},{id:'popLow',   name:'Smallest Population',     higher:false}]},
+  { key:'elev',  dataType:'highest-elevation',    variants:[{id:'elevHigh', name:'Highest Elevation',      higher:true},{id:'elevLow',  name:'Lowest Elevation',        higher:false}]},
+  { key:'life',  dataType:'life-expectancy',      variants:[{id:'lifeHigh', name:'Highest Life Expectancy',higher:true},{id:'lifeLow',  name:'Lowest Life Expectancy',  higher:false}]},
+  { key:'area',  dataType:'land-area',            variants:[{id:'areaLarge',name:'Largest Land Area',      higher:true},{id:'areaSmall',name:'Smallest Land Area',       higher:false}]},
+  { key:'temp',  dataType:'average-temperature',  variants:[{id:'tempHot',  name:'Hottest Country',        higher:true},{id:'tempCold', name:'Coldest Country',          higher:false}]},
+  { key:'gdp',   dataType:'gdp-per-capita',       variants:[{id:'gdpHigh',  name:'Highest GDP/Capita',     higher:true},{id:'gdpLow',   name:'Lowest GDP/Capita',        higher:false}]},
+];
+const DUEL_CATS = ['Population','GDP/Capita','Land Area','Life Expectancy','HDI','Olympic Medals','Avg Temperature'];
+const DUEL_DATA_TYPES = ['population','gdp-per-capita','land-area','life-expectancy','hdi','olympic','average-temperature'];
+const DUEL_CAT_KEYS  = ['duelPop','duelGdp','duelArea','duelLife','duelHdi','duelOlym','duelTemp'];
+
+// ── I18N STRINGS ────────────────────────────────────────────────
+const STRINGS = {
+  en: {
+    hdiHigh:'Highest HDI', hdiLow:'Lowest HDI',
+    olymMost:'Most Olympic Medals', olymLeast:'Fewest Olympic Medals',
+    popHigh:'Largest Population', popLow:'Smallest Population',
+    elevHigh:'Highest Elevation', elevLow:'Lowest Elevation',
+    lifeHigh:'Highest Life Expectancy', lifeLow:'Lowest Life Expectancy',
+    areaLarge:'Largest Land Area', areaSmall:'Smallest Land Area',
+    tempHot:'Hottest Country', tempCold:'Coldest Country',
+    gdpHigh:'Highest GDP/Capita', gdpLow:'Lowest GDP/Capita',
+    duelPop:'Population', duelGdp:'GDP/Capita', duelArea:'Land Area',
+    duelLife:'Life Expectancy', duelHdi:'HDI', duelOlym:'Olympic Medals', duelTemp:'Avg Temperature',
+    milestones:'Milestones', placed:'Placed', settings:'Settings',
+    themeLabel:'Theme', lightTheme:'Light', darkTheme:'Dark', langLabel:'Language',
+    cardWatermarkLabel:'Card Watermark', showBestLabel:'Show Best Score',
+    flagSizeLabel:'Flag Size', rollToStart:'Roll to Start',
+    pickCategory:'← Pick a Category →', placeHere:'Place here →',
+    empty:'Empty', pressRoll:'Press Roll to begin',
+    gameComplete:'Game Complete', newPersonalBest:'🏆 New Personal Best',
+    avgRankingNote:'Average ranking — lower is better',
+    personalBest:'Personal best:', playAgain:'Play Again', share:'Share', copied:'✓ Copied!',
+    whichHigher:'Which country ranks higher in…',
+    clickToAnswer:'Click a flag to answer',
+    correct:'✓ Correct!', wrong:'✕ Wrong!', tie:'— Tie!',
+    tieExplain:'Both countries share the same rank — streak preserved',
+    nextDuel:'Next Duel →', comingSoon:'Coming Soon', comingSoonSub:'will follow the same design language',
+    unranked:'Unranked', yourBestScores:'Your Best Scores',
+    flagGame:'Flag Game', flagDuel:'Flag Duel', flagReveal:'Flag Reveal', flagPuzzle:'Flag Puzzle',
+    close:'Close', english:'English', norwegian:'Norwegian (Bokmål)', rerolls:'re-rolls',
+  },
+  no: {
+    hdiHigh:'Høyest HDI', hdiLow:'Lavest HDI',
+    olymMost:'Flest olympiske medaljer', olymLeast:'Færrest olympiske medaljer',
+    popHigh:'Størst befolkning', popLow:'Minst befolkning',
+    elevHigh:'Høyest beliggenhet', elevLow:'Lavest beliggenhet',
+    lifeHigh:'Høyest levealder', lifeLow:'Lavest levealder',
+    areaLarge:'Størst landareal', areaSmall:'Minst landareal',
+    tempHot:'Varmest land', tempCold:'Kaldest land',
+    gdpHigh:'Høyest BNP/innb.', gdpLow:'Lavest BNP/innb.',
+    duelPop:'Befolkning', duelGdp:'BNP/innb.', duelArea:'Landareal',
+    duelLife:'Levealder', duelHdi:'HDI', duelOlym:'Olympiske medaljer', duelTemp:'Gjennomsnittstemperatur',
+    milestones:'Milepæler', placed:'Plassert', settings:'Innstillinger',
+    themeLabel:'Tema', lightTheme:'Lys', darkTheme:'Mørk', langLabel:'Språk',
+    cardWatermarkLabel:'Kortvannmerke', showBestLabel:'Vis beste score',
+    flagSizeLabel:'Flaggstørrelse', rollToStart:'Rull for å starte',
+    pickCategory:'← Velg en kategori →', placeHere:'Plasser her →',
+    empty:'Tom', pressRoll:'Trykk Roll for å starte',
+    gameComplete:'Spill fullført', newPersonalBest:'🏆 Ny personlig rekord',
+    avgRankingNote:'Gjennomsnittlig rangering — lavere er bedre',
+    personalBest:'Personlig rekord:', playAgain:'Spill igjen', share:'Del', copied:'✓ Kopiert!',
+    whichHigher:'Hvilket land rangeres høyere i…',
+    clickToAnswer:'Klikk på et flagg for å svare',
+    correct:'✓ Riktig!', wrong:'✕ Feil!', tie:'— Uavgjort!',
+    tieExplain:'Begge land deler samme rangering — streak beholdes',
+    nextDuel:'Neste duell →', comingSoon:'Kommer snart', comingSoonSub:'vil følge samme designspråk',
+    unranked:'Urangert', yourBestScores:'Dine beste resultater',
+    flagGame:'Flag Game', flagDuel:'Flaggduell', flagReveal:'Flaggavsløring', flagPuzzle:'Flaggpuslespill',
+    close:'Lukk', english:'English', norwegian:'Norsk (Bokmål)', rerolls:'reruller',
+  }
+};
+function useT(lang) {
+  const strings = STRINGS[lang] || STRINGS.en;
+  return React.useCallback((key) => strings[key] ?? STRINGS.en[key] ?? key, [lang]);
+}
+
+// ── THEMES ────────────────────────────────────────────────────────
+const THEMES = {
+  light: {
+    bg:'#F4F3EF', headerBg:'#FFFFFF', headerBorder:'rgba(0,0,0,0.07)', headerShadow:'0 1px 12px rgba(0,0,0,0.06)',
+    textPrimary:'#1A1917', subText:'#888480', labelColor:'#706D6A',
+    accent:'oklch(52% 0.21 248)', accentRaw:'15,100,210', accentGlow:'rgba(15,100,210,0.28)', accentHoverBg:'rgba(15,100,210,0.05)',
+    cardBg:'#FFFFFF', cardBorder:'rgba(0,0,0,0.07)', cardShadow:'0 2px 8px rgba(0,0,0,0.05)',
+    cardHoverShadow:'0 8px 28px rgba(15,100,210,0.15)', cardHoverBorder:'rgba(15,100,210,0.35)',
+    emptySlotBorder:'#D8D5D0', emptySlotBg:'#F9F8F5',
+    flagFrameBg:'#FFFFFF', flagFrameBorder:'rgba(0,0,0,0.09)', flagFrameShadow:'0 10px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)',
+    btnBg:'oklch(52% 0.21 248)', btnText:'#FFFFFF', btnShadow:'0 4px 18px rgba(15,100,210,0.35)',
+    countryNameColor:'#1A1917', skipActive:'oklch(52% 0.21 248)', skipInactive:'#DDD9D4',
+    pickBg:'oklch(97% 0.04 248)', pickText:'oklch(52% 0.21 248)',
+    rankGood:'#16a34a', rankMid:'#d97706', rankBad:'#dc2626',
+    filledCardBg:'#FAFAFA', overlayBg:'rgba(0,0,0,0.70)',
+    scoreBg:'#FFFFFF', scoreBorder:'rgba(0,0,0,0.07)', scoreRowBg:'#F6F5F1',
+    progressFill:'oklch(52% 0.21 248)', progressBg:'rgba(0,0,0,0.07)',
+    globeColor:'rgba(15,100,210,0.22)', dropdownBg:'#FFFFFF', dropdownBorder:'rgba(0,0,0,0.10)',
+    navTabColor:'#706D6A', navTabHover:'#1A1917',
+  },
+  dark: {
+    bg:'#0D1B2A', headerBg:'#0A1520', headerBorder:'rgba(255,255,255,0.05)', headerShadow:'0 1px 0 rgba(255,255,255,0.04)',
+    textPrimary:'#EDE8E1', subText:'#6A8099', labelColor:'#7A90A8',       // ← fixed (was #6A80980)
+    accent:'oklch(73% 0.17 76)', accentRaw:'210,155,50', accentGlow:'rgba(210,155,50,0.35)', accentHoverBg:'rgba(210,155,50,0.08)',
+    cardBg:'#152333', cardBorder:'rgba(255,255,255,0.06)', cardShadow:'0 2px 10px rgba(0,0,0,0.3)',
+    cardHoverShadow:'0 8px 28px rgba(210,155,50,0.18)', cardHoverBorder:'rgba(210,155,50,0.4)',
+    emptySlotBorder:'rgba(255,255,255,0.14)', emptySlotBg:'rgba(255,255,255,0.03)',
+    flagFrameBg:'#0F1F30', flagFrameBorder:'oklch(73% 0.17 76)', flagFrameShadow:'0 12px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(210,155,50,0.18), 0 0 40px rgba(210,155,50,0.1)',
+    btnBg:'oklch(73% 0.17 76)', btnText:'#0D1B2A', btnShadow:'0 4px 20px rgba(210,155,50,0.4)',
+    countryNameColor:'#EDE8E1', skipActive:'oklch(73% 0.17 76)', skipInactive:'#1E3045',
+    pickBg:'rgba(210,155,50,0.1)', pickText:'oklch(73% 0.17 76)',
+    rankGood:'#4ade80', rankMid:'#fbbf24', rankBad:'#f87171',
+    filledCardBg:'#111E2E', overlayBg:'rgba(0,0,0,0.82)',
+    scoreBg:'#152333', scoreBorder:'rgba(255,255,255,0.07)', scoreRowBg:'#0D1B2A',
+    progressFill:'oklch(73% 0.17 76)', progressBg:'rgba(255,255,255,0.08)',
+    globeColor:'rgba(210,155,50,0.25)', dropdownBg:'#162535', dropdownBorder:'rgba(255,255,255,0.10)',
+    navTabColor:'#6A8099', navTabHover:'#EDE8E1',
+  },
+};
+
+// ── UTILITIES ─────────────────────────────────────────────────────
+function parseRank(str) { if(!str) return 999; return parseInt(str,10)||999; }
+// Per-category fallback ranks for countries missing from the data
+// (e.g. 0 Olympic medals → tied last at 134th; others → true last place)
+const CATEGORY_FALLBACKS = {
+  'olympic':             134,  // 0 medals, tied last after rank 133
+  'population':          195,
+  'hdi':                 195,
+  'highest-elevation':   195,
+  'life-expectancy':     195,
+  'land-area':           195,
+  'average-temperature': 195,
+  'gdp-per-capita':      195,
+};
+
+function getScore(name, rd, higher, dataType) {
+  const raw = rd[name];
+  const rank = raw ? parseRank(raw) : (CATEGORY_FALLBACKS[dataType] || 195);
+  return higher ? rank : (196 - rank);
+}
+function ordinalStr(n, fallback='Unranked') {
+  if (!n || n === 999) return fallback;
+  const s=['th','st','nd','rd'], v=n%100;
+  return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+function rankColor(score,T) { if(!score||score===999) return T.subText; if(score<=35) return T.rankGood; if(score<=110) return T.rankMid; return T.rankBad; }
+function getRankData(rankings,dataType) { const key=dataType.replace(/-([a-z])/g,(_,l)=>l.toUpperCase())+'Rankings'; return rankings[key]||{}; }
+
+// ── RESPONSIVE SCALE HOOK ─────────────────────────────────────────
+function useWindowWidth() {
+  const [w, setW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const handler = () => setW(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return w;
+}
+function useUiScale() {
+  const w = useWindowWidth();
+  return Math.max(1, Math.min(1.85, w / 1380));
+}
+
+function twoRandom(arr) { const a=Math.floor(Math.random()*arr.length); let b; do{b=Math.floor(Math.random()*arr.length);}while(b===a); return [arr[a],arr[b]]; }
+
+// ── GLOBE CARD BACK ───────────────────────────────────────────────
+function GlobeCardBack({ color }) {
+  return (
+    <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+      <svg viewBox="0 0 120 90" style={{ width:'88%', height:'88%' }} fill="none">
+        {/* Outer ellipse */}
+        <ellipse cx="60" cy="45" rx="52" ry="41" stroke={color} strokeWidth="1.4"/>
+        {/* Parallels */}
+        <ellipse cx="60" cy="45" rx="52" ry="12" stroke={color} strokeWidth="0.9"/>
+        <ellipse cx="60" cy="45" rx="50" ry="26" stroke={color} strokeWidth="0.9"/>
+        <ellipse cx="60" cy="45" rx="44" ry="37" stroke={color} strokeWidth="0.9"/>
+        {/* Meridians */}
+        <path d="M60 4 Q78 45 60 86" stroke={color} strokeWidth="0.9"/>
+        <path d="M60 4 Q42 45 60 86" stroke={color} strokeWidth="0.9"/>
+        <line x1="8" y1="45" x2="112" y2="45" stroke={color} strokeWidth="0.9"/>
+        <line x1="60" y1="4" x2="60" y2="86" stroke={color} strokeWidth="0.9"/>
+        {/* Centre dot */}
+        <circle cx="60" cy="45" r="2.5" fill={color}/>
+      </svg>
     </div>
-    <div class="tab" id="settingsTab">Settings ⚙</div>
-</header>
-    
-    <div class="main-wrapper">
-        <div class="container game-container">
-            <div class="categories">
-                <div class="category-column">
-                    <!-- Left-side categories -->
-                    <div class="category" id="hdiBox">
-                        <h2>Human Development Index (HDI)</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="hdiRank"></div>
-                    </div>
-                    <div class="category" id="olympicBox">
-                        <h2>Olympic Medals</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="olympicRank"></div>
-                    </div>
-                    <div class="category" id="populationBox">
-                        <h2>Population</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="populationRank"></div>
-                    </div>
-                    <div class="category" id="highestElevationBox">
-                        <h2>Highest Elevation</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="highestElevationRank"></div>
-                    </div>
-                </div>
+  );
+}
 
-                <div class="flag-column">
-                    <div class="flag-container">
-                        <div class="country-name" id="countryName"></div>
-                        <div class="flag-box" id="flagBox"></div>
-                        <button onclick="rollFlag()">Roll</button>
-                        <div id="pickText">Pick!</div>
-                        <div id="averageRankingText" style="margin-top: 50px; text-align: center;"></div>
-                        <div class="how-to-play-container">
-                            <button id="howToPlayButton" class="how-to-play-button">How to Play</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="howToPlayModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-button">&times;</span>
-                        <h2>How to Play</h2>
-                        <div class="instructions">
-                            <p>1. Click the "Roll" button to get a random country flag.</p>
-                            <p>2. Place the flag in one of the eight category boxes to see how that country ranks in that category.</p>
-                            <p>3. Rankings go from 1st (best) to 195th (worst).</p>
-                            <p>4. You have 3 skips - if you don't like a country, you can click "Re-roll" to get a different one.</p>
-                            <p>5. After filling all eight categories, you'll see your average ranking.</p>
-                            <p>6. The goal is to achieve the lowest possible average ranking.</p>
-                        </div>
-                    </div>
-                </div>
+// ── CATEGORY CARD ─────────────────────────────────────────────────
+function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark, scale=1, t }) {
+  const T = THEMES[theme];
+  const [hovered, setHovered] = useState(false);
+  const cardRef = useRef(null);
+  const isEmpty = !placed;
+  const isHoverable = canPlace && isEmpty;
 
-                <div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Settings</h2>
-        
-        <div class="settings-section">
-            <div class="setting-item">
-                <span class="setting-label">Dark Mode:</span>
-                <label class="switch">
-                    <input type="checkbox" id="darkModeToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            
-            <div class="setting-item">
-                <span class="setting-label">Language:</span>
-                <select id="languageSelect">
-                    <option value="en">English</option>
-                    <option value="no">Norwegian</option>
-                </select>
-            </div>
+  function handleClick() {
+    if (!canPlace) return;
+    if (cardRef.current) {
+      cardRef.current.classList.add('cat-popping');
+      setTimeout(() => cardRef.current?.classList.remove('cat-popping'), 380);
+    }
+    onPlace();
+  }
+
+  const cardStyle = {
+    background: placed ? T.filledCardBg : (isHoverable && hovered ? T.accentHoverBg : T.cardBg),
+    border: `1.5px solid ${isHoverable && hovered ? T.cardHoverBorder : T.cardBorder}`,
+    borderRadius: `${Math.round(14*scale)}px`,
+    padding: `${Math.round(16*scale)}px ${Math.round(18*scale)}px`,
+    marginBottom: `${Math.round(12*scale)}px`,
+    cursor: isHoverable ? 'pointer' : 'default',
+    boxShadow: isHoverable && hovered ? T.cardHoverShadow : T.cardShadow,
+    transform: isHoverable && hovered ? 'translateY(-3px) scale(1.01)' : 'none',
+    transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.2s',
+    position: 'relative', overflow: 'hidden',
+    animation: 'fadeSlideUp 0.3s ease backwards',
+  };
+
+  return (
+    <div ref={cardRef} className={`cat-card${isHoverable?' can-place':''}`} style={cardStyle}
+      onClick={handleClick} onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}>
+
+      {/* Watermark: flag fills card when placed */}
+      {placed && watermark && (
+        <div style={{
+          position:'absolute', inset:0, borderRadius:'13px',
+          backgroundImage:`url(${placed.flagUrl})`,
+          backgroundSize:'cover', backgroundPosition:'center',
+          opacity:0.10, pointerEvents:'none',
+        }}/>
+      )}
+
+      {/* Hover top line */}
+      {isHoverable && hovered && (
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:'2px', background:T.accent, borderRadius:`${Math.round(14*scale)}px ${Math.round(14*scale)}px 0 0` }}/>
+      )}
+
+      {/* Label */}
+      <div style={{ fontSize:`${Math.round(11*scale)}px`, fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase',
+        color: isHoverable && hovered ? T.accent : T.labelColor, marginBottom:`${Math.round(11*scale)}px`,
+        fontFamily:'Barlow, sans-serif', transition:'color 0.15s' }}>
+        {t ? t(cat.id) : cat.name}
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
+        <div style={{ width:`${Math.round(100*scale)}px`, height:`${Math.round(72*scale)}px`, borderRadius:`${Math.round(8*scale)}px`,
+          border: isEmpty ? `1.5px dashed ${T.emptySlotBorder}` : 'none',
+          background: isEmpty ? T.emptySlotBg : 'transparent',
+          flexShrink:0, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center',
+          boxShadow: placed ? '0 2px 10px rgba(0,0,0,0.18)' : 'none', position:'relative' }}>
+          {placed
+            ? <img src={placed.flagUrl} alt={placed.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
+            : <div style={{ fontSize:'20px', opacity:0.15 }}>⚑</div>}
         </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          {placed ? (
+            <>
+              <div style={{ fontSize:`${Math.round(11*scale)}px`, color:T.subText, fontFamily:'Barlow, sans-serif', fontWeight:500,
+                marginBottom:'4px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                {placed.name}
+              </div>
+              <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${Math.round(32*scale)}px`, fontWeight:800,
+                color:rankColor(score,T), lineHeight:1, letterSpacing:'-0.01em' }}>
+                {ordinalStr(score, t ? t('unranked') : 'Unranked')}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize:`${Math.round(12*scale)}px`, color: isHoverable && hovered ? T.accent : T.subText,
+              fontStyle: isHoverable ? 'normal' : 'italic', fontFamily:'Barlow, sans-serif',
+              fontWeight: isHoverable ? 600 : 400, transition:'color 0.15s' }}>
+              {isHoverable ? (t ? t('placeHere') : 'Place here →') : (t ? t('empty') : 'Empty')}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-</div>
+  );
+}
 
-                <div class="category-column">
-                    <!-- Right-side categories -->
-                    <div class="category" id="lifeExpectancyBox">
-                        <h2>Life Expectancy</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="lifeExpectancyRank"></div>
-                    </div>
-                    <div class="category" id="landAreaBox">
-                        <h2>Land Area</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="landAreaRank"></div>
-                    </div>
-                    <div class="category" id="averageTemperatureBox">
-                        <h2>Average Temperature</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="averageTemperatureRank"></div>
-                    </div>
-                    <div class="category" id="gdpPerCapitaBox">
-                        <h2>GDP per Capita</h2>
-                        <div class="category-box"></div>
-                        <div class="rank" id="gdpPerCapitaRank"></div>
-                    </div>
-                </div>
+// ── FLAG CENTER ───────────────────────────────────────────────────
+function FlagCenter({ country, isRolling, onRoll, skipsLeft, phase, theme, flagSize, scale=1, t }) {
+  const T = THEMES[theme];
+  const fw = flagSize, fh = Math.round(fw*0.72);
+  const canRoll = !isRolling && (phase==='idle' || (phase==='placing' && skipsLeft>0));
+  const btnLabel = isRolling ? 'Rolling…' : phase==='idle' ? 'Roll' : 'Re-roll';
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 20px' }}>
+      {/* Country name */}
+      <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${Math.round(26*scale)}px`, fontWeight:900,
+        letterSpacing:'0.04em', color:T.countryNameColor, textTransform:'uppercase',
+        marginBottom:`${Math.round(18*scale)}px`, minHeight:`${Math.round(32*scale)}px`, textAlign:'center', lineHeight:1.1,
+        maxWidth:`${fw+20}px`, wordBreak:'break-word', transition:'color 0.3s' }}>
+        {country ? country.name : (isRolling ? '' : (t ? t('rollToStart') : 'Roll to Start'))}
+      </div>
+
+      {/* Flag frame */}
+      <div id="flag-frame" style={{ width:`${fw}px`, height:`${fh}px`, borderRadius:'16px',
+        background:T.flagFrameBg, boxShadow:T.flagFrameShadow, border:`2px solid ${T.flagFrameBorder}`,
+        overflow:'hidden', position:'relative', marginBottom:'26px', flexShrink:0,
+        transition:'box-shadow 0.3s, border-color 0.3s' }}>
+
+        {/* Globe card back — shown when empty */}
+        {!country && !isRolling && <GlobeCardBack color={T.globeColor}/>}
+        {!country && !isRolling && (
+          <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center', gap:'8px', zIndex:1 }}>
+            <div style={{ fontSize:'11px', color:T.subText, fontFamily:'Barlow, sans-serif',
+              letterSpacing:'0.06em', textTransform:'uppercase', fontWeight:600, opacity:0.7 }}>
+              {t ? t('pressRoll') : 'Press Roll to begin'}
             </div>
+          </div>
+        )}
+
+        <img id="rolling-flag-img"
+          src={country ? country.flagUrl : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
+          alt={country ? country.name : ''}
+          className={!isRolling && country ? 'flag-deal-anim' : ''}
+          onError={e => { e.currentTarget.style.display='none'; }}
+          style={{ width:'100%', height:'100%', objectFit:'contain', padding:'4px',
+            display:(country||isRolling)?'block':'none', position:'relative', zIndex:2 }}
+        />
+      </div>
+
+      {/* Roll button */}
+      <button onClick={onRoll} disabled={!canRoll}
+        style={{ padding:`${Math.round(16*scale)}px ${Math.round(64*scale)}px`, borderRadius:'50px', border:'none',
+          background: canRoll ? T.btnBg : T.skipInactive,
+          color: canRoll ? T.btnText : T.subText,
+          fontFamily:'Barlow Condensed, sans-serif', fontSize:`${Math.round(22*scale)}px`, fontWeight:800,
+          letterSpacing:'0.1em', textTransform:'uppercase',
+          cursor: canRoll ? 'pointer' : 'not-allowed',
+          boxShadow: canRoll ? T.btnShadow : 'none',
+          transition:'all 0.2s ease', opacity: canRoll ? 1 : 0.45 }}
+        onMouseEnter={e=>{ if(canRoll) e.currentTarget.style.transform='scale(1.04)'; }}
+        onMouseLeave={e=>{ e.currentTarget.style.transform='scale(1)'; }}
+        onMouseDown={e=>{ if(canRoll) e.currentTarget.style.transform='scale(0.97)'; }}
+        onMouseUp={e=>{ if(canRoll) e.currentTarget.style.transform='scale(1.04)'; }}>
+        {btnLabel}
+      </button>
+
+      {/* Skip dots */}
+      <div style={{ marginTop:`${Math.round(14*scale)}px`, display:'flex', alignItems:'center', gap:`${Math.round(7*scale)}px`,
+        fontSize:`${Math.round(11*scale)}px`, color:T.subText, fontFamily:'Barlow, sans-serif' }}>
+        {[0,1,2].map(i=>(
+          <div key={i} style={{ width:`${Math.round(8*scale)}px`, height:`${Math.round(8*scale)}px`, borderRadius:'50%',
+            background: i<skipsLeft ? T.skipActive : T.skipInactive,
+            transition:'background 0.3s ease',
+            boxShadow: i<skipsLeft ? `0 0 6px ${T.accentGlow}` : 'none' }}/>
+        ))}
+        <span style={{ marginLeft:'3px' }}>{t ? t('rerolls') : 're-rolls'}</span>
+      </div>
+
+      {/* Pick prompt */}
+      {phase==='placing' && (
+        <div style={{ marginTop:'18px', padding:'9px 22px', borderRadius:'8px',
+          background:T.pickBg, color:T.pickText, fontFamily:'Barlow Condensed, sans-serif',
+          fontSize:'14px', fontWeight:700, letterSpacing:'0.07em', textTransform:'uppercase',
+          animation:'pickPulse 1.6s ease-in-out infinite', border:`1px solid ${T.pickText}22` }}>
+          {t ? t('pickCategory') : '← Pick a Category →'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SCORE OVERLAY ─────────────────────────────────────────────────
+function ScoreOverlay({ slots, scores, categories, theme, onRestart, highScore, isNewHigh, t }) {
+  const T = THEMES[theme];
+  const validScores = scores.filter(s => s !== null && s !== undefined);
+  const avg = validScores.length ? validScores.reduce((a,b)=>a+b,0)/validScores.length : 0;
+  const [displayAvg, setDisplayAvg] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      let start = null;
+      const dur = 2000;
+      function step(ts) {
+        if(!start) start=ts;
+        const p=Math.min((ts-start)/dur,1);
+        const ease = p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+        setDisplayAvg(avg*ease);
+        if(p<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }, 200);
+    return ()=>clearTimeout(t);
+  }, [avg]);
+
+  async function handleShare() {
+    const lines = [`🌍 Flag Game — Average Rank: ${avg.toFixed(1)}`, '',
+      ...categories.map((c,i)=>`${c.name}: ${ordinalStr(scores[i])}`)].join('\n');
+    try {
+      if (navigator.share) { await navigator.share({ text: lines }); }
+      else { await navigator.clipboard.writeText(lines); setCopied(true); setTimeout(()=>setCopied(false), 2000); }
+    } catch(e) {}
+  }
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:T.overlayBg, backdropFilter:'blur(10px)',
+      display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, animation:'fadeIn 0.4s ease' }}>
+      <div style={{ background:T.scoreBg, border:`1px solid ${T.scoreBorder}`, borderRadius:'24px',
+        padding:'36px 40px', textAlign:'center', maxWidth:'500px', width:'92%',
+        boxShadow: theme==='dark' ? '0 32px 80px rgba(0,0,0,0.6)' : '0 24px 60px rgba(0,0,0,0.18)',
+        animation:'fadeSlideUp 0.4s ease' }}>
+
+        {/* Badge */}
+        <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'11px', fontWeight:700,
+          letterSpacing:'0.15em', textTransform:'uppercase', color:T.accent, marginBottom:'6px' }}>
+          {isNewHigh ? (t ? t('newPersonalBest') : '🏆 New Personal Best') : (t ? t('gameComplete') : 'Game Complete')}
         </div>
 
-        <div id="flagDuelContainer" class="game-container" style="display: none;">
-            <div class="duel-content">
-                <h2>Flag Duel</h2>
-                
-                <!-- Category display -->
-                <div class="duel-category" id="duelCategory">Category: <span id="categoryName">Population</span></div>
-                
-                <!-- Flags section -->
-                <div class="duel-flags">
-                    <div class="duel-flag-container">
-                        <div class="duel-flag" id="leftFlag"></div>
-                        <div class="duel-country-name" id="leftCountryName">Country 1</div>
-                    </div>
-                    <div class="vs-container">VS</div>
-                    <div class="duel-flag-container">
-                        <div class="duel-flag" id="rightFlag"></div>
-                        <div class="duel-country-name" id="rightCountryName">Country 2</div>
-                    </div>
-                </div>
-                
-                <!-- Instruction text -->
-                <div class="duel-instruction">Click on the flag of the country that ranks higher!</div>
-                
-                <!-- Score display -->
-                <div class="duel-score-container">
-                    <div class="duel-scores-row">
-                        <div class="duel-high-score" id="duelHighScore">High Score: 0</div>
-                        <div class="duel-score" id="duelScore">Score: 0</div>
-                    </div>
-                    <div class="duel-high-score-message-container">
-                        <!-- High score message will be added here by JavaScript -->
-                    </div>
-                </div>
-                
-                <!-- Next button -->
-                <button id="nextDuelButton" style="display: none;">Next Duel</button>
-            </div>
+        {/* Big score */}
+        <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'88px', fontWeight:900,
+          lineHeight:0.9, color:T.textPrimary, letterSpacing:'-0.02em', marginBottom:'4px' }}>
+          {displayAvg.toFixed(1)}
         </div>
-        <div id="flagRevealContainer" class="game-container" style="display: none;">
-            <div class="reveal-content">
-                <h2>Flag Reveal</h2>
-                
-                <div class="reveal-game-area">
-                    <!-- Flag display with puzzle pieces -->
-                    <div class="reveal-flag-container">
-                        <div class="reveal-flag" id="revealFlag"></div>
-                        <div class="reveal-puzzle-grid" id="puzzleGrid"></div>
-                    </div>
-                    
-                    <!-- Timer and progress -->
-                    <div class="reveal-info">
-                        <div class="reveal-timer">Time: <span id="revealTimer">2:00</span></div>
-                        <div class="reveal-progress">Pieces Revealed: <span id="revealProgress">0</span>/16</div>
-                        <div class="reveal-score">Score: <span id="revealScore">0</span></div>
-                        <div class="reveal-high-score">High Score: <span id="revealHighScore">0</span></div>
-                        <div class="reveal-lives">Attempts Left: <span id="revealLives">3</span></div>
-                    </div>
-                    
-                    <!-- Input form -->
-                    <div class="reveal-input-container">
-                        <input type="text" id="countryGuessInput" placeholder="Type country name...">
-                        <button id="submitGuessButton">Submit</button>
-                    </div>
-                    
-                    <!-- Message display -->
-                    <div class="reveal-message" id="revealMessage"></div>
-                    
-                    <!-- Next round button -->
-                    <button id="nextRevealButton" style="display: none;">Next Flag</button>
-                </div>
-            </div>
+        <div style={{ fontSize:'13px', color:T.subText, marginBottom:'16px', fontWeight:500 }}>
+          {t ? t('avgRankingNote') : 'Average ranking — lower is better'}
         </div>
-        <div id="flagPuzzleContainer" class="game-container" style="display: none;">
-            <div class="puzzle-content">
-                <h2>Flag Puzzle Guesser</h2>
-                
-                <div class="puzzle-game-area">
-                    <!-- Timer and Score Display -->
-                    <div class="puzzle-info">
-                        <div class="puzzle-timer">Time: <span id="puzzleTimer">2:00</span></div>
-                        <div class="puzzle-score">Score: <span id="puzzleScore">0</span></div>
-                        <div class="puzzle-high-score">High Score: <span id="puzzleHighScore">0</span></div>
-                    </div>
-                    
-                    <!-- Merged Flag Display -->
-                    <div class="puzzle-flag-container">
-                        <div class="puzzle-merged-flag" id="puzzleMergedFlag"></div>
-                        <div class="puzzle-progress">
-                            Flags Identified: <span id="flagsIdentified">0</span>/<span id="totalFlags">2</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Input form -->
-                    <div class="puzzle-input-container">
-                        <input type="text" id="countryPuzzleInput" placeholder="Type country name...">
-                        <button id="submitPuzzleButton">Submit</button>
-                    </div>
-                    
-                    <!-- Skip button (in its own container) -->
-                    <div class="puzzle-skip-container">
-                        <button id="skipPuzzleButton">Skip This Puzzle</button>
-                    </div>
-                    
-                    <!-- Guessed Countries List -->
-                    <div class="puzzle-guessed-flags" id="guessedFlags"></div>
-                    
-                    <!-- Message display -->
-                    <div class="puzzle-message" id="puzzleMessage"></div>
-                    
-                    <!-- Game Controls -->
-                    <button id="startPuzzleButton">Start Game</button>
-                    <button id="restartPuzzleButton" style="display: none;">Play Again</button>
+
+        {/* Personal best row */}
+        {highScore>0 && !isNewHigh && (
+          <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:T.scoreRowBg,
+            padding:'6px 16px', borderRadius:'50px', marginBottom:'16px',
+            fontSize:'12px', color:T.subText, fontFamily:'Barlow, sans-serif' }}>
+            {t ? t('personalBest') : 'Personal best:'}
+            <strong style={{ color:T.textPrimary }}>{highScore.toFixed(1)}</strong>
+          </div>
+        )}
+
+        {/* Results grid — with flag thumbnails */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'7px', marginBottom:'24px' }}>
+          {categories.map((cat,i) => (
+            <div key={i} style={{ background:T.scoreRowBg, borderRadius:'10px', padding:'9px 12px',
+              display:'flex', alignItems:'center', gap:'10px',
+              animation:`fadeSlideUp 0.3s ${0.04*i}s ease backwards` }}>
+              {/* Mini flag */}
+              {slots[i] && (
+                <img src={slots[i].flagUrl} alt={slots[i].name}
+                  style={{ width:'36px', height:'26px', objectFit:'cover', borderRadius:'4px',
+                    flexShrink:0, boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }}/>
+              )}
+              <div style={{ flex:1, minWidth:0, textAlign:'left' }}>
+                <div style={{ fontSize:'10px', color:T.subText, fontFamily:'Barlow, sans-serif',
+                  fontWeight:500, lineHeight:1.3, marginBottom:'1px',
+                  whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {cat.name}
                 </div>
+                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontWeight:800,
+                  fontSize:'18px', color:rankColor(scores[i],T), lineHeight:1 }}>
+                  {ordinalStr(scores[i], t ? t('unranked') : 'Unranked')}
+                </div>
+              </div>
             </div>
+          ))}
         </div>
-        <div id="milestonesContainer" class="game-container" style="display: none;">
-            <div class="milestones-content">
-                <h2>Milestones</h2>
-                
-                <!-- High Score Overview -->
-                <div class="high-score-overview">
-                    <div class="score-row">
-                        <div class="game-score">
-                            <h3>Flag Game</h3>
-                            <span id="flagGameHighScore">0.00</span>
-                        </div>
-                        <div class="game-score">
-                            <h3>Flag Duel</h3>
-                            <span id="flagDuelHighScore">0</span>
-                        </div>
-                    </div>
-                    <div class="score-row">
-                        <div class="game-score">
-                            <h3>Flag Reveal</h3>
-                            <span id="flagRevealHighScore">0</span>
-                        </div>
-                        <div class="game-score">
-                            <h3>Flag Puzzle</h3>
-                            <span id="flagPuzzleHighScore">0</span>
-                        </div>
-                    </div>
+
+        {/* Buttons */}
+        <div style={{ display:'flex', gap:'10px', justifyContent:'center' }}>
+          <button onClick={onRestart}
+            style={{ padding:'13px 40px', borderRadius:'50px', border:'none',
+              background:T.btnBg, color:T.btnText, fontFamily:'Barlow Condensed, sans-serif',
+              fontSize:'18px', fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase',
+              cursor:'pointer', boxShadow:T.btnShadow, transition:'transform 0.15s ease' }}
+            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+            {t ? t('playAgain') : 'Play Again'}
+          </button>
+          <button onClick={handleShare}
+            style={{ padding:'13px 24px', borderRadius:'50px',
+              border:`1.5px solid ${T.cardBorder}`, background:'transparent',
+              color:T.textPrimary, fontFamily:'Barlow Condensed, sans-serif',
+              fontSize:'18px', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase',
+              cursor:'pointer', transition:'all 0.15s ease' }}
+            onMouseEnter={e=>{ e.currentTarget.style.borderColor=T.accent; e.currentTarget.style.color=T.accent; }}
+            onMouseLeave={e=>{ e.currentTarget.style.borderColor=T.cardBorder; e.currentTarget.style.color=T.textPrimary; }}>
+            {copied ? (t ? t('copied') : '✓ Copied!') : (t ? t('share') : 'Share')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PROGRESS BAR ──────────────────────────────────────────────────
+function ProgressBar({ filled, theme }) {
+  const T = THEMES[theme];
+  return (
+    <div style={{ display:'flex', gap:'4px' }}>
+      {Array.from({length:8}).map((_,i)=>(
+        <div key={i} style={{ width:'18px', height:'4px', borderRadius:'2px',
+          background: i<filled ? T.progressFill : T.progressBg,
+          transition:`background 0.3s ${i*0.05}s ease` }}/>
+      ))}
+    </div>
+  );
+}
+
+// ── FLAG DUEL MODE ────────────────────────────────────────────────
+function FlagDuel({ theme, rankings, uiScale=1, t }) {
+  const T = THEMES[theme];
+  const [catIdx, setCatIdx]     = useState(Math.floor(Math.random()*DUEL_CATS.length));
+  const [pair, setPair]         = useState(() => twoRandom(COUNTRIES));
+  const [streak, setStreak]     = useState(0);
+  const [bestStreak, setBestStreak] = useState(()=>parseInt(localStorage.getItem('fg_duel_hs')||'0'));
+  const [result, setResult]     = useState(null); // null | 'correct' | 'wrong' | 'tie'
+  const [answered, setAnswered] = useState(false);
+  const [correctIdx, setCorrectIdx] = useState(null);
+  const [isNewBest, setIsNewBest]   = useState(false);
+  const [firePlaying, setFirePlaying] = useState(false);
+  const streakRef = useRef(null);
+
+  // Responsive sizes
+  const maxW      = Math.round(820  * uiScale);
+  const flagH     = Math.round(160  * uiScale);
+  const catSz     = Math.round(34   * uiScale);
+  const subSz     = Math.round(12   * uiScale);
+  const vsSz      = Math.round(30   * uiScale);
+  const nameSz    = Math.round(18   * uiScale);
+  const rankSz    = Math.round(26   * uiScale);
+  const scoreLblSz= Math.round(11   * uiScale);
+  const scoreValSz= Math.round(38   * uiScale);
+  const resultSz  = Math.round(24   * uiScale);
+  const btnFz     = Math.round(18   * uiScale);
+  const gap       = Math.round(20   * uiScale);
+  const cardPad   = Math.round(20   * uiScale);
+  const cardR     = Math.round(16   * uiScale);
+  const mb        = Math.round(28   * uiScale);
+
+  function newRound() {
+    setCatIdx(Math.floor(Math.random()*DUEL_CATS.length));
+    setPair(twoRandom(COUNTRIES));
+    setResult(null);
+    setAnswered(false);
+    setCorrectIdx(null);
+    setIsNewBest(false);
+    setFirePlaying(false);
+  }
+
+  function triggerFire() {
+    if (!streakRef.current) return;
+    streakRef.current.classList.remove('streak-fire','streak-glow');
+    void streakRef.current.offsetWidth; // reflow
+    streakRef.current.classList.add('streak-fire');
+    setFirePlaying(true);
+    setTimeout(() => {
+      if (streakRef.current) {
+        streakRef.current.classList.remove('streak-fire');
+        streakRef.current.classList.add('streak-glow');
+      }
+      setFirePlaying(false);
+    }, 1400);
+  }
+
+  function handlePick(idx) {
+    if (answered) return;
+    const dt = DUEL_DATA_TYPES[catIdx];
+    const rd = getRankData(rankings, dt);
+    const r0 = parseRank(rd[pair[0].name] || '999');
+    const r1 = parseRank(rd[pair[1].name] || '999');
+
+    // Tie detection
+    if (r0 === r1) {
+      setAnswered(true);
+      setResult('tie');
+      setCorrectIdx(-1); // neither
+      return;
+    }
+
+    const correct = r0 < r1 ? 0 : 1;
+    const isCorrect = idx === correct;
+    setCorrectIdx(correct);
+    setAnswered(true);
+
+    if (isCorrect) {
+      const ns = streak + 1;
+      setStreak(ns);
+      setResult('correct');
+      if (ns > bestStreak) {
+        setBestStreak(ns);
+        localStorage.setItem('fg_duel_hs', ns);
+        setIsNewBest(true);
+        setTimeout(triggerFire, 100);
+      }
+    } else {
+      setStreak(0);
+      setResult('wrong');
+      setIsNewBest(false);
+      if (streakRef.current) streakRef.current.classList.remove('streak-fire','streak-glow');
+    }
+  }
+
+  function cardBorderColor(idx) {
+    if (!answered) return T.cardBorder;
+    if (result === 'tie') return '#d97706'; // amber for tie
+    if (correctIdx === idx) return T.rankGood;
+    return T.rankBad;
+  }
+
+  function cardGlow(idx) {
+    if (!answered) return T.cardShadow;
+    if (result === 'tie') return '0 0 28px rgba(217,119,6,0.4)';
+    if (correctIdx === idx) return `0 0 28px rgba(${theme==='dark'?'74,222,128':'22,163,74'},0.35)`;
+    return `0 0 16px rgba(${theme==='dark'?'248,113,113':'220,38,38'},0.2)`;
+  }
+
+  function rankDisplay(country) {
+    const dt = DUEL_DATA_TYPES[catIdx];
+    const rd = getRankData(rankings, dt);
+    const raw = rd[country.name];
+    const r = parseRank(raw || '999');
+    const unrankedStr = t ? t('unranked') : 'Unranked';
+    if (result === 'tie') return <span style={{ color:'#d97706' }}>{ordinalStr(r, unrankedStr)}</span>;
+    return ordinalStr(r, unrankedStr);
+  }
+
+  const catName = DUEL_CATS[catIdx];
+
+  return (
+    <div style={{ flex:1, display:'flex', alignItems:'center', overflowY:'auto',
+      justifyContent:'center', padding:`${Math.round(24*uiScale)}px ${Math.round(20*uiScale)}px` }}>
+      <div style={{ width:'100%', maxWidth:`${maxW}px`, animation:'fadeSlideUp 0.4s ease' }}>
+
+        {/* ── Category question ── */}
+        <div style={{ textAlign:'center', marginBottom:`${mb}px` }}>
+          <div style={{ fontSize:`${subSz}px`, fontWeight:700, letterSpacing:'0.12em',
+            textTransform:'uppercase', color:T.subText, marginBottom:`${Math.round(8*uiScale)}px`,
+            fontFamily:'Barlow, sans-serif' }}>
+            {t ? t('whichHigher') : 'Which country ranks higher in…'}
+          </div>
+          <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${catSz}px`, fontWeight:900,
+            color:T.accent, letterSpacing:'0.02em', textTransform:'uppercase', lineHeight:1.1 }}>
+            {t ? t(DUEL_CAT_KEYS[catIdx]) : DUEL_CATS[catIdx]}
+          </div>
+        </div>
+
+        {/* ── Flags row — 3 cols: left | VS | right ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr',
+          gap:`${gap}px`, alignItems:'center', marginBottom:`${mb}px` }}>
+
+          {/* Left flag */}
+          {[0, 1].map(idx => (
+            <React.Fragment key={idx}>
+              {idx === 1 && (
+                /* VS divider — rendered once between the two flags */
+                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${vsSz}px`,
+                  fontWeight:900, color:T.subText, textAlign:'center', letterSpacing:'0.08em',
+                  userSelect:'none', opacity:0.7 }}>
+                  VS
                 </div>
-                
-                <!-- DEBUG BUTTONS REMOVED - Uncomment below to add back for testing:
-                <div class="debug-controls" style="text-align: center; margin-bottom: 20px;">
-                    <button id="checkMilestonesButton" style="padding: 8px 16px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-                        Check Milestones
+              )}
+              <div
+                onClick={()=>handlePick(idx)}
+                style={{ background:T.cardBg, border:`2px solid ${cardBorderColor(idx)}`,
+                  borderRadius:`${cardR}px`, padding:`${cardPad}px`,
+                  textAlign:'center', cursor: answered?'default':'pointer',
+                  transition:'all 0.2s ease', boxShadow: cardGlow(idx) }}
+                onMouseEnter={e=>{ if(!answered){
+                  e.currentTarget.style.borderColor=T.accent;
+                  e.currentTarget.style.transform='translateY(-4px) scale(1.02)';
+                }}}
+                onMouseLeave={e=>{ if(!answered){
+                  e.currentTarget.style.borderColor=T.cardBorder;
+                  e.currentTarget.style.transform='none';
+                }}}>
+                {/* Flag image */}
+                <div style={{ width:'100%', height:`${flagH}px`,
+                  marginBottom:`${Math.round(14*uiScale)}px` }}>
+                  <img src={pair[idx].flagUrl} alt={pair[idx].name}
+                    style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }}/>
+                </div>
+                {/* Country name */}
+                <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${nameSz}px`,
+                  fontWeight:800, letterSpacing:'0.02em', textTransform:'uppercase',
+                  color: answered && result!=='tie' && correctIdx===idx ? T.rankGood
+                       : answered && result!=='tie' && correctIdx!==null && correctIdx!==idx ? T.rankBad
+                       : answered && result==='tie' ? '#d97706'
+                       : T.textPrimary,
+                  transition:'color 0.3s', lineHeight:1.2, marginBottom: answered?`${Math.round(6*uiScale)}px`:0 }}>
+                  {pair[idx].name}
+                </div>
+                {/* Rank — revealed on answer */}
+                {answered && (
+                  <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${rankSz}px`,
+                    fontWeight:900, marginTop:`${Math.round(4*uiScale)}px`, lineHeight:1,
+                    color: result==='tie' ? '#d97706' : correctIdx===idx ? T.rankGood : T.rankBad }}>
+                    {rankDisplay(pair[idx])}
+                  </div>
+                )}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* ── Streak row ── */}
+        <div style={{ display:'flex', justifyContent:'center', gap:`${Math.round(48*uiScale)}px`,
+          marginBottom:`${Math.round(20*uiScale)}px` }}>
+          {/* Streak */}
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:`${scoreLblSz}px`, textTransform:'uppercase', letterSpacing:'0.1em',
+              color:T.subText, fontFamily:'Barlow, sans-serif', fontWeight:700,
+              marginBottom:`${Math.round(3*uiScale)}px` }}>
+              Streak
+            </div>
+            <div ref={streakRef}
+              style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${scoreValSz}px`,
+                fontWeight:900, color: isNewBest ? '#fb923c' : T.accent, lineHeight:1,
+                transition:'color 0.3s' }}>
+              {streak}
+            </div>
+          </div>
+          {/* Best Streak */}
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:`${scoreLblSz}px`, textTransform:'uppercase', letterSpacing:'0.1em',
+              color:T.subText, fontFamily:'Barlow, sans-serif', fontWeight:700,
+              marginBottom:`${Math.round(3*uiScale)}px` }}>
+              Best Streak
+            </div>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${scoreValSz}px`,
+              fontWeight:900, color:T.subText, lineHeight:1 }}>
+              {bestStreak}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Result feedback + Next button ── */}
+        {answered ? (
+          <div style={{ textAlign:'center', animation:'fadeSlideUp 0.3s ease' }}>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${resultSz}px`,
+              fontWeight:800, letterSpacing:'0.04em', marginBottom:`${Math.round(18*uiScale)}px`,
+              color: result==='correct' ? T.rankGood : result==='wrong' ? T.rankBad : '#d97706' }}>
+              {result==='correct' ? (t ? t('correct') : '✓ Correct!') : result==='wrong' ? (t ? t('wrong') : '✗ Wrong!') : (t ? t('tie') : '— Tie!')}
+            </div>
+            {result==='tie' && (
+              <div style={{ fontSize:`${Math.round(12*uiScale)}px`, color:T.subText,
+                fontFamily:'Barlow, sans-serif', marginBottom:`${Math.round(14*uiScale)}px` }}>
+                {t ? t('tieExplain') : 'Both countries share the same rank — streak preserved'}
+              </div>
+            )}
+            <button onClick={newRound}
+              style={{ padding:`${Math.round(13*uiScale)}px ${Math.round(48*uiScale)}px`,
+                borderRadius:'50px', border:'none', background:T.btnBg, color:T.btnText,
+                fontFamily:'Barlow Condensed, sans-serif', fontSize:`${btnFz}px`, fontWeight:800,
+                letterSpacing:'0.1em', textTransform:'uppercase', cursor:'pointer',
+                boxShadow:T.btnShadow, transition:'transform 0.15s ease' }}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+              onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+              {t ? t('nextDuel') : 'Next Duel →'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ textAlign:'center', fontFamily:'Barlow, sans-serif',
+            fontSize:`${Math.round(13*uiScale)}px`, color:T.subText, opacity:0.7 }}>
+            {t ? t('clickToAnswer') : 'Click a flag to answer'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── CLASSIC GAME ──────────────────────────────────────────────────
+function ClassicGame({ theme, rankings, flagSize, cardWatermark, showHighScore, uiScale=1, onFilledChange, t }) {
+  const T = THEMES[theme];
+  const [categories, setCategories] = useState([]);
+  const [slots, setSlots] = useState(Array(8).fill(null));
+  const [scores, setScores] = useState(Array(8).fill(999));
+  const [currentCountry, setCurrentCountry] = useState(null);
+  const [isRolling, setIsRolling] = useState(false);
+  const [phase, setPhase] = useState('idle');
+  const [skipsLeft, setSkipsLeft] = useState(3);
+  const [rolledSet, setRolledSet] = useState(new Set());
+  const [highScore, setHighScore] = useState(()=>parseFloat(localStorage.getItem('fg_r_hs')||'0'));
+  const [isNewHigh, setIsNewHigh] = useState(false);
+  const [flagRevealKey, setFlagRevealKey] = useState(0);
+  const rollIntervalRef = useRef(null);
+
+  useEffect(()=>{ initGame(); }, []);
+  useEffect(()=>()=>clearInterval(rollIntervalRef.current), []);
+
+  function initGame() {
+    clearInterval(rollIntervalRef.current);
+    setCategories(CATEGORY_PAIRS.map(pair=>{ const v=pair.variants[Math.floor(Math.random()*2)]; return {...v,dataType:pair.dataType}; }));
+    setSlots(Array(8).fill(null)); setScores(Array(8).fill(999));
+    setCurrentCountry(null); setPhase('idle');
+    setSkipsLeft(3); setRolledSet(new Set()); setIsRolling(false); setIsNewHigh(false);
+    onFilledChange && onFilledChange(0);
+  }
+
+  function startRoll() {
+    if (isRolling) return;
+    clearInterval(rollIntervalRef.current);
+    if (phase==='placing') setSkipsLeft(s=>s-1);
+    setIsRolling(true); setCurrentCountry(null); setPhase('rolling');
+
+    const available = COUNTRIES.map((_,i)=>i).filter(i=>!rolledSet.has(i));
+    if (!available.length) { setIsRolling(false); setPhase('idle'); return; }
+
+    let elapsed=0, lastTick=performance.now(), interval=50;
+    const total=2000;
+
+    function tick() {
+      const now=performance.now(), delta=now-lastTick; elapsed+=delta; lastTick=now;
+      if(elapsed<600) interval=50; else if(elapsed<1100) interval=90;
+      else if(elapsed<1500) interval=160; else interval=300;
+
+      if (elapsed<total) {
+        const ri=available[Math.floor(Math.random()*available.length)];
+        const img=document.getElementById('rolling-flag-img');
+        if(img){ img.src=COUNTRIES[ri].flagUrl; img.style.display='block'; img.style.animation='none'; }
+        rollIntervalRef.current=setTimeout(tick,interval);
+      } else {
+        const fi=available[Math.floor(Math.random()*available.length)];
+        const fc=COUNTRIES[fi];
+        setRolledSet(prev=>new Set([...prev,fi]));
+        setCurrentCountry(fc); setFlagRevealKey(k=>k+1);
+        setPhase('placing'); setIsRolling(false);
+      }
+    }
+    rollIntervalRef.current=setTimeout(tick,interval);
+  }
+
+  function placeFlag(si) {
+    if (phase!=='placing'||slots[si]||!currentCountry) return;
+    const cat=categories[si];
+    const rd=getRankData(rankings,cat.dataType);
+    const score=getScore(currentCountry.name,rd,cat.higher,cat.dataType);
+    const ns=[...slots]; ns[si]=currentCountry;
+    const nsc=[...scores]; nsc[si]=score;
+    setSlots(ns); setScores(nsc);
+    setCurrentCountry(null); setPhase('idle');
+    onFilledChange && onFilledChange(ns.filter(Boolean).length);
+    if (ns.filter(Boolean).length===8) {
+      const valid=nsc.filter(s=>s!==999);
+      const avg=valid.reduce((a,b)=>a+b,0)/valid.length;
+      setTimeout(()=>{
+        setPhase('complete');
+        if (!highScore||avg<highScore){ setHighScore(avg); localStorage.setItem('fg_r_hs',avg.toString()); setIsNewHigh(true); }
+      },350);
+    }
+  }
+
+  const lc=categories.slice(0,4), rc=categories.slice(4,8);
+  const filledCount=slots.filter(Boolean).length;
+
+  return (
+    <>
+      {/* Score widget in header slot — exposed via prop */}
+      <div style={{ flex:1, overflowY:'auto', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 14px' }}>
+        <div style={{ width:'100%', maxWidth:`${Math.round(1200*uiScale)}px`, display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:`${Math.round(16*uiScale)}px`, alignItems:'center' }}>
+          <div style={{ paddingTop:'8px' }}>
+            {lc.map((cat,i)=>(
+              <CategoryCard key={cat.id} cat={cat} placed={slots[i]} score={scores[i]}
+                canPlace={phase==='placing'&&!slots[i]} onPlace={()=>placeFlag(i)}
+                theme={theme} watermark={cardWatermark} scale={uiScale} t={t}/>
+            ))}
+          </div>
+          <FlagCenter key={`fc-${flagRevealKey}`} country={currentCountry} isRolling={isRolling}
+            onRoll={startRoll} skipsLeft={skipsLeft} phase={phase} theme={theme} flagSize={Math.round(flagSize*uiScale)} scale={uiScale} t={t}/>
+          <div style={{ paddingTop:'8px' }}>
+            {rc.map((cat,i)=>(
+              <CategoryCard key={cat.id} cat={cat} placed={slots[i+4]} score={scores[i+4]}
+                canPlace={phase==='placing'&&!slots[i+4]} onPlace={()=>placeFlag(i+4)}
+                theme={theme} watermark={cardWatermark} scale={uiScale} t={t}/>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {phase==='complete' && (
+        <ScoreOverlay slots={slots} scores={scores} categories={categories} theme={theme}
+          onRestart={initGame} highScore={highScore} isNewHigh={isNewHigh} t={t}/>
+      )}
+    </>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+  const [rankings, setRankings] = useState({});
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [filledCount, setFilledCount] = useState(0);
+  const uiScale = useUiScale();
+  const [gameMode, setGameMode] = useState('classic');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showMilestones, setShowMilestones] = useState(false);
+  const dropRef = useRef(null);
+  const settingsRef = useRef(null);
+  const lang = tweaks.lang || 'en';
+  const t = useT(lang);
+
+  const theme = tweaks.theme;
+  const T = THEMES[theme];
+
+  useEffect(()=>{
+    window.addEventListener('message', e=>{
+      if(e.data?.type==='__activate_edit_mode')   setTweaksVisible(true);
+      if(e.data?.type==='__deactivate_edit_mode') setTweaksVisible(false);
+      if(e.data?.type==='__edit_mode_set_keys')   setTweaks(p=>({...p,...e.data.edits}));
+    });
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+  },[]);
+
+  useEffect(()=>{
+    const types=['hdi','olympic','population','highest-elevation','life-expectancy','land-area','average-temperature','gdp-per-capita'];
+    window.dataLoader.loadAllRankings(types).then(r=>{ setRankings(r); setDataLoaded(true); });
+  },[]);
+
+  // Close dropdowns on outside click
+  useEffect(()=>{
+    function handler(e) {
+      if(dropRef.current&&!dropRef.current.contains(e.target)) setDropdownOpen(false);
+      if(settingsRef.current&&!settingsRef.current.contains(e.target)) setShowSettings(false);
+    }
+    document.addEventListener('mousedown',handler);
+    return ()=>document.removeEventListener('mousedown',handler);
+  },[]);
+
+  const MODES = [
+    {id:'classic', label:t('flagGame')},
+    {id:'duel',    label:t('flagDuel')},
+    {id:'reveal',  label:t('flagReveal')},
+    {id:'puzzle',  label:t('flagPuzzle')},
+  ];
+
+  if (!dataLoaded) return (
+    <div style={{ height:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+      background:T.bg, color:T.subText, fontFamily:'Barlow Condensed, sans-serif', fontSize:'18px', letterSpacing:'0.1em' }}>
+      Loading…
+    </div>
+  );
+
+  return (
+    <div style={{ height:'100vh', display:'flex', flexDirection:'column', overflow:'hidden', background:T.bg, transition:'background 0.4s' }}>
+
+      {/* ── HEADER ── */}
+      {(() => {
+        const hh  = Math.round(58  * uiScale);
+        const pad = Math.round(28  * uiScale);
+        const titleSz = Math.round(28 * uiScale);
+        const labelSz = Math.round(11 * uiScale);
+        const valSz   = Math.round(22 * uiScale);
+        const btnFz   = Math.round(14 * uiScale);
+        const btnPV   = Math.round(7  * uiScale);
+        const btnPH   = Math.round(16 * uiScale);
+        const btnR    = Math.round(10 * uiScale);
+        const dotW    = Math.round(22 * uiScale);
+        const dotH    = Math.round(5  * uiScale);
+        return (<>
+      <header style={{ background:T.headerBg, borderBottom:`1px solid ${T.headerBorder}`,
+        boxShadow:T.headerShadow, padding:`0 ${pad}px`, height:`${hh}px`,
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        position:'relative', zIndex:50 }}>
+
+        {/* Left: milestones + high score */}
+        <div style={{ flex:1, display:'flex', alignItems:'center', gap:`${Math.round(20*uiScale)}px` }}>
+          <button onClick={()=>setShowMilestones(true)}
+            style={{ background:'none', border:'none', cursor:'pointer',
+              padding:`${btnPV}px ${btnPH}px`, borderRadius:`${btnR}px`,
+              fontFamily:'Barlow, sans-serif', fontSize:`${btnFz}px`, fontWeight:600,
+              color:T.navTabColor, transition:'all 0.15s',
+              display:'flex', alignItems:'center', gap:`${Math.round(6*uiScale)}px` }}
+            onMouseEnter={e=>{ e.currentTarget.style.color=T.navTabHover; e.currentTarget.style.background=T.accentHoverBg; }}
+            onMouseLeave={e=>{ e.currentTarget.style.color=T.navTabColor; e.currentTarget.style.background='none'; }}>
+            🏆 Milestones
+          </button>
+          {tweaks.showHighScore && gameMode==='classic' && (() => {
+            const hs = parseFloat(localStorage.getItem('fg_r_hs')||'0');
+            return hs>0 ? (
+              <div style={{ display:'flex', flexDirection:'column', gap:'2px' }}>
+                <span style={{ fontSize:`${labelSz}px`, textTransform:'uppercase', letterSpacing:'0.07em', color:T.subText, fontWeight:700 }}>Best</span>
+                <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${valSz}px`, fontWeight:800, color:T.accent, lineHeight:1 }}>{hs.toFixed(1)}</span>
+              </div>
+            ) : null;
+          })()}
+        </div>
+
+        {/* Center: title — truly centered with absolute */}
+        <div style={{ position:'absolute', left:'50%', transform:'translateX(-50%)',
+          fontFamily:'Barlow Condensed, sans-serif', fontSize:`${titleSz}px`, fontWeight:900,
+          letterSpacing:'0.14em', textTransform:'uppercase', color:T.textPrimary, whiteSpace:'nowrap' }}>
+          Flag Game
+        </div>
+
+        {/* Right: gamemode + progress */}
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap:`${Math.round(20*uiScale)}px` }}>
+          {gameMode==='classic' && (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:`${Math.round(4*uiScale)}px` }}>
+              <span style={{ fontSize:`${labelSz}px`, textTransform:'uppercase', letterSpacing:'0.07em',
+                color:T.subText, fontWeight:700, fontFamily:'Barlow, sans-serif' }}>
+                Placed {filledCount}/8
+              </span>
+              <div style={{ display:'flex', gap:`${Math.round(4*uiScale)}px` }}>
+                {Array.from({length:8}).map((_,i)=>(
+                  <div key={i} style={{ width:`${dotW}px`, height:`${dotH}px`, borderRadius:`${Math.round(dotH/2)}px`,
+                    background: i<filledCount ? T.progressFill : T.progressBg,
+                    transition:`background 0.3s ${i*0.05}s ease` }}/>
+                ))}
+              </div>
+            </div>
+          )}
+          <div ref={dropRef} style={{ position:'relative' }}>
+            <button onClick={()=>setDropdownOpen(o=>!o)}
+              style={{ background:T.accentHoverBg, border:`1.5px solid ${dropdownOpen?T.accent:T.cardBorder}`,
+                borderRadius:`${btnR}px`, padding:`${btnPV}px ${btnPH}px`,
+                cursor:'pointer', color:T.textPrimary,
+                fontFamily:'Barlow, sans-serif', fontSize:`${btnFz}px`, fontWeight:600,
+                display:'flex', alignItems:'center', gap:`${Math.round(6*uiScale)}px`,
+                transition:'all 0.15s', whiteSpace:'nowrap' }}>
+              {MODES.find(m=>m.id===gameMode)?.label}
+              <span style={{ fontSize:`${Math.round(10*uiScale)}px`, opacity:0.6, transform:dropdownOpen?'rotate(180deg)':'none', transition:'transform 0.2s' }}>▼</span>
+            </button>
+            {dropdownOpen && (
+              <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:T.dropdownBg,
+                border:`1px solid ${T.dropdownBorder}`, borderRadius:'12px', padding:'6px',
+                minWidth:'160px', boxShadow:'0 8px 32px rgba(0,0,0,0.2)', zIndex:200,
+                animation:'fadeSlideUp 0.15s ease' }}>
+                {MODES.map(m=>(
+                  <button key={m.id} onClick={()=>{ setGameMode(m.id); setDropdownOpen(false); }}
+                    style={{ display:'block', width:'100%', padding:'9px 14px', borderRadius:'8px',
+                      border:'none', background: gameMode===m.id ? T.accentHoverBg : 'transparent',
+                      color: gameMode===m.id ? T.accent : T.textPrimary,
+                      fontFamily:'Barlow, sans-serif', fontSize:`${Math.round(13*uiScale)}px`, fontWeight: gameMode===m.id?700:500,
+                      cursor:'pointer', textAlign:'left', transition:'all 0.1s',
+                      borderLeft: gameMode===m.id ? `3px solid ${T.accent}` : '3px solid transparent' }}
+                    onMouseEnter={e=>{ if(gameMode!==m.id){ e.currentTarget.style.background=T.accentHoverBg; }}}
+                    onMouseLeave={e=>{ if(gameMode!==m.id){ e.currentTarget.style.background='transparent'; }}}>
+                    {m.label}
+                    {m.id!=='classic'&&m.id!=='duel' && <span style={{ fontSize:'10px', opacity:0.5, marginLeft:'6px' }}>soon</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Settings gear */}
+          <div style={{ width:'1px', height:`${Math.round(20*uiScale)}px`, background:T.cardBorder, opacity:0.5, flexShrink:0 }}/>
+          <div ref={settingsRef} style={{ position:'relative' }}>
+            <button onClick={()=>setShowSettings(o=>!o)}
+              style={{ background:showSettings?T.accentHoverBg:'none',
+                border:`1.5px solid ${showSettings?T.accent:T.cardBorder}`,
+                borderRadius:`${btnR}px`, padding:`${btnPV}px ${Math.round(12*uiScale)}px`,
+                cursor:'pointer', color:showSettings?T.accent:T.navTabColor,
+                fontFamily:'Barlow, sans-serif', fontSize:`${btnFz}px`, fontWeight:600,
+                display:'flex', alignItems:'center', gap:`${Math.round(5*uiScale)}px`, transition:'all 0.15s' }}>
+              ⚙ {t('settings')}
+            </button>
+            {showSettings && (
+              <div style={{ position:'absolute', top:`calc(100% + ${Math.round(8*uiScale)}px)`, right:0,
+                background:T.dropdownBg, border:`1px solid ${T.dropdownBorder}`, borderRadius:'14px',
+                padding:'16px', width:`${Math.round(180*uiScale)}px`,
+                boxShadow:'0 8px 32px rgba(0,0,0,0.22)', zIndex:300, animation:'fadeSlideUp 0.15s ease' }}>
+                <div style={{ marginBottom:'12px' }}>
+                  <div style={{ fontSize:'10px',color:T.subText,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'6px',fontWeight:700 }}>{t('themeLabel')}</div>
+                  {[['light',t('lightTheme')],['dark',t('darkTheme')]].map(([tv,lbl])=>(
+                    <button key={tv} onClick={()=>{ const v={...tweaks,theme:tv}; setTweaks(v); localStorage.setItem('fg_settings',JSON.stringify(v)); window.parent.postMessage({type:'__edit_mode_set_keys',edits:{theme:tv}},'*'); }}
+                      style={{ display:'block',width:'100%',padding:'6px 10px',marginBottom:'4px',borderRadius:'7px',
+                        border:`1.5px solid ${tweaks.theme===tv?T.accent:T.cardBorder}`,
+                        background:tweaks.theme===tv?T.accentHoverBg:'transparent',
+                        color:tweaks.theme===tv?T.accent:T.subText,
+                        fontFamily:'Barlow, sans-serif',fontWeight:tweaks.theme===tv?700:500,fontSize:'13px',cursor:'pointer',textAlign:'left'}}>
+                      {lbl}
                     </button>
-                    <button id="resetMilestonesButton" style="padding: 8px 16px; background-color: #ff6b6b; color: white; border: 1px solid #ff5252; border-radius: 4px; cursor: pointer;">
-                        Reset Progress (Test Mode)
+                  ))}
+                </div>
+                <div style={{ marginBottom:'12px' }}>
+                  <div style={{ fontSize:'10px',color:T.subText,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'6px',fontWeight:700 }}>{t('langLabel')}</div>
+                  {[['en',t('english')],['no',t('norwegian')]].map(([lv,lbl])=>(
+                    <button key={lv} onClick={()=>{ const v={...tweaks,lang:lv}; setTweaks(v); localStorage.setItem('fg_settings',JSON.stringify(v)); window.parent.postMessage({type:'__edit_mode_set_keys',edits:{lang:lv}},'*'); }}
+                      style={{ display:'block',width:'100%',padding:'6px 10px',marginBottom:'4px',borderRadius:'7px',
+                        border:`1.5px solid ${lang===lv?T.accent:T.cardBorder}`,
+                        background:lang===lv?T.accentHoverBg:'transparent',
+                        color:lang===lv?T.accent:T.subText,
+                        fontFamily:'Barlow, sans-serif',fontWeight:lang===lv?700:500,fontSize:'13px',cursor:'pointer',textAlign:'left'}}>
+                      {lbl}
                     </button>
+                  ))}
                 </div>
-                -->
-                
-                <!-- Milestones Navigation -->
-                <div class="milestones-nav">
-                    <button class="milestone-nav-btn active" data-type="all">All</button>
-                    <button class="milestone-nav-btn" data-type="completed">Completed</button>
-                    <button class="milestone-nav-btn" data-type="in-progress">In Progress</button>
+                <div style={{ marginBottom:'12px' }}>
+                  <div style={{ fontSize:'10px',color:T.subText,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'6px',fontWeight:700 }}>{t('flagSizeLabel')} — {tweaks.flagSize}px</div>
+                  <input type="range" min="160" max="320" step="10" value={tweaks.flagSize}
+                    onChange={e=>{ const v=parseInt(e.target.value); const nv={...tweaks,flagSize:v}; setTweaks(nv); localStorage.setItem('fg_settings',JSON.stringify(nv)); window.parent.postMessage({type:'__edit_mode_set_keys',edits:{flagSize:v}},'*'); }}
+                    style={{ width:'100%',accentColor:T.accent }}/>
                 </div>
-                
-                <!-- Basic Milestones Section -->
-                <div class="milestones-section">
-                    <h3 class="section-title">Basic Milestones</h3>
-                    <div class="milestones-grid" id="basicMilestones">
-                        <!-- Milestone items will be added by JavaScript -->
-                    </div>
+                <div style={{ marginBottom:'12px' }}>
+                  <div style={{ fontSize:'10px',color:T.subText,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'6px',fontWeight:700 }}>{t('cardWatermarkLabel')}</div>
+                  <button onClick={()=>{ const v={...tweaks,cardWatermark:!tweaks.cardWatermark}; setTweaks(v); localStorage.setItem('fg_settings',JSON.stringify(v)); }}
+                    style={{ display:'block',width:'100%',padding:'6px 10px',borderRadius:'7px',
+                      border:`1.5px solid ${tweaks.cardWatermark?T.accent:T.cardBorder}`,
+                      background:tweaks.cardWatermark?T.accentHoverBg:'transparent',
+                      color:tweaks.cardWatermark?T.accent:T.subText,
+                      fontFamily:'Barlow, sans-serif',fontWeight:tweaks.cardWatermark?700:500,fontSize:'13px',cursor:'pointer',textAlign:'left'}}>
+                    {tweaks.cardWatermark?'✓ On':'Off'}
+                  </button>
                 </div>
-                
-                <!-- Advanced Achievements Section -->
-                <div class="milestones-section">
-                    <h3 class="section-title">Advanced Achievements</h3>
-                    <div class="milestones-grid" id="advancedAchievements">
-                        <!-- Achievement items will be added by JavaScript -->
-                    </div>
+                <div>
+                  <div style={{ fontSize:'10px',color:T.subText,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'6px',fontWeight:700 }}>{t('showBestLabel')}</div>
+                  <button onClick={()=>{ const v={...tweaks,showHighScore:!tweaks.showHighScore}; setTweaks(v); localStorage.setItem('fg_settings',JSON.stringify(v)); }}
+                    style={{ display:'block',width:'100%',padding:'6px 10px',borderRadius:'7px',
+                      border:`1.5px solid ${tweaks.showHighScore?T.accent:T.cardBorder}`,
+                      background:tweaks.showHighScore?T.accentHoverBg:'transparent',
+                      color:tweaks.showHighScore?T.accent:T.subText,
+                      fontFamily:'Barlow, sans-serif',fontWeight:tweaks.showHighScore?700:500,fontSize:'13px',cursor:'pointer',textAlign:'left'}}>
+                    {tweaks.showHighScore?'✓ On':'Off'}
+                  </button>
                 </div>
-            </div>
+              </div>
+            )}
+          </div>
         </div>
-        
-        <!-- Achievement notifications are now created dynamically -->
-    <script src="script.js"></script>
+      </header>
+      </>);
+      })()}
+
+      {/* ── GAME CONTENT ── */}
+      <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+      {gameMode==='classic' && (
+        <ClassicGame theme={theme} rankings={rankings} flagSize={tweaks.flagSize}
+          cardWatermark={tweaks.cardWatermark} showHighScore={tweaks.showHighScore} uiScale={uiScale}
+          onFilledChange={setFilledCount} t={t}/>
+      )}
+      {gameMode==='duel' && (
+        <FlagDuel theme={theme} rankings={rankings} uiScale={uiScale} t={t}/>
+      )}
+      {(gameMode==='reveal'||gameMode==='puzzle') && (
+        <div style={{ flex:1, overflowY:'auto', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ textAlign:'center', animation:'fadeSlideUp 0.4s ease' }}>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'48px', fontWeight:900,
+              color:T.subText, opacity:0.4, marginBottom:'12px' }}>{t('comingSoon')}</div>
+            <div style={{ fontFamily:'Barlow, sans-serif', fontSize:'14px', color:T.subText }}>
+              {MODES.find(m=>m.id===gameMode)?.label} {t('comingSoonSub')}
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* ── MILESTONES MODAL ── */}
+      {showMilestones && (
+        <div style={{ position:'fixed', inset:0, background:T.overlayBg, backdropFilter:'blur(10px)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, animation:'fadeIn 0.3s ease' }}
+          onClick={()=>setShowMilestones(false)}>
+          <div onClick={e=>e.stopPropagation()}
+            style={{ background:T.scoreBg, border:`1px solid ${T.scoreBorder}`, borderRadius:'24px',
+              padding:'36px 40px', maxWidth:'420px', width:'90%',
+              boxShadow: theme==='dark'?'0 32px 80px rgba(0,0,0,0.6)':'0 24px 60px rgba(0,0,0,0.18)',
+              animation:'fadeSlideUp 0.3s ease' }}>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'11px', fontWeight:700,
+              letterSpacing:'0.15em', textTransform:'uppercase', color:T.accent, marginBottom:'8px' }}>
+              Milestones
+            </div>
+            <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'28px', fontWeight:900,
+              color:T.textPrimary, marginBottom:'20px' }}>{t('yourBestScores')}</div>
+            {[[t('flagGame'), parseFloat(localStorage.getItem('fg_r_hs')||'0'), true],
+              [t('flagDuel'), parseInt(localStorage.getItem('fg_duel_hs')||'0'), false]].map(([label,val,isFloat])=>(
+              <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                background:T.scoreRowBg, borderRadius:'10px', padding:'12px 16px', marginBottom:'8px' }}>
+                <span style={{ fontFamily:'Barlow, sans-serif', fontSize:'13px', color:T.subText, fontWeight:500 }}>{label}</span>
+                <span style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:'24px', fontWeight:800,
+                  color: val>0 ? T.accent : T.subText }}>
+                  {val>0 ? (isFloat?val.toFixed(1):val) : '—'}
+                </span>
+              </div>
+            ))}
+            <button onClick={()=>setShowMilestones(false)}
+              style={{ marginTop:'16px', width:'100%', padding:'12px', borderRadius:'50px', border:'none',
+                background:T.btnBg, color:T.btnText, fontFamily:'Barlow Condensed, sans-serif',
+                fontSize:'16px', fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase',
+                cursor:'pointer', boxShadow:T.btnShadow }}>
+              {t('close')}
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
-
 </html>
-
