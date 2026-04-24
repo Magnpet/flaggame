@@ -227,6 +227,25 @@ function useT(lang) {
   return React.useCallback((key) => strings[key] ?? STRINGS.en[key] ?? key, [lang]);
 }
 
+// ── COUNTRY NAME TRANSLATION ──────────────────────────────────────
+// Loads data/country_names_<lang>.json on language change.
+// Add support for a new language by dropping in a matching file — no code changes needed.
+function useCountryNames(lang) {
+  const [map, setMap] = useState({});
+  useEffect(() => {
+    if (lang === 'en') { setMap({}); return; }
+    fetch(`data/country_names_${lang}.json`)
+      .then(r => r.ok ? r.json() : {})
+      .then(data => {
+        const clean = {};
+        Object.entries(data).forEach(([k, v]) => { if (!k.startsWith('_')) clean[k] = v; });
+        setMap(clean);
+      })
+      .catch(() => setMap({}));
+  }, [lang]);
+  return React.useCallback(name => map[name] || name, [map]);
+}
+
 // ── THEMES ────────────────────────────────────────────────────────
 const THEMES = {
   light: {
@@ -336,7 +355,7 @@ function GlobeCardBack({ color }) {
 }
 
 // ── CATEGORY CARD ─────────────────────────────────────────────────
-function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark, scale=1, t }) {
+function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark, scale=1, t, cn }) {
   const T = THEMES[theme];
   const [hovered, setHovered] = useState(false);
   const cardRef = useRef(null);
@@ -406,7 +425,7 @@ function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark,
             <>
               <div style={{ fontSize:`${Math.round(11*scale)}px`, color:T.subText, fontFamily:'Barlow, sans-serif', fontWeight:500,
                 marginBottom:'4px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
-                {placed.name}
+                {cn ? cn(placed.name) : placed.name}
               </div>
               <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${Math.round(32*scale)}px`, fontWeight:800,
                 color:rankColor(score,T), lineHeight:1, letterSpacing:'-0.01em' }}>
@@ -427,7 +446,7 @@ function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark,
 }
 
 // ── FLAG CENTER ───────────────────────────────────────────────────
-function FlagCenter({ country, isRolling, onRoll, skipsLeft, phase, theme, flagSize, scale=1, t }) {
+function FlagCenter({ country, isRolling, onRoll, skipsLeft, phase, theme, flagSize, scale=1, t, cn }) {
   const T = THEMES[theme];
   const fw = flagSize, fh = Math.round(fw*0.72);
   const canRoll = !isRolling && (phase==='idle' || (phase==='placing' && skipsLeft>0));
@@ -440,7 +459,7 @@ function FlagCenter({ country, isRolling, onRoll, skipsLeft, phase, theme, flagS
         letterSpacing:'0.04em', color:T.countryNameColor, textTransform:'uppercase',
         marginBottom:`${Math.round(18*scale)}px`, minHeight:`${Math.round(32*scale)}px`, textAlign:'center', lineHeight:1.1,
         maxWidth:`${fw+20}px`, wordBreak:'break-word', transition:'color 0.3s' }}>
-        {country ? country.name : (isRolling ? '' : (t ? t('rollToStart') : 'Roll to Start'))}
+        {country ? (cn ? cn(country.name) : country.name) : (isRolling ? '' : (t ? t('rollToStart') : 'Roll to Start'))}
       </div>
 
       {/* Flag frame */}
@@ -648,7 +667,7 @@ function ProgressBar({ filled, theme }) {
 }
 
 // ── FLAG DUEL MODE ────────────────────────────────────────────────
-function FlagDuel({ theme, rankings, uiScale=1, t }) {
+function FlagDuel({ theme, rankings, uiScale=1, t, cn }) {
   const T = THEMES[theme];
   const [catIdx, setCatIdx]     = useState(Math.floor(Math.random()*DUEL_CATS.length));
   const [pair, setPair]         = useState(() => twoRandom(COUNTRIES));
@@ -828,7 +847,7 @@ function FlagDuel({ theme, rankings, uiScale=1, t }) {
                        : answered && result==='tie' ? '#d97706'
                        : T.textPrimary,
                   transition:'color 0.3s', lineHeight:1.2, marginBottom: answered?`${Math.round(6*uiScale)}px`:0 }}>
-                  {pair[idx].name}
+                  {cn ? cn(pair[idx].name) : pair[idx].name}
                 </div>
                 {/* Rank — revealed on answer */}
                 {answered && (
@@ -911,7 +930,7 @@ function FlagDuel({ theme, rankings, uiScale=1, t }) {
 }
 
 // ── CLASSIC GAME ──────────────────────────────────────────────────
-function ClassicGame({ theme, rankings, flagSize, cardWatermark, showHighScore, uiScale=1, onFilledChange, t }) {
+function ClassicGame({ theme, rankings, flagSize, cardWatermark, showHighScore, uiScale=1, onFilledChange, t, cn }) {
   const T = THEMES[theme];
   const [categories, setCategories] = useState([]);
   const [slots, setSlots] = useState(Array(8).fill(null));
@@ -1003,16 +1022,16 @@ function ClassicGame({ theme, rankings, flagSize, cardWatermark, showHighScore, 
             {lc.map((cat,i)=>(
               <CategoryCard key={cat.id} cat={cat} placed={slots[i]} score={scores[i]}
                 canPlace={phase==='placing'&&!slots[i]} onPlace={()=>placeFlag(i)}
-                theme={theme} watermark={cardWatermark} scale={uiScale} t={t}/>
+                theme={theme} watermark={cardWatermark} scale={uiScale} t={t} cn={cn}/>
             ))}
           </div>
           <FlagCenter key={`fc-${flagRevealKey}`} country={currentCountry} isRolling={isRolling}
-            onRoll={startRoll} skipsLeft={skipsLeft} phase={phase} theme={theme} flagSize={Math.round(flagSize*uiScale)} scale={uiScale} t={t}/>
+            onRoll={startRoll} skipsLeft={skipsLeft} phase={phase} theme={theme} flagSize={Math.round(flagSize*uiScale)} scale={uiScale} t={t} cn={cn}/>
           <div style={{ paddingTop:'8px' }}>
             {rc.map((cat,i)=>(
               <CategoryCard key={cat.id} cat={cat} placed={slots[i+4]} score={scores[i+4]}
                 canPlace={phase==='placing'&&!slots[i+4]} onPlace={()=>placeFlag(i+4)}
-                theme={theme} watermark={cardWatermark} scale={uiScale} t={t}/>
+                theme={theme} watermark={cardWatermark} scale={uiScale} t={t} cn={cn}/>
             ))}
           </div>
         </div>
@@ -1042,6 +1061,7 @@ function App() {
   const settingsRef = useRef(null);
   const lang = tweaks.lang || 'en';
   const t = useT(lang);
+  const cn = useCountryNames(lang);
 
   const theme = tweaks.theme;
   const T = THEMES[theme];
@@ -1271,10 +1291,10 @@ function App() {
       {gameMode==='classic' && (
         <ClassicGame theme={theme} rankings={rankings} flagSize={tweaks.flagSize}
           cardWatermark={tweaks.cardWatermark} showHighScore={tweaks.showHighScore} uiScale={uiScale}
-          onFilledChange={setFilledCount} t={t}/>
+          onFilledChange={setFilledCount} t={t} cn={cn}/>
       )}
       {gameMode==='duel' && (
-        <FlagDuel theme={theme} rankings={rankings} uiScale={uiScale} t={t}/>
+        <FlagDuel theme={theme} rankings={rankings} uiScale={uiScale} t={t} cn={cn}/>
       )}
       {(gameMode==='reveal'||gameMode==='puzzle') && (
         <div style={{ flex:1, overflowY:'auto', display:'flex', alignItems:'center', justifyContent:'center' }}>
