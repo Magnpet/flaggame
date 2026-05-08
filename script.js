@@ -89,6 +89,17 @@ const CATEGORY_FALLBACKS = {
   'land-area': 195, 'average-temperature': 195, 'gdp-per-capita': 195,
 };
 
+// Duel mode uses 7 categories; "higher ranking" always means lower rank number
+const DUEL_CATS = [
+  { key: 'duelPop',  dataType: 'population'          },
+  { key: 'duelGdp',  dataType: 'gdp-per-capita'       },
+  { key: 'duelArea', dataType: 'land-area'             },
+  { key: 'duelLife', dataType: 'life-expectancy'       },
+  { key: 'duelHdi',  dataType: 'hdi'                  },
+  { key: 'duelOlym', dataType: 'olympic'              },
+  { key: 'duelTemp', dataType: 'average-temperature'  },
+];
+
 // ═══ I18N ════════════════════════════════════════════════
 const STRINGS = {
   en: {
@@ -212,6 +223,17 @@ let filledCount  = 0;
 let highScore    = 0;
 let isNewHigh    = false;
 let rollTimer    = null;
+
+// ── Duel state ─────────────────────────────────────────
+let duelCatIdx     = 0;
+let duelPair       = [];         // [country, country]
+let duelStreak     = 0;
+let duelBestStreak = 0;
+let duelAnswered   = false;
+let duelCorrectIdx = -1;         // -1 = tie
+let duelResult     = null;       // 'correct' | 'wrong' | 'tie' | null
+let duelIsNewBest  = false;
+let dataReady      = false;      // true once rankings + initGame have run
 
 // ═══ GAME FUNCTIONS ══════════════════════════════════════
 
@@ -610,6 +632,160 @@ async function handleShare() {
   } catch (_) {}
 }
 
+// ═══ DUEL GAME ═══════════════════════════════════════════
+
+function initDuel() {
+  duelStreak     = 0;
+  duelBestStreak = parseInt(localStorage.getItem('fg_duel_hs') || '0', 10);
+  duelIsNewBest  = false;
+  updateDuelStreaks();
+  setupNewDuel();
+}
+
+function setupNewDuel() {
+  duelCatIdx     = Math.floor(Math.random() * DUEL_CATS.length);
+  duelAnswered   = false;
+  duelCorrectIdx = -1;
+  duelResult     = null;
+  duelIsNewBest  = false;
+
+  // Two different random countries
+  const a = Math.floor(Math.random() * COUNTRIES.length);
+  let b;
+  do { b = Math.floor(Math.random() * COUNTRIES.length); } while (b === a);
+  duelPair = [COUNTRIES[a], COUNTRIES[b]];
+
+  // Category label
+  document.getElementById('duel-cat-name').textContent = t(DUEL_CATS[duelCatIdx].key);
+
+  // Flags, names, reset card states
+  [0, 1].forEach(idx => {
+    const card = document.getElementById(`duel-card-${idx}`);
+    card.classList.remove('answered', 'result-correct', 'result-wrong', 'result-tie',
+                          'duel-correct', 'duel-wrong');
+
+    document.getElementById(`duel-flag-${idx}`).style.backgroundImage =
+      `url(${duelPair[idx].flagUrl})`;
+
+    const nameEl = document.getElementById(`duel-country-${idx}`);
+    nameEl.textContent = cn(duelPair[idx].name);
+    nameEl.style.color = '';
+
+    const rankEl = document.getElementById(`duel-rank-${idx}`);
+    rankEl.textContent = '';
+    rankEl.style.color = '';
+    rankEl.classList.add('hidden');
+  });
+
+  // Footer: hint visible, result + next hidden
+  document.getElementById('duel-click-hint').classList.remove('hidden');
+  const resultEl = document.getElementById('duel-result');
+  resultEl.textContent = '';
+  resultEl.className = 'duel-result hidden';
+  document.getElementById('duel-tie-note').classList.add('hidden');
+  document.getElementById('duel-next-btn').classList.add('hidden');
+}
+
+function handleDuelPick(idx) {
+  if (duelAnswered) return;
+
+  const cat = DUEL_CATS[duelCatIdx];
+  const rd  = getRankData(rankings, cat.dataType);
+  const r0  = parseRank(rd[duelPair[0].name] || '999');
+  const r1  = parseRank(rd[duelPair[1].name] || '999');
+
+  duelAnswered = true;
+
+  if (r0 === r1) {
+    // Tie — streak preserved, neither card is "correct"
+    duelResult     = 'tie';
+    duelCorrectIdx = -1;
+  } else {
+    duelCorrectIdx = r0 < r1 ? 0 : 1; // lower rank number = higher ranking
+    if (idx === duelCorrectIdx) {
+      duelStreak++;
+      duelResult = 'correct';
+      if (duelStreak > duelBestStreak) {
+        duelBestStreak = duelStreak;
+        localStorage.setItem('fg_duel_hs', duelBestStreak);
+        duelIsNewBest = true;
+        setTimeout(duelTriggerFire, 100);
+      }
+    } else {
+      duelStreak    = 0;
+      duelResult    = 'wrong';
+      duelIsNewBest = false;
+      document.getElementById('duel-streak').classList.remove('streak-fire', 'streak-glow');
+    }
+  }
+
+  showDuelResult();
+  updateDuelStreaks();
+}
+
+function showDuelResult() {
+  const cat = DUEL_CATS[duelCatIdx];
+  const rd  = getRankData(rankings, cat.dataType);
+
+  [0, 1].forEach(idx => {
+    const raw    = rd[duelPair[idx].name];
+    const r      = parseRank(raw || '999');
+    const card   = document.getElementById(`duel-card-${idx}`);
+    const nameEl = document.getElementById(`duel-country-${idx}`);
+    const rankEl = document.getElementById(`duel-rank-${idx}`);
+
+    rankEl.textContent = ordinalStr(r);
+    rankEl.classList.remove('hidden');
+    card.classList.add('answered');
+
+    let col;
+    if (duelResult === 'tie') {
+      col = '#d97706';
+      card.classList.add('result-tie');
+    } else if (duelCorrectIdx === idx) {
+      col = 'var(--c-rank-good)';
+      card.classList.add('result-correct', 'duel-correct');
+    } else {
+      col = 'var(--c-rank-bad)';
+      card.classList.add('result-wrong', 'duel-wrong');
+    }
+    nameEl.style.color = col;
+    rankEl.style.color = col;
+  });
+
+  // Result badge
+  const resultEl = document.getElementById('duel-result');
+  resultEl.className  = `duel-result ${duelResult}`;
+  resultEl.textContent =
+    duelResult === 'correct' ? t('correct') :
+    duelResult === 'wrong'   ? t('wrong')   : t('tie');
+
+  // Tie note
+  document.getElementById('duel-tie-note').classList.toggle('hidden', duelResult !== 'tie');
+
+  // Swap click-hint → next button
+  document.getElementById('duel-click-hint').classList.add('hidden');
+  document.getElementById('duel-next-btn').classList.remove('hidden');
+}
+
+function updateDuelStreaks() {
+  const el       = document.getElementById('duel-streak');
+  el.textContent = duelStreak;
+  el.style.color = duelIsNewBest ? '#fb923c' : 'var(--c-accent)';
+  document.getElementById('duel-best-streak').textContent = duelBestStreak;
+}
+
+function duelTriggerFire() {
+  const el = document.getElementById('duel-streak');
+  el.classList.remove('streak-fire', 'streak-glow');
+  void el.offsetWidth; // forced reflow — restart animation from frame 0
+  el.classList.add('streak-fire');
+  setTimeout(() => {
+    el.classList.remove('streak-fire');
+    el.classList.add('streak-glow');
+  }, 1400); // fireFlare: 0.22s × 6 = 1.32s; settle after last frame
+}
+
 // ─── Apply i18n across the whole UI ──────────────────────
 function applyI18n() {
   // Batch update all data-i18n elements
@@ -655,6 +831,24 @@ function applyI18n() {
   if (phase === 'complete') {
     document.getElementById('score-badge').textContent =
       isNewHigh ? t('newPersonalBest') : t('gameComplete');
+  }
+
+  // Duel: re-translate country names, category, and result text
+  if (duelPair.length === 2) {
+    [0, 1].forEach(idx => {
+      document.getElementById(`duel-country-${idx}`).textContent = cn(duelPair[idx].name);
+    });
+    if (DUEL_CATS[duelCatIdx]) {
+      document.getElementById('duel-cat-name').textContent = t(DUEL_CATS[duelCatIdx].key);
+    }
+  }
+  if (duelResult) {
+    const resultEl = document.getElementById('duel-result');
+    if (!resultEl.classList.contains('hidden')) {
+      resultEl.textContent =
+        duelResult === 'correct' ? t('correct') :
+        duelResult === 'wrong'   ? t('wrong')   : t('tie');
+    }
   }
 
   // Roll button stays in English (same as React version)
@@ -783,6 +977,8 @@ function switchMode(mode) {
     item.classList.toggle('active', item.dataset.mode === mode);
   });
 
+  if (mode === 'duel' && dataReady) initDuel();
+
   applySettings(); // refresh best-score visibility
 }
 
@@ -867,7 +1063,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('play-again-btn').addEventListener('click', initGame);
   document.getElementById('share-btn').addEventListener('click', handleShare);
 
-  // ── Phase 2: Load ranking data then start game ──
+  // ── Phase 5: Flag Duel event handlers ──
+  [0, 1].forEach(idx => {
+    document.getElementById(`duel-card-${idx}`).addEventListener('click', () => {
+      handleDuelPick(idx);
+    });
+  });
+  document.getElementById('duel-next-btn').addEventListener('click', setupNewDuel);
+
+  // ── Load ranking data, then start the appropriate game ──
   const types = [
     'hdi','olympic','population','highest-elevation',
     'life-expectancy','land-area','average-temperature','gdp-per-capita',
@@ -876,6 +1080,8 @@ document.addEventListener('DOMContentLoaded', () => {
     rankings = r;
     return loadCountryNames(settings.lang);
   }).then(() => {
+    dataReady = true;
     initGame();
+    if (currentMode === 'duel') initDuel();
   });
 });
