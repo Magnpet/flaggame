@@ -417,7 +417,7 @@ function CategoryCard({ cat, placed, score, canPlace, onPlace, theme, watermark,
           flexShrink:0, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center',
           boxShadow: placed ? '0 2px 10px rgba(0,0,0,0.18)' : 'none', position:'relative' }}>
           {placed
-            ? <img src={placed.flagUrl} alt={placed.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
+            ? <div style={{ width:'100%', height:'100%', backgroundImage:`url(${placed.flagUrl})`, backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center' }}/>
             : <div style={{ fontSize:'20px', opacity:0.15 }}>⚑</div>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
@@ -480,12 +480,11 @@ function FlagCenter({ country, isRolling, onRoll, skipsLeft, phase, theme, flagS
           </div>
         )}
 
-        <img id="rolling-flag-img"
-          src={country ? country.flagUrl : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}
-          alt={country ? country.name : ''}
+        <div id="rolling-flag-img"
           className={!isRolling && country ? 'flag-deal-anim' : ''}
-          onError={e => { e.currentTarget.style.display='none'; }}
-          style={{ width:'100%', height:'100%', objectFit:'contain', padding:'4px',
+          style={{ width:'100%', height:'100%', padding:'4px',
+            backgroundImage: country ? `url(${country.flagUrl})` : 'none',
+            backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center',
             display:(country||isRolling)?'block':'none', position:'relative', zIndex:2 }}
         />
       </div>
@@ -836,8 +835,7 @@ function FlagDuel({ theme, rankings, uiScale=1, t, cn }) {
                 {/* Flag image */}
                 <div style={{ width:'100%', height:`${flagH}px`,
                   marginBottom:`${Math.round(14*uiScale)}px` }}>
-                  <img src={pair[idx].flagUrl} alt={pair[idx].name}
-                    style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }}/>
+                  <div style={{ width:'100%', height:'100%', backgroundImage:`url(${pair[idx].flagUrl})`, backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center' }}/>
                 </div>
                 {/* Country name */}
                 <div style={{ fontFamily:'Barlow Condensed, sans-serif', fontSize:`${nameSz}px`,
@@ -977,7 +975,7 @@ function ClassicGame({ theme, rankings, flagSize, cardWatermark, showHighScore, 
       if (elapsed<total) {
         const ri=available[Math.floor(Math.random()*available.length)];
         const img=document.getElementById('rolling-flag-img');
-        if(img){ img.src=COUNTRIES[ri].flagUrl; img.style.display='block'; img.style.animation='none'; }
+        if(img){ img.style.backgroundImage=`url(${COUNTRIES[ri].flagUrl})`; img.style.display='block'; img.style.animation='none'; }
         rollIntervalRef.current=setTimeout(tick,interval);
       } else {
         const fi=available[Math.floor(Math.random()*available.length)];
