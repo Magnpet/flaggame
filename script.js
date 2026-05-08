@@ -274,7 +274,7 @@ function setFlagFrameEmpty() {
 }
 
 function startRoll() {
-  if (isRolling) return;
+  if (isRolling || categories.length === 0) return;
   clearTimeout(rollTimer);
 
   // Use a skip if re-rolling
@@ -651,6 +651,12 @@ function applyI18n() {
   };
   document.getElementById('mode-label').textContent = modeMap[currentMode] || currentMode;
 
+  // Score badge: managed dynamically — re-translate if overlay is visible
+  if (phase === 'complete') {
+    document.getElementById('score-badge').textContent =
+      isNewHigh ? t('newPersonalBest') : t('gameComplete');
+  }
+
   // Roll button stays in English (same as React version)
   updateRollButton();
 }
@@ -786,6 +792,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Phase 1: layout + settings ──
   applySettings();
   window.addEventListener('resize', updateLayout);
+
+  // Keep roll button disabled until rankings + categories are loaded.
+  // applySettings() above enables it (phase='idle'), but initGame() hasn't run yet.
+  document.getElementById('roll-btn').disabled = true;
 
   // ── Milestones ──
   document.getElementById('milestones-btn').addEventListener('click', () => {
