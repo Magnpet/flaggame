@@ -236,8 +236,8 @@ function initGame() {
   isNewHigh    = false;
   highScore    = parseFloat(localStorage.getItem('fg_r_hs') || '0');
 
-  // Reset card UI
-  for (let i = 0; i < 8; i++) resetCard(i);
+  // Reset card UI — stagger entrance animation per column position (0→3)
+  for (let i = 0; i < 8; i++) resetCard(i, (i % 4) * 40);
 
   // Set category labels
   for (let i = 0; i < 8; i++) {
@@ -447,7 +447,7 @@ function updatePlaceableCards() {
   }
 }
 
-function resetCard(i) {
+function resetCard(i, animDelay = 0) {
   const card = document.getElementById(`cat-${i}`);
   card.classList.remove('filled', 'placeable', 'watermarked');
 
@@ -458,9 +458,14 @@ function resetCard(i) {
   document.getElementById(`cat-wm-${i}`).style.backgroundImage = '';
 
   const etxt = document.getElementById(`cat-etxt-${i}`);
-  etxt.textContent    = t('empty');
+  etxt.textContent      = t('empty');
   etxt.style.fontStyle  = 'italic';
   etxt.style.fontWeight = '400';
+
+  // Re-trigger entrance animation (forced reflow restarts it)
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = `fadeSlideUp 0.3s ${animDelay}ms ease backwards`;
 }
 
 function updateCard(i) {
