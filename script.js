@@ -168,7 +168,7 @@ const STRINGS = {
     flagSizeLabel:'Flaggstørrelse', rollToStart:'Rull for å starte',
     livesLabel:'Liv', skipsLabel:'Hopp',
     possiblePts:'Mulige poeng:', totalScore:'Poeng:',
-    submitBtn:'Send', skipBtn:'Hopp',
+    submitBtn:'Send', skipBtn:'Skip',
     flagOf:'Flagg {0} av 15', finalScore:'Sluttresultat',
     newHighScore:'🏆 Ny rekord!', gameOver:'Spill over',
     flagRevealHs:'Flaggavsløring rekord', flagPuzzleHs:'Flaggpuslespill rekord',
@@ -1119,7 +1119,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') handleRevealGuess();
   });
   document.getElementById('rv-skip-btn').addEventListener('click', handleRevealSkip);
-  document.getElementById('rv-play-again').addEventListener('click', initReveal);
+  document.getElementById('rv-results-play-again').addEventListener('click', () => {
+    document.getElementById('rv-results-overlay').classList.add('hidden');
+    initReveal();
+  });
 
   // ── Load ranking data, then start the appropriate game ──
   const types = [
@@ -1210,12 +1213,12 @@ function playSound(type) {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.36);
       osc.start(); osc.stop(ctx.currentTime + 0.36);
     } else {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.22, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-      osc.start(); osc.stop(ctx.currentTime + 0.22);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.28);
+      gain.gain.setValueAtTime(0.30, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.30);
+      osc.start(); osc.stop(ctx.currentTime + 0.30);
     }
     osc.onended = () => ctx.close();
   } catch (_) {}
@@ -1225,9 +1228,10 @@ function playSound(type) {
 const rv = {
   active: false, country: null,
   flagNum: 0, lives: 3, skips: 3,
-  totalScore: 0, possible: 500, tilesLeft: 16,
+  totalScore: 0, possible: 500, tilesLeft: 0,
   tileTimer: null, countdownTimer: null, countdown: 30,
   answered: false, usedIndices: new Set(),
+  results: [],    // { country, correct, pts } — one entry per flag faced
 };
 
 function cleanupReveal() {
@@ -1241,11 +1245,12 @@ function initReveal() {
   rv.lives = 3; rv.skips = 3;
   rv.totalScore = 0; rv.flagNum = 0;
   rv.usedIndices = new Set();
+  rv.results = [];
 
+  document.getElementById('rv-results-overlay').classList.add('hidden');
   updateRevealLives();
   updateRevealSkips();
   document.getElementById('rv-total').textContent = '0';
-  document.getElementById('rv-gameover').classList.add('hidden');
   setRevealInputsDisabled(false);
   setupRevealRound();
 }
@@ -1272,7 +1277,8 @@ function setupRevealRound() {
   // Set flag image
   const flagImg = document.getElementById('rv-flag-img');
   flagImg.style.backgroundImage = `url(${rv.country.flagUrl})`;
-  document.getElementById('rv-flag-wrap').classList.remove('correct-glow');
+  const flagWrap = document.getElementById('rv-flag-wrap');
+  flagWrap.classList.remove('correct-glow', 'shake');
 
   // Build tile grid
   buildRevealGrid();
@@ -1282,7 +1288,7 @@ function setupRevealRound() {
   const fb = document.getElementById('rv-feedback');
   fb.textContent = ''; fb.className = 'rv-feedback';
   const inp = document.getElementById('rv-input');
-  inp.value = ''; inp.classList.remove('shake');
+  inp.value = '';
 
   // Start 30s countdown
   rv.countdown = 30;
@@ -1311,8 +1317,7 @@ function buildRevealGrid() {
 function revealOneTile() {
   const tiles = document.querySelectorAll('#rv-grid .rv-tile:not(.rv-tile-gone)');
   if (tiles.length === 0) {
-    clearInterval(rv.tileTimer);
-    if (!rv.answered) handleRevealAllTilesGone();
+    clearInterval(rv.tileTimer); // All tiles gone; countdown still runs — player can still guess
     return;
   }
   const tile = tiles[Math.floor(Math.random() * tiles.length)];
@@ -1331,12 +1336,15 @@ function slideTileOff(tile, onDone) {
   tile.style.setProperty('--tile-tx', dir === 'left' ? '-140%' : dir === 'right' ? '140%' : '0');
   tile.style.setProperty('--tile-ty', dir === 'up'   ? '-140%' : dir === 'down'  ? '140%' : '0');
   tile.classList.add('sliding');
-  setTimeout(() => { tile.remove(); if (onDone) onDone(); }, 400);
+  // Keep tile in DOM — animation fill-mode:forwards holds it at opacity:0.
+  // Removing it from the grid would cause grid reflow and shift remaining tiles.
+  setTimeout(() => { if (onDone) onDone(); }, 420);
 }
 
 function slideAllTilesOff(onDone) {
   const dirs  = ['up','down','left','right'];
   const tiles = Array.from(document.querySelectorAll('#rv-grid .rv-tile:not(.rv-tile-gone)'));
+  if (tiles.length === 0) { if (onDone) onDone(); return; }
   tiles.forEach((tile, i) => {
     tile.classList.add('rv-tile-gone');
     const dir = dirs[Math.floor(Math.random() * 4)];
@@ -1345,10 +1353,8 @@ function slideAllTilesOff(onDone) {
     tile.style.animationDelay = `${i * 18}ms`;
     tile.classList.add('sliding');
   });
-  setTimeout(() => {
-    document.querySelectorAll('#rv-grid .rv-tile').forEach(t => t.remove());
-    if (onDone) onDone();
-  }, tiles.length * 18 + 420);
+  // Keep tiles in DOM — see slideTileOff comment
+  setTimeout(() => { if (onDone) onDone(); }, tiles.length * 18 + 420);
 }
 
 function tickRevealCountdown() {
@@ -1377,7 +1383,8 @@ function handleRevealGuess() {
   inp.value = '';
 
   if (!matched) {
-    shakeRevealInput();
+    shakeRevealFlag();
+    playSound('wrong');
     setRevealFeedback('Not a recognised country name', 'wrong');
     return;
   }
@@ -1402,6 +1409,8 @@ function handleRevealCorrect() {
   showFloatingScore(rv.possible);
   setRevealFeedback(`${rv.country.name} ✓  +${rv.possible} pts`, 'correct');
 
+  rv.results.push({ country: rv.country, correct: true, pts: rv.possible });
+
   // Save high score incrementally
   const hs = parseInt(localStorage.getItem('fg_reveal_hs') || '0', 10);
   if (rv.totalScore > hs) localStorage.setItem('fg_reveal_hs', rv.totalScore);
@@ -1416,16 +1425,17 @@ function handleRevealWrong() {
   rv.lives--;
   updateRevealLives();
   playSound('wrong');
-  shakeRevealInput();
+  shakeRevealFlag();
 
   if (rv.lives <= 0) {
     rv.answered = true;
     clearInterval(rv.tileTimer); clearInterval(rv.countdownTimer);
+    rv.results.push({ country: rv.country, correct: false, pts: 0 });
     setRevealFeedback(`It was ${rv.country.name}`, 'wrong');
     slideAllTilesOff(null);
     setTimeout(endReveal, 1600);
   } else {
-    setRevealFeedback(`Wrong — ${rv.lives} life${rv.lives !== 1 ? 'ves' : ''} left`, 'wrong');
+    setRevealFeedback(`Wrong — ${rv.lives} ${rv.lives !== 1 ? 'lives' : 'life'} left`, 'wrong');
     setTimeout(() => document.getElementById('rv-input').focus(), 80);
   }
 }
@@ -1439,6 +1449,7 @@ function handleRevealSkip() {
   updateRevealSkips();
   if (rv.skips <= 0) document.getElementById('rv-skip-btn').disabled = true;
 
+  rv.results.push({ country: rv.country, correct: false, pts: 0 });
   setRevealFeedback(`Skipped — it was ${rv.country.name}`, 'wrong');
   slideAllTilesOff(null);
   setTimeout(() => {
@@ -1450,18 +1461,9 @@ function handleRevealSkip() {
 function handleRevealTimeUp() {
   rv.answered = true;
   clearInterval(rv.tileTimer);
+  rv.results.push({ country: rv.country, correct: false, pts: 0 });
   setRevealFeedback(`Time's up! It was ${rv.country.name}`, 'wrong');
   slideAllTilesOff(null);
-  setTimeout(() => {
-    if (rv.flagNum < 15) setupRevealRound();
-    else endReveal();
-  }, 1500);
-}
-
-function handleRevealAllTilesGone() {
-  rv.answered = true;
-  clearInterval(rv.countdownTimer);
-  setRevealFeedback(`It was ${rv.country.name}`, 'wrong');
   setTimeout(() => {
     if (rv.flagNum < 15) setupRevealRound();
     else endReveal();
@@ -1476,11 +1478,27 @@ function endReveal() {
   const isNew   = rv.totalScore > savedHs;
   if (isNew) localStorage.setItem('fg_reveal_hs', rv.totalScore);
 
-  document.getElementById('rv-go-score').textContent = rv.totalScore;
-  document.getElementById('rv-go-hs').textContent    = isNew
+  // Build flag-by-flag results list
+  const list = document.getElementById('rv-results-list');
+  list.innerHTML = '';
+  rv.results.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'rv-result-row ' + (r.correct ? 'rv-result-correct' : 'rv-result-wrong');
+    const pts = r.correct ? `<div class="rv-result-pts">+${r.pts}</div>` : '';
+    row.innerHTML = `
+      <div class="rv-result-thumb" style="background-image:url(${r.country.flagUrl})"></div>
+      <div class="rv-result-name">${cn(r.country.name)}</div>
+      <div class="rv-result-mark">${r.correct ? '✓' : '✗'}</div>
+      ${pts}
+    `;
+    list.appendChild(row);
+  });
+
+  document.getElementById('rv-results-total').textContent = rv.totalScore;
+  document.getElementById('rv-results-hs').textContent    = isNew
     ? t('newHighScore')
     : `Best: ${Math.max(savedHs, rv.totalScore)}`;
-  document.getElementById('rv-gameover').classList.remove('hidden');
+  document.getElementById('rv-results-overlay').classList.remove('hidden');
 }
 
 // ── HUD helpers ───────────────────────────────────────────
@@ -1517,11 +1535,12 @@ function setRevealInputsDisabled(disabled) {
   document.getElementById('rv-skip-btn').disabled = disabled;
 }
 
-function shakeRevealInput() {
-  const inp = document.getElementById('rv-input');
-  inp.classList.remove('shake');
-  void inp.offsetWidth;
-  inp.classList.add('shake');
+function shakeRevealFlag() {
+  const wrap = document.getElementById('rv-flag-wrap');
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('shake');
+  setTimeout(() => wrap.classList.remove('shake'), 400);
 }
 
 function showFloatingScore(pts) {

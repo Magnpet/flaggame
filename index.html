@@ -340,13 +340,7 @@
           <span class="rv-score-total-val" id="rv-total">0</span>
         </div>
 
-        <!-- Game-over panel (hidden until game ends) -->
-        <div class="rv-gameover hidden" id="rv-gameover">
-          <div class="rv-go-title" id="rv-go-title">Game Over</div>
-          <div class="rv-go-score" id="rv-go-score">0</div>
-          <div class="rv-go-hs" id="rv-go-hs"></div>
-          <button class="btn-primary" id="rv-play-again" data-i18n="playAgain">Play Again</button>
-        </div>
+        <!-- spacer so layout doesn't collapse at game end -->
 
       </div>
     </div>
@@ -360,6 +354,17 @@
     </div>
 
   </main>
+
+  <!-- ═══ REVEAL RESULTS OVERLAY ═══ -->
+  <div class="overlay hidden" id="rv-results-overlay">
+    <div class="rv-results-modal">
+      <div class="rv-results-badge" id="rv-results-badge">Game Over</div>
+      <div class="rv-results-total" id="rv-results-total">0</div>
+      <div class="rv-results-hs" id="rv-results-hs"></div>
+      <div class="rv-results-list" id="rv-results-list"></div>
+      <button class="btn-primary" id="rv-results-play-again" data-i18n="playAgain">Play Again</button>
+    </div>
+  </div>
 
   <!-- ═══ SCORE OVERLAY ═══ -->
   <div class="overlay hidden" id="score-overlay">
