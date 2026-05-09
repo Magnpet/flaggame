@@ -42,7 +42,7 @@
         <div class="hdr-dd" id="mode-menu">
           <button class="mode-item active" data-mode="classic">Flag Game</button>
           <button class="mode-item" data-mode="duel">Flag Duel</button>
-          <button class="mode-item" data-mode="reveal">Flag Reveal <span class="soon-tag">soon</span></button>
+          <button class="mode-item" data-mode="reveal">Flag Reveal</button>
           <button class="mode-item" data-mode="puzzle">Flag Puzzle <span class="soon-tag">soon</span></button>
         </div>
       </div>
@@ -75,6 +75,11 @@
             <div class="sg-lbl" data-i18n="showBestLabel">Show Best Score</div>
             <button class="sg-opt" data-key="showHighScore" data-val="true">✓ On</button>
             <button class="sg-opt" data-key="showHighScore" data-val="false">Off</button>
+          </div>
+          <div class="sg">
+            <div class="sg-lbl" data-i18n="soundLabel">Sound</div>
+            <button class="sg-opt" data-key="sound" data-val="true" data-i18n="soundOn">On</button>
+            <button class="sg-opt" data-key="sound" data-val="false" data-i18n="soundOff">Off</button>
           </div>
         </div>
       </div>
@@ -277,6 +282,75 @@
       </div>
     </div>
 
+    <!-- ─── Flag Reveal ─── -->
+    <div class="game-mode" id="reveal-game">
+      <div class="rv-wrap">
+
+        <!-- HUD: lives | flag counter + timer | skips -->
+        <div class="rv-hud">
+          <div class="rv-hud-block">
+            <div class="rv-hud-lbl" data-i18n="livesLabel">Lives</div>
+            <div class="rv-lives">
+              <span class="rv-life on" id="rv-life-0">♥</span>
+              <span class="rv-life on" id="rv-life-1">♥</span>
+              <span class="rv-life on" id="rv-life-2">♥</span>
+            </div>
+          </div>
+          <div class="rv-hud-center">
+            <div class="rv-flag-num" id="rv-flag-num">Flag 1 of 15</div>
+            <div class="rv-timer" id="rv-timer">30</div>
+          </div>
+          <div class="rv-hud-block rv-hud-end">
+            <div class="rv-hud-lbl" data-i18n="skipsLabel">Skips</div>
+            <div class="rv-skips">
+              <span class="rv-skip on" id="rv-skip-0"></span>
+              <span class="rv-skip on" id="rv-skip-1"></span>
+              <span class="rv-skip on" id="rv-skip-2"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flag image with frosted-glass tile overlay -->
+        <div class="rv-stage">
+          <div class="rv-flag-wrap" id="rv-flag-wrap">
+            <div class="rv-flag-img" id="rv-flag-img"></div>
+            <div class="rv-grid" id="rv-grid"></div>
+          </div>
+        </div>
+
+        <!-- Live possible score for current flag -->
+        <div class="rv-possible-row">
+          <span class="rv-possible-lbl" data-i18n="possiblePts">Possible pts:</span>
+          <span class="rv-possible-val" id="rv-possible">500</span>
+        </div>
+
+        <!-- Guess input -->
+        <div class="rv-input-row">
+          <input class="rv-input" id="rv-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type country name…">
+          <button class="rv-btn-submit" id="rv-submit" data-i18n="submitBtn">Submit</button>
+          <button class="rv-btn-skip" id="rv-skip-btn" data-i18n="skipBtn">Skip</button>
+        </div>
+
+        <!-- Feedback message -->
+        <div class="rv-feedback" id="rv-feedback"></div>
+
+        <!-- Running total score -->
+        <div class="rv-score-total-row">
+          <span class="rv-score-total-lbl" data-i18n="totalScore">Score:</span>
+          <span class="rv-score-total-val" id="rv-total">0</span>
+        </div>
+
+        <!-- Game-over panel (hidden until game ends) -->
+        <div class="rv-gameover hidden" id="rv-gameover">
+          <div class="rv-go-title" id="rv-go-title">Game Over</div>
+          <div class="rv-go-score" id="rv-go-score">0</div>
+          <div class="rv-go-hs" id="rv-go-hs"></div>
+          <button class="btn-primary" id="rv-play-again" data-i18n="playAgain">Play Again</button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ─── Coming Soon ─── -->
     <div class="game-mode" id="coming-soon">
       <div class="coming-soon-wrap">
@@ -317,6 +391,14 @@
       <div class="milestone-row">
         <span data-i18n="flagDuel">Flag Duel</span>
         <span class="milestone-val" id="ms-duel">—</span>
+      </div>
+      <div class="milestone-row">
+        <span data-i18n="flagReveal">Flag Reveal</span>
+        <span class="milestone-val" id="ms-reveal">—</span>
+      </div>
+      <div class="milestone-row">
+        <span data-i18n="flagPuzzle">Flag Puzzle</span>
+        <span class="milestone-val" id="ms-puzzle">—</span>
       </div>
       <button class="btn-primary" id="milestones-close" data-i18n="close">Close</button>
     </div>

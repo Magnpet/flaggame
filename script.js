@@ -125,7 +125,14 @@ const STRINGS = {
     milestones:'Milestones', settings:'Settings',
     themeLabel:'Theme', lightTheme:'Light', darkTheme:'Dark', langLabel:'Language',
     cardWatermarkLabel:'Card Watermark', showBestLabel:'Show Best Score',
+    soundLabel:'Sound', soundOn:'On', soundOff:'Off',
     flagSizeLabel:'Flag Size', rollToStart:'Roll to Start',
+    livesLabel:'Lives', skipsLabel:'Skips',
+    possiblePts:'Possible pts:', totalScore:'Score:',
+    submitBtn:'Submit', skipBtn:'Skip',
+    flagOf:'Flag {0} of 15', finalScore:'Final Score',
+    newHighScore:'🏆 New High Score!', gameOver:'Game Over',
+    flagRevealHs:'Flag Reveal Best', flagPuzzleHs:'Flag Puzzle Best',
     pickCategory:'← Pick a Category →', placeHere:'Place here →',
     empty:'Empty', pressRoll:'Press Roll to begin',
     gameComplete:'Game Complete', newPersonalBest:'🏆 New Personal Best',
@@ -157,7 +164,14 @@ const STRINGS = {
     milestones:'Milepæler', settings:'Innstillinger',
     themeLabel:'Tema', lightTheme:'Lys', darkTheme:'Mørk', langLabel:'Språk',
     cardWatermarkLabel:'Kortvannmerke', showBestLabel:'Vis beste score',
+    soundLabel:'Lyd', soundOn:'På', soundOff:'Av',
     flagSizeLabel:'Flaggstørrelse', rollToStart:'Rull for å starte',
+    livesLabel:'Liv', skipsLabel:'Hopp',
+    possiblePts:'Mulige poeng:', totalScore:'Poeng:',
+    submitBtn:'Send', skipBtn:'Hopp',
+    flagOf:'Flagg {0} av 15', finalScore:'Sluttresultat',
+    newHighScore:'🏆 Ny rekord!', gameOver:'Spill over',
+    flagRevealHs:'Flaggavsløring rekord', flagPuzzleHs:'Flaggpuslespill rekord',
     pickCategory:'← Velg en kategori →', placeHere:'Plasser her →',
     empty:'Tom', pressRoll:'Trykk Roll for å starte',
     gameComplete:'Spill fullført', newPersonalBest:'🏆 Ny personlig rekord',
@@ -877,7 +891,7 @@ function applyI18n() {
 
 const DEFAULT_SETTINGS = {
   theme: 'dark', lang: 'en', flagSize: 270,
-  cardWatermark: true, showHighScore: true,
+  cardWatermark: true, showHighScore: true, sound: true,
 };
 
 let settings = DEFAULT_SETTINGS;
@@ -977,14 +991,17 @@ function switchMode(mode) {
 
   document.getElementById('classic-game').classList.toggle('active', mode === 'classic');
   document.getElementById('duel-game').classList.toggle('active', mode === 'duel');
+  document.getElementById('reveal-game').classList.toggle('active', mode === 'reveal');
   const soonEl = document.getElementById('coming-soon');
-  const isSoon = mode === 'reveal' || mode === 'puzzle';
+  const isSoon = mode === 'puzzle';
   soonEl.classList.toggle('active', isSoon);
   if (isSoon) {
     document.getElementById('coming-soon-sub').textContent =
-      (t(mode === 'reveal' ? 'flagReveal' : 'flagPuzzle')) +
-      ' will follow the same design language';
+      t('flagPuzzle') + ' will follow the same design language';
   }
+
+  // Cleanup reveal timers when leaving
+  if (mode !== 'reveal') cleanupReveal();
 
   document.getElementById('progress-widget').classList.toggle('hidden', mode !== 'classic');
   document.getElementById('mode-label').textContent =
@@ -995,7 +1012,8 @@ function switchMode(mode) {
     item.classList.toggle('active', item.dataset.mode === mode);
   });
 
-  if (mode === 'duel' && dataReady) initDuel();
+  if (mode === 'duel'   && dataReady) initDuel();
+  if (mode === 'reveal' && dataReady) initReveal();
 
   applySettings(); // refresh best-score visibility
 }
@@ -1014,12 +1032,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Milestones ──
   document.getElementById('milestones-btn').addEventListener('click', () => {
     closeAllDropdowns();
-    const hs    = parseFloat(localStorage.getItem('fg_r_hs')  || '0');
-    const duelH = parseInt(localStorage.getItem('fg_duel_hs') || '0', 10);
-    document.getElementById('ms-classic').textContent = hs    > 0 ? hs.toFixed(1) : '—';
-    document.getElementById('ms-duel').textContent    = duelH > 0 ? duelH : '—';
-    document.getElementById('ms-classic').classList.toggle('none', hs    === 0);
-    document.getElementById('ms-duel').classList.toggle('none',    duelH === 0);
+    const hs      = parseFloat(localStorage.getItem('fg_r_hs')      || '0');
+    const duelH   = parseInt(localStorage.getItem('fg_duel_hs')     || '0', 10);
+    const revealH = parseInt(localStorage.getItem('fg_reveal_hs')   || '0', 10);
+    const puzzleH = parseInt(localStorage.getItem('fg_puzzle_hs')   || '0', 10);
+    const set = (id, val, isZero) => {
+      document.getElementById(id).textContent = isZero ? '—' : val;
+      document.getElementById(id).classList.toggle('none', isZero);
+    };
+    set('ms-classic', hs.toFixed(1),  hs      === 0);
+    set('ms-duel',    duelH,           duelH   === 0);
+    set('ms-reveal',  revealH,         revealH === 0);
+    set('ms-puzzle',  puzzleH,         puzzleH === 0);
     document.getElementById('milestones-overlay').classList.remove('hidden');
   });
   document.getElementById('milestones-close').addEventListener('click', () => {
@@ -1089,6 +1113,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('duel-next-btn').addEventListener('click', setupNewDuel);
 
+  // ── Flag Reveal event handlers ──
+  document.getElementById('rv-submit').addEventListener('click', handleRevealGuess);
+  document.getElementById('rv-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleRevealGuess();
+  });
+  document.getElementById('rv-skip-btn').addEventListener('click', handleRevealSkip);
+  document.getElementById('rv-play-again').addEventListener('click', initReveal);
+
   // ── Load ranking data, then start the appropriate game ──
   const types = [
     'hdi','olympic','population','highest-elevation',
@@ -1100,6 +1132,415 @@ document.addEventListener('DOMContentLoaded', () => {
   }).then(() => {
     dataReady = true;
     initGame();
-    if (currentMode === 'duel') initDuel();
+    if (currentMode === 'duel')   initDuel();
+    if (currentMode === 'reveal') initReveal();
   });
 });
+
+// ═══════════════════════════════════════════════════════════
+// FLAG REVEAL
+// ═══════════════════════════════════════════════════════════
+
+// ── Fuzzy country-name matching ───────────────────────────
+const COUNTRY_ALIASES = {
+  'usa':'United States','us':'United States','america':'United States',
+  'united states of america':'United States',
+  'uk':'United Kingdom','britain':'United Kingdom',
+  'great britain':'United Kingdom','england':'United Kingdom',
+  'uae':'United Arab Emirates','emirates':'United Arab Emirates',
+  'drc':'Democratic Republic of the Congo',
+  'dr congo':'Democratic Republic of the Congo',
+  'congo dr':'Democratic Republic of the Congo',
+  'republic of congo':'Republic of the Congo',
+  'congo republic':'Republic of the Congo',
+  'dprk':'North Korea','north corea':'North Korea',
+  'south corea':'South Korea','korea':'South Korea',
+  'czech':'Czech Republic','czechia':'Czech Republic',
+  "cote d'ivoire":'Ivory Coast',"côte d'ivoire":'Ivory Coast',
+  'cote divoire':'Ivory Coast',
+  'trinidad':'Trinidad and Tobago',
+  'st kitts':'Saint Kitts and Nevis','saint kitts':'Saint Kitts and Nevis',
+  'st lucia':'Saint Lucia',
+  'st vincent':'Saint Vincent and the Grenadines',
+  'saint vincent':'Saint Vincent and the Grenadines',
+  'bosnia':'Bosnia and Herzegovina','bih':'Bosnia and Herzegovina',
+  'macedonia':'North Macedonia',
+  'sao tome':'Sao Tome and Principe',
+  'timor':'Timor-Leste','east timor':'Timor-Leste',
+  'swaziland':'Eswatini','burma':'Myanmar',
+  'holland':'Netherlands','persia':'Iran',
+  'ivory coast':'Ivory Coast',
+};
+
+function matchCountryName(input) {
+  const clean = input.trim().toLowerCase().replace(/[^\w\s'\-]/g, '');
+  if (clean.length < 2) return null;
+  const alias = COUNTRY_ALIASES[clean];
+  if (alias) {
+    const found = COUNTRIES.find(c => c.name === alias);
+    if (found) return found.name;
+  }
+  const exact = COUNTRIES.find(c => c.name.toLowerCase() === clean);
+  if (exact) return exact.name;
+  if (clean.length >= 3) {
+    const prefix = COUNTRIES.find(c => c.name.toLowerCase().startsWith(clean));
+    if (prefix) return prefix.name;
+  }
+  if (clean.length >= 4) {
+    const contains = COUNTRIES.find(c => c.name.toLowerCase().includes(clean));
+    if (contains) return contains.name;
+  }
+  return null;
+}
+
+// ── Sound synthesis ───────────────────────────────────────
+function playSound(type) {
+  if (!settings.sound) return;
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.28, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.36);
+      osc.start(); osc.stop(ctx.currentTime + 0.36);
+    } else {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(220, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.start(); osc.stop(ctx.currentTime + 0.22);
+    }
+    osc.onended = () => ctx.close();
+  } catch (_) {}
+}
+
+// ── Reveal state ──────────────────────────────────────────
+const rv = {
+  active: false, country: null,
+  flagNum: 0, lives: 3, skips: 3,
+  totalScore: 0, possible: 500, tilesLeft: 16,
+  tileTimer: null, countdownTimer: null, countdown: 30,
+  answered: false, usedIndices: new Set(),
+};
+
+function cleanupReveal() {
+  clearInterval(rv.tileTimer);
+  clearInterval(rv.countdownTimer);
+  rv.active = false;
+}
+
+function initReveal() {
+  cleanupReveal();
+  rv.lives = 3; rv.skips = 3;
+  rv.totalScore = 0; rv.flagNum = 0;
+  rv.usedIndices = new Set();
+
+  updateRevealLives();
+  updateRevealSkips();
+  document.getElementById('rv-total').textContent = '0';
+  document.getElementById('rv-gameover').classList.add('hidden');
+  setRevealInputsDisabled(false);
+  setupRevealRound();
+}
+
+function setupRevealRound() {
+  rv.flagNum++;
+  rv.answered = false;
+  rv.possible = 500;
+  rv.tilesLeft = 0;
+
+  clearInterval(rv.tileTimer);
+  clearInterval(rv.countdownTimer);
+
+  // Pick an unused country
+  const available = COUNTRIES.map((c, i) => i).filter(i => !rv.usedIndices.has(i));
+  const pickIdx   = available[Math.floor(Math.random() * available.length)];
+  rv.country = COUNTRIES[pickIdx];
+  rv.usedIndices.add(pickIdx);
+
+  // Update HUD
+  const flagNumEl = document.getElementById('rv-flag-num');
+  flagNumEl.textContent = t('flagOf').replace('{0}', rv.flagNum);
+
+  // Set flag image
+  const flagImg = document.getElementById('rv-flag-img');
+  flagImg.style.backgroundImage = `url(${rv.country.flagUrl})`;
+  document.getElementById('rv-flag-wrap').classList.remove('correct-glow');
+
+  // Build tile grid
+  buildRevealGrid();
+
+  // Reset UI
+  document.getElementById('rv-possible').textContent = '500';
+  const fb = document.getElementById('rv-feedback');
+  fb.textContent = ''; fb.className = 'rv-feedback';
+  const inp = document.getElementById('rv-input');
+  inp.value = ''; inp.classList.remove('shake');
+
+  // Start 30s countdown
+  rv.countdown = 30;
+  updateRevealTimerDisplay();
+  rv.countdownTimer = setInterval(tickRevealCountdown, 1000);
+
+  // Start tile reveal (1.5s interval)
+  rv.tileTimer = setInterval(revealOneTile, 1500);
+
+  rv.active = true;
+  setTimeout(() => document.getElementById('rv-input').focus(), 80);
+}
+
+function buildRevealGrid() {
+  const grid = document.getElementById('rv-grid');
+  grid.innerHTML = '';
+  const dirs = ['up','down','left','right'];
+  for (let i = 0; i < 16; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'rv-tile';
+    tile.dataset.dir = dirs[Math.floor(Math.random() * 4)];
+    grid.appendChild(tile);
+  }
+}
+
+function revealOneTile() {
+  const tiles = document.querySelectorAll('#rv-grid .rv-tile:not(.rv-tile-gone)');
+  if (tiles.length === 0) {
+    clearInterval(rv.tileTimer);
+    if (!rv.answered) handleRevealAllTilesGone();
+    return;
+  }
+  const tile = tiles[Math.floor(Math.random() * tiles.length)];
+  slideTileOff(tile, () => {
+    rv.tilesLeft++;
+    const newPossible = Math.max(100, 500 - rv.tilesLeft * 25);
+    animateScoreCount(rv.possible, newPossible, document.getElementById('rv-possible'));
+    rv.possible = newPossible;
+  });
+}
+
+function slideTileOff(tile, onDone) {
+  if (tile.classList.contains('rv-tile-gone')) return;
+  tile.classList.add('rv-tile-gone');
+  const dir = tile.dataset.dir || 'up';
+  tile.style.setProperty('--tile-tx', dir === 'left' ? '-140%' : dir === 'right' ? '140%' : '0');
+  tile.style.setProperty('--tile-ty', dir === 'up'   ? '-140%' : dir === 'down'  ? '140%' : '0');
+  tile.classList.add('sliding');
+  setTimeout(() => { tile.remove(); if (onDone) onDone(); }, 400);
+}
+
+function slideAllTilesOff(onDone) {
+  const dirs  = ['up','down','left','right'];
+  const tiles = Array.from(document.querySelectorAll('#rv-grid .rv-tile:not(.rv-tile-gone)'));
+  tiles.forEach((tile, i) => {
+    tile.classList.add('rv-tile-gone');
+    const dir = dirs[Math.floor(Math.random() * 4)];
+    tile.style.setProperty('--tile-tx', dir === 'left' ? '-140%' : dir === 'right' ? '140%' : '0');
+    tile.style.setProperty('--tile-ty', dir === 'up'   ? '-140%' : dir === 'down'  ? '140%' : '0');
+    tile.style.animationDelay = `${i * 18}ms`;
+    tile.classList.add('sliding');
+  });
+  setTimeout(() => {
+    document.querySelectorAll('#rv-grid .rv-tile').forEach(t => t.remove());
+    if (onDone) onDone();
+  }, tiles.length * 18 + 420);
+}
+
+function tickRevealCountdown() {
+  rv.countdown--;
+  updateRevealTimerDisplay();
+  if (rv.countdown <= 0 && !rv.answered) {
+    clearInterval(rv.countdownTimer);
+    handleRevealTimeUp();
+  }
+}
+
+function updateRevealTimerDisplay() {
+  const el = document.getElementById('rv-timer');
+  el.textContent = rv.countdown;
+  el.className = 'rv-timer' +
+    (rv.countdown <= 7 ? ' urgent' : rv.countdown <= 15 ? ' warning' : '');
+}
+
+function handleRevealGuess() {
+  if (!rv.active || rv.answered) return;
+  const inp = document.getElementById('rv-input');
+  const raw = inp.value.trim();
+  if (!raw) return;
+
+  const matched = matchCountryName(raw);
+  inp.value = '';
+
+  if (!matched) {
+    shakeRevealInput();
+    setRevealFeedback('Not a recognised country name', 'wrong');
+    return;
+  }
+  if (matched === rv.country.name) {
+    handleRevealCorrect();
+  } else {
+    handleRevealWrong();
+  }
+}
+
+function handleRevealCorrect() {
+  rv.answered = true;
+  clearInterval(rv.tileTimer); clearInterval(rv.countdownTimer);
+  playSound('correct');
+
+  slideAllTilesOff(() => {
+    document.getElementById('rv-flag-wrap').classList.add('correct-glow');
+  });
+
+  rv.totalScore += rv.possible;
+  document.getElementById('rv-total').textContent = rv.totalScore;
+  showFloatingScore(rv.possible);
+  setRevealFeedback(`${rv.country.name} ✓  +${rv.possible} pts`, 'correct');
+
+  // Save high score incrementally
+  const hs = parseInt(localStorage.getItem('fg_reveal_hs') || '0', 10);
+  if (rv.totalScore > hs) localStorage.setItem('fg_reveal_hs', rv.totalScore);
+
+  setTimeout(() => {
+    if (rv.flagNum < 15) setupRevealRound();
+    else endReveal();
+  }, 1300);
+}
+
+function handleRevealWrong() {
+  rv.lives--;
+  updateRevealLives();
+  playSound('wrong');
+  shakeRevealInput();
+
+  if (rv.lives <= 0) {
+    rv.answered = true;
+    clearInterval(rv.tileTimer); clearInterval(rv.countdownTimer);
+    setRevealFeedback(`It was ${rv.country.name}`, 'wrong');
+    slideAllTilesOff(null);
+    setTimeout(endReveal, 1600);
+  } else {
+    setRevealFeedback(`Wrong — ${rv.lives} life${rv.lives !== 1 ? 'ves' : ''} left`, 'wrong');
+    setTimeout(() => document.getElementById('rv-input').focus(), 80);
+  }
+}
+
+function handleRevealSkip() {
+  if (!rv.active || rv.answered) return;
+  rv.answered = true;
+  clearInterval(rv.tileTimer); clearInterval(rv.countdownTimer);
+
+  rv.skips--;
+  updateRevealSkips();
+  if (rv.skips <= 0) document.getElementById('rv-skip-btn').disabled = true;
+
+  setRevealFeedback(`Skipped — it was ${rv.country.name}`, 'wrong');
+  slideAllTilesOff(null);
+  setTimeout(() => {
+    if (rv.flagNum < 15) setupRevealRound();
+    else endReveal();
+  }, 1400);
+}
+
+function handleRevealTimeUp() {
+  rv.answered = true;
+  clearInterval(rv.tileTimer);
+  setRevealFeedback(`Time's up! It was ${rv.country.name}`, 'wrong');
+  slideAllTilesOff(null);
+  setTimeout(() => {
+    if (rv.flagNum < 15) setupRevealRound();
+    else endReveal();
+  }, 1500);
+}
+
+function handleRevealAllTilesGone() {
+  rv.answered = true;
+  clearInterval(rv.countdownTimer);
+  setRevealFeedback(`It was ${rv.country.name}`, 'wrong');
+  setTimeout(() => {
+    if (rv.flagNum < 15) setupRevealRound();
+    else endReveal();
+  }, 1500);
+}
+
+function endReveal() {
+  cleanupReveal();
+  setRevealInputsDisabled(true);
+
+  const savedHs = parseInt(localStorage.getItem('fg_reveal_hs') || '0', 10);
+  const isNew   = rv.totalScore > savedHs;
+  if (isNew) localStorage.setItem('fg_reveal_hs', rv.totalScore);
+
+  document.getElementById('rv-go-score').textContent = rv.totalScore;
+  document.getElementById('rv-go-hs').textContent    = isNew
+    ? t('newHighScore')
+    : `Best: ${Math.max(savedHs, rv.totalScore)}`;
+  document.getElementById('rv-gameover').classList.remove('hidden');
+}
+
+// ── HUD helpers ───────────────────────────────────────────
+function updateRevealLives() {
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`rv-life-${i}`);
+    const wasOn = el.classList.contains('on');
+    el.classList.toggle('on',  i < rv.lives);
+    el.classList.toggle('off', i >= rv.lives);
+    if (wasOn && i >= rv.lives) {
+      el.classList.add('pulse');
+      setTimeout(() => el.classList.remove('pulse'), 400);
+    }
+  }
+}
+
+function updateRevealSkips() {
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`rv-skip-${i}`);
+    el.classList.toggle('on',  i < rv.skips);
+    el.classList.toggle('off', i >= rv.skips);
+  }
+}
+
+function setRevealFeedback(msg, cls) {
+  const fb = document.getElementById('rv-feedback');
+  fb.textContent = msg;
+  fb.className = 'rv-feedback' + (cls ? ` ${cls}` : '');
+}
+
+function setRevealInputsDisabled(disabled) {
+  document.getElementById('rv-input').disabled  = disabled;
+  document.getElementById('rv-submit').disabled = disabled;
+  document.getElementById('rv-skip-btn').disabled = disabled;
+}
+
+function shakeRevealInput() {
+  const inp = document.getElementById('rv-input');
+  inp.classList.remove('shake');
+  void inp.offsetWidth;
+  inp.classList.add('shake');
+}
+
+function showFloatingScore(pts) {
+  const wrap = document.getElementById('rv-flag-wrap');
+  const el   = document.createElement('div');
+  el.className   = 'rv-float-score';
+  el.textContent = `+${pts}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function animateScoreCount(from, to, el) {
+  const diff  = from - to;
+  if (diff <= 0) { el.textContent = to; return; }
+  const steps = 8;
+  let   step  = 0;
+  const id    = setInterval(() => {
+    step++;
+    el.textContent = Math.round(from - diff * step / steps);
+    if (step >= steps) { clearInterval(id); el.textContent = to; }
+  }, 22);
+}
