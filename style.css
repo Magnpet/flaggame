@@ -1203,28 +1203,34 @@ body.dark .rv-tile {
   white-space: nowrap;
 }
 
-/* ── Live possible score ── */
-.rv-possible-row {
-  display: flex;
-  align-items: baseline;
-  gap: calc(8px * var(--ui-scale));
+/* ── Stats block: possible pts + running score ── */
+.rv-stats-block {
+  display: inline-grid;
+  grid-template-columns: max-content max-content;
+  column-gap: calc(10px * var(--ui-scale));
+  row-gap: calc(1px * var(--ui-scale));
 }
-.rv-possible-lbl {
+.rv-stats-lbl {
   font-size: calc(11px * var(--ui-scale));
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--c-sub);
-}
-.rv-possible-val {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: calc(34px * var(--ui-scale));
-  font-weight: 900;
-  color: var(--c-accent);
-  line-height: 1;
-  min-width: calc(52px * var(--ui-scale));
   text-align: right;
+  align-self: baseline;
 }
+.rv-stats-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: calc(30px * var(--ui-scale));
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  align-self: baseline;
+  color: var(--c-accent);
+  min-width: 3.5ch; /* 4 digits never shifts layout */
+}
+.rv-stats-score { color: var(--c-text); }
 
 /* ── Input row — constrained to flag width so it sits centred under the flag ── */
 .rv-input-row {
@@ -1295,26 +1301,7 @@ body.dark .rv-tile {
 .rv-feedback.correct { color: var(--c-rank-good); }
 .rv-feedback.wrong   { color: var(--c-rank-bad); }
 
-/* ── Running total ── */
-.rv-score-total-row {
-  display: flex;
-  align-items: baseline;
-  gap: calc(8px * var(--ui-scale));
-}
-.rv-score-total-lbl {
-  font-size: calc(11px * var(--ui-scale));
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--c-sub);
-}
-.rv-score-total-val {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: calc(28px * var(--ui-scale));
-  font-weight: 900;
-  color: var(--c-text);
-  line-height: 1;
-}
+/* (rv-score-total-* merged into rv-stats-block above) */
 
 /* ── Game-over panel ── */
 .rv-gameover {

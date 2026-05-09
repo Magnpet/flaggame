@@ -318,10 +318,12 @@
           </div>
         </div>
 
-        <!-- Live possible score for current flag -->
-        <div class="rv-possible-row">
-          <span class="rv-possible-lbl" data-i18n="possiblePts">Possible pts:</span>
-          <span class="rv-possible-val" id="rv-possible">500</span>
+        <!-- Possible pts + running score — two-column grid keeps numbers pinned -->
+        <div class="rv-stats-block">
+          <span class="rv-stats-lbl" data-i18n="possiblePts">Possible pts:</span>
+          <span class="rv-stats-val" id="rv-possible">500</span>
+          <span class="rv-stats-lbl" data-i18n="totalScore">Score:</span>
+          <span class="rv-stats-val rv-stats-score" id="rv-total">0</span>
         </div>
 
         <!-- Guess input -->
@@ -334,11 +336,7 @@
         <!-- Feedback message -->
         <div class="rv-feedback" id="rv-feedback"></div>
 
-        <!-- Running total score -->
-        <div class="rv-score-total-row">
-          <span class="rv-score-total-lbl" data-i18n="totalScore">Score:</span>
-          <span class="rv-score-total-val" id="rv-total">0</span>
-        </div>
+        <!-- (score now lives in rv-stats-block above) -->
 
         <!-- spacer so layout doesn't collapse at game end -->
 
