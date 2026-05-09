@@ -1676,16 +1676,41 @@ function buildMerged() {
     merged.appendChild(line);
 
   } else if (pz.splitStyle === 'horizontal') {
-    merged.appendChild(makeRegion(0, f0.flagUrl,
-      { top:'0', left:'0', width:'100%', height:'50%', backgroundPosition:'center bottom' }));
-    merged.appendChild(makeRegion(1, f1.flagUrl,
-      { top:'50%', left:'0', width:'100%', height:'50%', backgroundPosition:'center top' }));
+    // Parent clips to top/bottom half; inner div is full-height so flag renders at
+    // natural size — only the relevant half is visible through overflow:hidden.
+    const makeHalf = (idx, url, parentCss, innerCss) => {
+      const parent = document.createElement('div');
+      parent.className   = 'pz-region';
+      parent.dataset.idx = String(idx);
+      Object.assign(parent.style, { position:'absolute', left:'0', width:'100%', height:'50%',
+        overflow:'hidden', backgroundColor:'var(--c-card)' }, parentCss);
+      const inner = document.createElement('div');
+      Object.assign(inner.style, { position:'absolute', left:'0', width:'100%', height:'200%',
+        backgroundImage:`url(${url})`, backgroundSize:'contain',
+        backgroundRepeat:'no-repeat', backgroundPosition:'center center' }, innerCss);
+      parent.appendChild(inner);
+      return parent;
+    };
+    merged.appendChild(makeHalf(0, f0.flagUrl, { top:'0' },    { top:'0' }));
+    merged.appendChild(makeHalf(1, f1.flagUrl, { bottom:'0' }, { bottom:'0' }));
 
   } else if (pz.splitStyle === 'vertical') {
-    merged.appendChild(makeRegion(0, f0.flagUrl,
-      { top:'0', left:'0', width:'50%', height:'100%', backgroundPosition:'right center' }));
-    merged.appendChild(makeRegion(1, f1.flagUrl,
-      { top:'0', left:'50%', width:'50%', height:'100%', backgroundPosition:'left center' }));
+    // Same principle for left/right split.
+    const makeVHalf = (idx, url, parentCss, innerAnchor) => {
+      const parent = document.createElement('div');
+      parent.className   = 'pz-region';
+      parent.dataset.idx = String(idx);
+      Object.assign(parent.style, { position:'absolute', top:'0', width:'50%', height:'100%',
+        overflow:'hidden', backgroundColor:'var(--c-card)' }, parentCss);
+      const inner = document.createElement('div');
+      Object.assign(inner.style, { position:'absolute', top:'0', width:'200%', height:'100%',
+        backgroundImage:`url(${url})`, backgroundSize:'contain',
+        backgroundRepeat:'no-repeat', backgroundPosition:'center center', ...innerAnchor });
+      parent.appendChild(inner);
+      return parent;
+    };
+    merged.appendChild(makeVHalf(0, f0.flagUrl, { left:'0' },   { left:'0' }));
+    merged.appendChild(makeVHalf(1, f1.flagUrl, { left:'50%' }, { right:'0' }));
 
   } else { // checkerboard — background-size:400% tiles each flag into a 4×4 grid
     for (let r = 0; r < 4; r++) {
