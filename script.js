@@ -133,6 +133,7 @@ const STRINGS = {
     flagOf:'Flag {0} of 15', finalScore:'Final Score',
     newHighScore:'🏆 New High Score!', gameOver:'Game Over',
     flagRevealHs:'Flag Reveal Best', flagPuzzleHs:'Flag Puzzle Best',
+    puzzleOf:'Puzzle {0} of 15', alreadyGuessed:'Already identified!',
     pickCategory:'← Pick a Category →', placeHere:'Place here →',
     empty:'Empty', pressRoll:'Press Roll to begin',
     gameComplete:'Game Complete', newPersonalBest:'🏆 New Personal Best',
@@ -172,6 +173,7 @@ const STRINGS = {
     flagOf:'Flagg {0} av 15', finalScore:'Sluttresultat',
     newHighScore:'🏆 Ny rekord!', gameOver:'Spill over',
     flagRevealHs:'Flaggavsløring rekord', flagPuzzleHs:'Flaggpuslespill rekord',
+    puzzleOf:'Puslespill {0} av 15', alreadyGuessed:'Allerede identifisert!',
     pickCategory:'← Velg en kategori →', placeHere:'Plasser her →',
     empty:'Tom', pressRoll:'Trykk Roll for å starte',
     gameComplete:'Spill fullført', newPersonalBest:'🏆 Ny personlig rekord',
@@ -992,16 +994,11 @@ function switchMode(mode) {
   document.getElementById('classic-game').classList.toggle('active', mode === 'classic');
   document.getElementById('duel-game').classList.toggle('active', mode === 'duel');
   document.getElementById('reveal-game').classList.toggle('active', mode === 'reveal');
-  const soonEl = document.getElementById('coming-soon');
-  const isSoon = mode === 'puzzle';
-  soonEl.classList.toggle('active', isSoon);
-  if (isSoon) {
-    document.getElementById('coming-soon-sub').textContent =
-      t('flagPuzzle') + ' will follow the same design language';
-  }
+  document.getElementById('puzzle-game').classList.toggle('active', mode === 'puzzle');
+  document.getElementById('coming-soon').classList.toggle('active', false);
 
-  // Cleanup reveal timers when leaving
   if (mode !== 'reveal') cleanupReveal();
+  if (mode !== 'puzzle') cleanupPuzzle();
 
   document.getElementById('progress-widget').classList.toggle('hidden', mode !== 'classic');
   document.getElementById('mode-label').textContent =
@@ -1014,6 +1011,7 @@ function switchMode(mode) {
 
   if (mode === 'duel'   && dataReady) initDuel();
   if (mode === 'reveal' && dataReady) initReveal();
+  if (mode === 'puzzle' && dataReady) initPuzzle();
 
   applySettings(); // refresh best-score visibility
 }
@@ -1124,6 +1122,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initReveal();
   });
 
+  // ── Flag Puzzle event handlers ──
+  document.getElementById('pz-submit').addEventListener('click', handlePuzzleGuess);
+  document.getElementById('pz-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handlePuzzleGuess();
+  });
+  document.getElementById('pz-skip-btn').addEventListener('click', handlePuzzleSkip);
+  document.getElementById('pz-results-play-again').addEventListener('click', () => {
+    document.getElementById('pz-results-overlay').classList.add('hidden');
+    initPuzzle();
+  });
+
   // ── Load ranking data, then start the appropriate game ──
   const types = [
     'hdi','olympic','population','highest-elevation',
@@ -1137,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGame();
     if (currentMode === 'duel')   initDuel();
     if (currentMode === 'reveal') initReveal();
+    if (currentMode === 'puzzle') initPuzzle();
   });
 });
 
@@ -1562,4 +1572,396 @@ function animateScoreCount(from, to, el) {
     el.textContent = Math.round(from - diff * step / steps);
     if (step >= steps) { clearInterval(id); el.textContent = to; }
   }, 22);
+}
+
+// ═══════════════════════════════════════════════════════════
+// FLAG PUZZLE
+// ═══════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────
+const pz = {
+  active: false,
+  flags: [null, null],          // two COUNTRIES entries
+  identified: [false, false],   // which have been guessed
+  puzzleNum: 0,
+  lives: 3, skips: 3,
+  totalScore: 0, possible: 1000,
+  elapsed: 0,                   // seconds elapsed this puzzle
+  countdownTimer: null, countdown: 60,
+  answered: false,
+  usedIndices: new Set(),
+  results: [],                  // { flags:[c,c], correct:[bool,bool], pts }
+  splitStyle: '',
+};
+
+function cleanupPuzzle() {
+  clearInterval(pz.countdownTimer);
+  pz.active = false;
+}
+
+// ── Init / round setup ────────────────────────────────────
+function initPuzzle() {
+  cleanupPuzzle();
+  pz.lives = 3; pz.skips = 3;
+  pz.totalScore = 0; pz.puzzleNum = 0;
+  pz.usedIndices = new Set();
+  pz.results = [];
+
+  document.getElementById('pz-results-overlay').classList.add('hidden');
+  updatePuzzleLives();
+  updatePuzzleSkips();
+  document.getElementById('pz-total').textContent = '0';
+  setPuzzleInputsDisabled(false);
+  setupPuzzleRound();
+}
+
+function setupPuzzleRound() {
+  pz.puzzleNum++;
+  pz.answered = false;
+  pz.identified = [false, false];
+  pz.possible = 1000;
+  pz.elapsed = 0;
+
+  clearInterval(pz.countdownTimer);
+
+  // Pick 2 distinct unused countries (random, no smart pairing)
+  const avail = COUNTRIES.map((_, i) => i).filter(i => !pz.usedIndices.has(i));
+  const a = Math.floor(Math.random() * avail.length);
+  let b;
+  do { b = Math.floor(Math.random() * avail.length); } while (b === a);
+  const idx0 = avail[a], idx1 = avail[b];
+  pz.flags = [COUNTRIES[idx0], COUNTRIES[idx1]];
+  pz.usedIndices.add(idx0); pz.usedIndices.add(idx1);
+
+  document.getElementById('pz-puzzle-num').textContent =
+    t('puzzleOf').replace('{0}', pz.puzzleNum);
+
+  buildMerged();
+
+  document.getElementById('pz-chips').innerHTML = '';
+  setPuzzleFeedback('', '');
+  document.getElementById('pz-merged').classList.remove('correct-glow', 'shake');
+  document.getElementById('pz-possible').textContent = '1000';
+  document.getElementById('pz-input').value = '';
+
+  pz.countdown = 60;
+  updatePuzzleTimerDisplay();
+  pz.countdownTimer = setInterval(tickPuzzleCountdown, 1000);
+
+  pz.active = true;
+  setTimeout(() => document.getElementById('pz-input').focus(), 80);
+}
+
+// ── Four merge styles ─────────────────────────────────────
+const SPLIT_STYLES = ['diagonal', 'horizontal', 'vertical', 'checkerboard'];
+
+function buildMerged() {
+  const merged = document.getElementById('pz-merged');
+  merged.innerHTML = '';
+  pz.splitStyle = SPLIT_STYLES[Math.floor(Math.random() * 4)];
+  const [f0, f1] = pz.flags;
+
+  if (pz.splitStyle === 'diagonal') {
+    merged.appendChild(makeRegion(0, f0.flagUrl, {
+      top:'0', right:'0', bottom:'0', left:'0',
+      clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+    }));
+    merged.appendChild(makeRegion(1, f1.flagUrl, {
+      top:'0', right:'0', bottom:'0', left:'0',
+      clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+    }));
+    // Subtle divider line
+    const line = document.createElement('div');
+    line.className = 'pz-diagonal-line';
+    merged.appendChild(line);
+
+  } else if (pz.splitStyle === 'horizontal') {
+    merged.appendChild(makeRegion(0, f0.flagUrl,
+      { top:'0', left:'0', width:'100%', height:'50%', backgroundPosition:'center bottom' }));
+    merged.appendChild(makeRegion(1, f1.flagUrl,
+      { top:'50%', left:'0', width:'100%', height:'50%', backgroundPosition:'center top' }));
+
+  } else if (pz.splitStyle === 'vertical') {
+    merged.appendChild(makeRegion(0, f0.flagUrl,
+      { top:'0', left:'0', width:'50%', height:'100%', backgroundPosition:'right center' }));
+    merged.appendChild(makeRegion(1, f1.flagUrl,
+      { top:'0', left:'50%', width:'50%', height:'100%', backgroundPosition:'left center' }));
+
+  } else { // checkerboard — background-size:400% tiles each flag into a 4×4 grid
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        const idx  = (r + c) % 2;
+        const flag = idx === 0 ? f0 : f1;
+        const tile = document.createElement('div');
+        tile.className   = 'pz-cb-tile';
+        tile.dataset.idx = String(idx);
+        Object.assign(tile.style, {
+          position: 'absolute',
+          left: `${c * 25}%`, top: `${r * 25}%`,
+          width: '25%',        height: '25%',
+          backgroundImage:    `url(${flag.flagUrl})`,
+          backgroundSize:     '400% 400%',
+          backgroundPosition: `${(c / 3) * 100}% ${(r / 3) * 100}%`,
+          backgroundRepeat:   'no-repeat',
+        });
+        merged.appendChild(tile);
+      }
+    }
+  }
+}
+
+function makeRegion(idx, url, extra) {
+  const el = document.createElement('div');
+  el.className   = 'pz-region';
+  el.dataset.idx = String(idx);
+  Object.assign(el.style, {
+    position:            'absolute',
+    backgroundImage:     `url(${url})`,
+    backgroundSize:      'contain',
+    backgroundRepeat:    'no-repeat',
+    backgroundPosition:  'center',
+    backgroundColor:     'var(--c-card)',
+  }, extra);
+  return el;
+}
+
+// ── Timer / countdown ─────────────────────────────────────
+function tickPuzzleCountdown() {
+  pz.countdown--;
+  pz.elapsed++;
+  updatePuzzleTimerDisplay();
+
+  const newPossible = Math.max(0, 1000 - pz.elapsed * 10);
+  animateScoreCount(pz.possible, newPossible, document.getElementById('pz-possible'));
+  pz.possible = newPossible;
+
+  if (pz.countdown <= 0 && !pz.answered) {
+    clearInterval(pz.countdownTimer);
+    handlePuzzleTimeUp();
+  }
+}
+
+function updatePuzzleTimerDisplay() {
+  const el = document.getElementById('pz-timer');
+  el.textContent = pz.countdown;
+  el.className = 'rv-timer' +
+    (pz.countdown <= 10 ? ' urgent' : pz.countdown <= 25 ? ' warning' : '');
+}
+
+// ── Guess handling ────────────────────────────────────────
+function handlePuzzleGuess() {
+  if (!pz.active || pz.answered) return;
+  const inp = document.getElementById('pz-input');
+  const raw = inp.value.trim();
+  if (!raw) return;
+
+  const matched = matchCountryName(raw);
+  inp.value = '';
+
+  if (!matched) {
+    shakePuzzle(); playSound('wrong');
+    setPuzzleFeedback('Not a recognised country name', 'wrong');
+    return;
+  }
+
+  // Already identified?
+  const doneIdx = pz.flags.findIndex((f, i) => f.name === matched && pz.identified[i]);
+  if (doneIdx >= 0) {
+    setPuzzleFeedback(t('alreadyGuessed'), '');
+    return;
+  }
+
+  // Correct for one of the two flags?
+  const matchIdx = pz.flags.findIndex((f, i) => f.name === matched && !pz.identified[i]);
+  if (matchIdx >= 0) {
+    handlePuzzleCorrectFlag(matchIdx);
+  } else {
+    handlePuzzleWrong();
+  }
+}
+
+function handlePuzzleCorrectFlag(idx) {
+  playSound('correct');
+  pz.identified[idx] = true;
+  lockInRegion(idx);
+  setPuzzleFeedback(`✓ ${cn(pz.flags[idx].name)}`, 'correct');
+
+  if (pz.identified[0] && pz.identified[1]) {
+    handlePuzzleBothFound();
+  } else {
+    // One down, one to go — clear feedback and refocus after a moment
+    setTimeout(() => {
+      if (!pz.answered) {
+        setPuzzleFeedback('', '');
+        document.getElementById('pz-input').focus();
+      }
+    }, 700);
+  }
+}
+
+function lockInRegion(idx) {
+  document.querySelectorAll(
+    `#pz-merged .pz-region[data-idx="${idx}"], #pz-merged .pz-cb-tile[data-idx="${idx}"]`
+  ).forEach(el => el.classList.add('pz-locked'));
+
+  const chip = document.createElement('div');
+  chip.className   = 'pz-chip';
+  chip.textContent = `✓ ${cn(pz.flags[idx].name)}`;
+  document.getElementById('pz-chips').appendChild(chip);
+}
+
+function handlePuzzleBothFound() {
+  pz.answered = true;
+  clearInterval(pz.countdownTimer);
+
+  const pts = pz.possible;
+  pz.totalScore += pts;
+  document.getElementById('pz-total').textContent = pz.totalScore;
+
+  pz.results.push({ flags: [...pz.flags], correct: [true, true], pts });
+  document.getElementById('pz-merged').classList.add('correct-glow');
+  setPuzzleFeedback(`Both found!  +${pts} pts`, 'correct');
+  playSound('correct');
+
+  const hs = parseInt(localStorage.getItem('fg_puzzle_hs') || '0', 10);
+  if (pz.totalScore > hs) localStorage.setItem('fg_puzzle_hs', pz.totalScore);
+
+  setTimeout(() => {
+    if (pz.puzzleNum < 15) setupPuzzleRound();
+    else endPuzzle();
+  }, 1200);
+}
+
+function handlePuzzleWrong() {
+  pz.lives--;
+  updatePuzzleLives();
+  playSound('wrong');
+  shakePuzzle();
+
+  if (pz.lives <= 0) {
+    pz.answered = true;
+    clearInterval(pz.countdownTimer);
+    const correct = [...pz.identified];
+    pz.results.push({ flags: [...pz.flags], correct, pts: 0 });
+    const missed = pz.flags.filter((_, i) => !pz.identified[i])
+      .map(f => cn(f.name)).join(' & ');
+    setPuzzleFeedback(`It was: ${missed}`, 'wrong');
+    setTimeout(endPuzzle, 1600);
+  } else {
+    setPuzzleFeedback(`Wrong — ${pz.lives} ${pz.lives !== 1 ? 'lives' : 'life'} left`, 'wrong');
+    setTimeout(() => document.getElementById('pz-input').focus(), 80);
+  }
+}
+
+function handlePuzzleSkip() {
+  if (!pz.active || pz.answered) return;
+  pz.answered = true;
+  clearInterval(pz.countdownTimer);
+
+  pz.skips--;
+  updatePuzzleSkips();
+  if (pz.skips <= 0) document.getElementById('pz-skip-btn').disabled = true;
+
+  pz.results.push({ flags: [...pz.flags], correct: [...pz.identified], pts: 0 });
+  const names = pz.flags.map((f, i) =>
+    pz.identified[i] ? `✓ ${cn(f.name)}` : cn(f.name)).join(' & ');
+  setPuzzleFeedback(`Skipped — ${names}`, 'wrong');
+
+  setTimeout(() => {
+    if (pz.puzzleNum < 15) setupPuzzleRound();
+    else endPuzzle();
+  }, 1400);
+}
+
+function handlePuzzleTimeUp() {
+  pz.answered = true;
+  pz.results.push({ flags: [...pz.flags], correct: [...pz.identified], pts: 0 });
+
+  const missed = pz.flags.filter((_, i) => !pz.identified[i]).map(f => cn(f.name));
+  const msg = missed.length === 0
+    ? "Time's up!"
+    : `Time's up! ${missed.join(' & ')}`;
+  setPuzzleFeedback(msg, 'wrong');
+
+  setTimeout(() => {
+    if (pz.puzzleNum < 15) setupPuzzleRound();
+    else endPuzzle();
+  }, 1500);
+}
+
+// ── End game ──────────────────────────────────────────────
+function endPuzzle() {
+  cleanupPuzzle();
+  setPuzzleInputsDisabled(true);
+
+  const savedHs = parseInt(localStorage.getItem('fg_puzzle_hs') || '0', 10);
+  const isNew   = pz.totalScore > savedHs;
+  if (isNew) localStorage.setItem('fg_puzzle_hs', pz.totalScore);
+
+  // Build results list — each flag as its own row
+  const list = document.getElementById('pz-results-list');
+  list.innerHTML = '';
+  pz.results.forEach(r => {
+    r.flags.forEach((flag, i) => {
+      const row = document.createElement('div');
+      row.className = 'rv-result-row ' + (r.correct[i] ? 'rv-result-correct' : 'rv-result-wrong');
+      // Show pts only on the second flag of a puzzle that was both-found
+      const showPts = i === 1 && r.pts > 0;
+      row.innerHTML = `
+        <div class="rv-result-thumb" style="background-image:url(${flag.flagUrl})"></div>
+        <div class="rv-result-name">${cn(flag.name)}</div>
+        <div class="rv-result-mark">${r.correct[i] ? '✓' : '✗'}</div>
+        ${showPts ? `<div class="rv-result-pts">+${r.pts}</div>` : ''}
+      `;
+      list.appendChild(row);
+    });
+  });
+
+  document.getElementById('pz-results-total').textContent = pz.totalScore;
+  document.getElementById('pz-results-hs').textContent    = isNew
+    ? t('newHighScore')
+    : `Best: ${Math.max(savedHs, pz.totalScore)}`;
+  document.getElementById('pz-results-overlay').classList.remove('hidden');
+}
+
+// ── HUD helpers ───────────────────────────────────────────
+function updatePuzzleLives() {
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`pz-life-${i}`);
+    const wasOn = el.classList.contains('on');
+    el.classList.toggle('on',  i < pz.lives);
+    el.classList.toggle('off', i >= pz.lives);
+    if (wasOn && i >= pz.lives) {
+      el.classList.add('pulse');
+      setTimeout(() => el.classList.remove('pulse'), 400);
+    }
+  }
+}
+
+function updatePuzzleSkips() {
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`pz-skip-${i}`);
+    el.classList.toggle('on',  i < pz.skips);
+    el.classList.toggle('off', i >= pz.skips);
+  }
+}
+
+function shakePuzzle() {
+  const el = document.getElementById('pz-merged');
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 400);
+}
+
+function setPuzzleFeedback(msg, cls) {
+  const fb = document.getElementById('pz-feedback');
+  fb.textContent = msg;
+  fb.className = 'rv-feedback pz-feedback' + (cls ? ` ${cls}` : '');
+}
+
+function setPuzzleInputsDisabled(disabled) {
+  document.getElementById('pz-input').disabled    = disabled;
+  document.getElementById('pz-submit').disabled   = disabled;
+  document.getElementById('pz-skip-btn').disabled = disabled;
 }
