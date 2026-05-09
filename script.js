@@ -91,6 +91,12 @@ const CATEGORY_FALLBACKS = {
   'highest-elevation': 195, 'life-expectancy': 195,
   'land-area': 195, 'average-temperature': 195, 'gdp-per-capita': 195,
 };
+// Max rank present in each data file — used for correct "Least" inversion
+const CATEGORY_TOTALS = {
+  'olympic': 133, 'population': 196, 'hdi': 191,
+  'highest-elevation': 193, 'life-expectancy': 192,
+  'land-area': 196, 'average-temperature': 194, 'gdp-per-capita': 194,
+};
 
 // Duel mode uses 7 categories; "higher ranking" always means lower rank number
 const DUEL_CATS = [
@@ -200,9 +206,14 @@ function getRankData(rnk, dataType) {
   return rnk[key] || {};
 }
 function getScore(name, rd, higher, dataType) {
-  const raw  = rd[name];
-  const rank = raw ? parseRank(raw) : (CATEGORY_FALLBACKS[dataType] || 195);
-  return higher ? rank : (196 - rank);
+  const raw = rd[name];
+  if (!raw) {
+    // Missing from data: "Most" uses fallback rank; "Least" gets rank 1 (fewest = best)
+    return higher ? (CATEGORY_FALLBACKS[dataType] || 195) : 1;
+  }
+  const rank  = parseRank(raw);
+  const total = CATEGORY_TOTALS[dataType] || 195;
+  return higher ? rank : (total + 1 - rank);
 }
 function ordinalStr(n, fallback) {
   if (!n || n === 999) return fallback || t('unranked');
