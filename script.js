@@ -64,6 +64,9 @@ const COUNTRIES = COUNTRY_PAIRS.map(([name, code]) => ({
   name, code, flagUrl: `flags_images/${code}.png`,
 }));
 
+// Preload all flag images on page load so rolls are instant
+const _preloadedFlags = COUNTRIES.map(c => { const img = new Image(); img.src = c.flagUrl; return img; });
+
 // ═══ CATEGORY DEFINITIONS ════════════════════════════════
 const CATEGORY_PAIRS = [
   { key:'hdi',  dataType:'hdi',
