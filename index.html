@@ -10,9 +10,10 @@
 <body class="dark">
 
   <!-- ═══ HEADER ═══ -->
-  <header id="app-header">
+  <header id="app-header" class="hidden">
 
     <div class="hdr-left">
+      <button class="hdr-btn" id="home-btn">← <span data-i18n="backHome">Home</span></button>
       <button class="hdr-btn" id="milestones-btn">🏆 <span data-i18n="milestones">Milestones</span></button>
       <div class="best-score hidden" id="best-score">
         <span class="best-lbl">Best</span>
@@ -51,47 +52,101 @@
 
       <div class="hdr-dd-wrap" id="settings-wrap">
         <button class="hdr-btn" id="settings-btn">⚙ <span data-i18n="settings">Settings</span></button>
-        <div class="hdr-dd settings-panel" id="settings-panel">
-          <div class="sg">
-            <div class="sg-lbl" data-i18n="themeLabel">Theme</div>
-            <button class="sg-opt" data-key="theme" data-val="light" data-i18n="lightTheme">Light</button>
-            <button class="sg-opt" data-key="theme" data-val="dark"  data-i18n="darkTheme">Dark</button>
-          </div>
-          <div class="sg">
-            <div class="sg-lbl" data-i18n="langLabel">Language</div>
-            <button class="sg-opt" data-key="lang" data-val="en" data-i18n="english">English</button>
-            <button class="sg-opt" data-key="lang" data-val="no" data-i18n="norwegian">Norwegian (Bokmål)</button>
-          </div>
-          <div class="sg">
-            <div class="sg-lbl"><span data-i18n="flagSizeLabel">Flag Size</span> — <span id="flag-size-lbl">270</span>px</div>
-            <input type="range" id="flag-size-range" min="160" max="320" step="10" value="270">
-          </div>
-          <div class="sg">
-            <div class="sg-lbl" data-i18n="cardWatermarkLabel">Card Watermark</div>
-            <button class="sg-opt" data-key="cardWatermark" data-val="true">✓ On</button>
-            <button class="sg-opt" data-key="cardWatermark" data-val="false">Off</button>
-          </div>
-          <div class="sg">
-            <div class="sg-lbl" data-i18n="showBestLabel">Show Best Score</div>
-            <button class="sg-opt" data-key="showHighScore" data-val="true">✓ On</button>
-            <button class="sg-opt" data-key="showHighScore" data-val="false">Off</button>
-          </div>
-          <div class="sg">
-            <div class="sg-lbl" data-i18n="soundLabel">Sound</div>
-            <button class="sg-opt" data-key="sound" data-val="true" data-i18n="soundOn">On</button>
-            <button class="sg-opt" data-key="sound" data-val="false" data-i18n="soundOff">Off</button>
-          </div>
-        </div>
       </div>
 
     </div>
   </header>
 
+  <!-- Settings panel: lives outside the header so it's reachable from the
+       landing page (where the header is hidden) as well as from inside a
+       gamemode. Both #settings-btn and #landing-settings-btn open it. -->
+  <div class="hdr-dd settings-panel" id="settings-panel">
+    <div class="sg">
+      <div class="sg-lbl" data-i18n="themeLabel">Theme</div>
+      <button class="sg-opt" data-key="theme" data-val="light" data-i18n="lightTheme">Light</button>
+      <button class="sg-opt" data-key="theme" data-val="dark"  data-i18n="darkTheme">Dark</button>
+    </div>
+    <div class="sg">
+      <div class="sg-lbl" data-i18n="langLabel">Language</div>
+      <button class="sg-opt" data-key="lang" data-val="en" data-i18n="english">English</button>
+      <button class="sg-opt" data-key="lang" data-val="no" data-i18n="norwegian">Norwegian (Bokmål)</button>
+    </div>
+    <div class="sg">
+      <div class="sg-lbl"><span data-i18n="flagSizeLabel">Flag Size</span> — <span id="flag-size-lbl">270</span>px</div>
+      <input type="range" id="flag-size-range" min="160" max="320" step="10" value="270">
+    </div>
+    <div class="sg">
+      <div class="sg-lbl" data-i18n="cardWatermarkLabel">Card Watermark</div>
+      <button class="sg-opt" data-key="cardWatermark" data-val="true">✓ On</button>
+      <button class="sg-opt" data-key="cardWatermark" data-val="false">Off</button>
+    </div>
+    <div class="sg">
+      <div class="sg-lbl" data-i18n="showBestLabel">Show Best Score</div>
+      <button class="sg-opt" data-key="showHighScore" data-val="true">✓ On</button>
+      <button class="sg-opt" data-key="showHighScore" data-val="false">Off</button>
+    </div>
+    <div class="sg">
+      <div class="sg-lbl" data-i18n="soundLabel">Sound</div>
+      <button class="sg-opt" data-key="sound" data-val="true" data-i18n="soundOn">On</button>
+      <button class="sg-opt" data-key="sound" data-val="false" data-i18n="soundOff">Off</button>
+    </div>
+  </div>
+
   <!-- ═══ GAME AREA ═══ -->
   <main id="game-area">
 
+    <!-- ─── Landing ─── -->
+    <div class="game-mode active" id="landing-game">
+      <div class="landing-wrap">
+        <button class="hdr-btn icon-fab" id="landing-settings-btn" aria-label="Settings">⚙</button>
+        <div class="landing-title">Flag Game</div>
+
+        <div class="landing-grid">
+          <div class="landing-card" data-mode="classic">
+            <div class="landing-card-icon">
+              <svg viewBox="0 0 104 76" preserveAspectRatio="xMidYMid meet"><rect x="10" y="13" width="34" height="50" rx="3" fill="#C60B1E"/><rect x="10" y="25.5" width="34" height="25" fill="#FFC400"/><rect x="10" y="13" width="34" height="50" rx="3" fill="none" stroke="rgba(120,128,140,.45)" stroke-width="1.5"/><circle cx="62" cy="22" r="8" fill="currentColor"/><text x="62" y="25.7" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="11" fill="#fff">1</text><rect x="74" y="18.5" width="22" height="7" rx="3.5" fill="currentColor"/><rect x="56" y="36" width="40" height="7" rx="3.5" fill="rgba(120,135,160,.5)"/><rect x="56" y="51" width="31" height="7" rx="3.5" fill="rgba(120,135,160,.32)"/></svg>
+            </div>
+            <div class="landing-card-title" data-i18n="classic">Classic</div>
+            <div class="landing-card-sub" data-i18n="classicSubtitle">Rank countries against the world</div>
+          </div>
+
+          <div class="landing-card" data-mode="duel">
+            <div class="landing-card-icon">
+              <svg viewBox="0 0 104 76" preserveAspectRatio="xMidYMid meet"><g transform="rotate(-8 33 39)"><rect x="17" y="16" width="30" height="46" rx="3" fill="#006AA7"/><rect x="23" y="16" width="6" height="46" fill="#FECC02"/><rect x="17" y="36" width="30" height="6" fill="#FECC02"/><rect x="17" y="16" width="30" height="46" rx="3" fill="none" stroke="rgba(120,128,140,.45)" stroke-width="1.5"/></g><g transform="rotate(8 71 39)"><rect x="57" y="16" width="30" height="46" rx="3" fill="#F4F1EA"/><circle cx="72" cy="39" r="9" fill="#BC002D"/><rect x="57" y="16" width="30" height="46" rx="3" fill="none" stroke="rgba(120,128,140,.45)" stroke-width="1.5"/></g><circle cx="52" cy="40" r="13" fill="currentColor"/><text x="52" y="45.5" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="800" font-size="16" fill="#fff">VS</text></svg>
+            </div>
+            <div class="landing-card-title" data-i18n="flagDuel">Flag Duel</div>
+            <div class="landing-card-sub" data-i18n="duelSubtitle">Pick the right flag, head-to-head</div>
+          </div>
+
+          <div class="landing-card" data-mode="reveal">
+            <div class="landing-card-icon">
+              <svg viewBox="0 0 104 76" preserveAspectRatio="xMidYMid meet"><rect x="20" y="14" width="64" height="48" rx="3" fill="#E7E1D3"/><rect x="20" y="14" width="21.3" height="48" fill="#178C4B"/><rect x="62.7" y="14" width="21.3" height="48" fill="#CD2B33"/><g stroke="rgba(127,127,127,.18)" stroke-width=".5"><rect x="52" y="14" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="36" y="30" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="52" y="30" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="68" y="30" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="20" y="46" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="36" y="46" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="52" y="46" width="16" height="16" fill="currentColor" opacity=".88"/><rect x="68" y="46" width="16" height="16" fill="currentColor" opacity=".88"/></g><rect x="75" y="9" width="16" height="16" rx="2" fill="currentColor" opacity=".4"/><rect x="20" y="14" width="64" height="48" rx="3" fill="none" stroke="rgba(120,128,140,.45)" stroke-width="1.5"/></svg>
+            </div>
+            <div class="landing-card-title" data-i18n="flagReveal">Flag Reveal</div>
+            <div class="landing-card-sub" data-i18n="revealSubtitle">Guess the flag before it's revealed</div>
+          </div>
+
+          <div class="landing-card" data-mode="puzzle">
+            <div class="landing-card-icon">
+              <svg viewBox="0 0 104 76" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="pzA"><polygon points="22,14 82,14 22,62"/></clipPath><clipPath id="pzB"><polygon points="82,14 82,62 22,62"/></clipPath><clipPath id="pzR"><rect x="22" y="14" width="60" height="48" rx="5"/></clipPath></defs><g clip-path="url(#pzR)"><g clip-path="url(#pzA)"><rect x="22" y="14" width="60" height="16" fill="#FDB913"/><rect x="22" y="30" width="60" height="16" fill="#006A44"/><rect x="22" y="46" width="60" height="16" fill="#C1272D"/></g><g clip-path="url(#pzB)"><rect x="22" y="14" width="20" height="48" fill="#0055A4"/><rect x="42" y="14" width="20" height="48" fill="#F4F1EA"/><rect x="62" y="14" width="20" height="48" fill="#EF4135"/></g></g><line x1="22" y1="14" x2="82" y2="62" stroke="currentColor" stroke-width="2.5"/><rect x="22" y="14" width="60" height="48" rx="5" fill="none" stroke="rgba(120,128,140,.45)" stroke-width="1.5"/><g transform="translate(7 -7)"><rect x="52" y="14" width="30" height="24" rx="3" fill="#E7E1D3" stroke="currentColor" stroke-width="1.5"/><circle cx="52" cy="26" r="3.6" fill="#E7E1D3" stroke="currentColor" stroke-width="1.5"/></g></svg>
+            </div>
+            <div class="landing-card-title" data-i18n="flagPuzzle">Flag Puzzle</div>
+            <div class="landing-card-sub" data-i18n="puzzleSubtitle">Spot two flags merged into one</div>
+          </div>
+        </div>
+
+        <div class="landing-daily" id="landing-daily">
+          <div class="landing-daily-info">
+            <div class="landing-daily-title" data-i18n="dailyChallenge">Daily Challenge</div>
+            <div class="landing-daily-sub" data-i18n="dailyChallengeSub">Classic · same countries for everyone today</div>
+          </div>
+          <div class="landing-daily-cta" aria-disabled="true" data-i18n="comingSoon">Coming Soon</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── Classic ─── -->
-    <div class="game-mode active" id="classic-game">
+    <div class="game-mode" id="classic-game">
       <div class="classic-wrap">
         <div class="classic-grid">
 

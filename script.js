@@ -150,6 +150,13 @@ const STRINGS = {
     correct:'✓ Correct!', wrong:'✕ Wrong!', tie:'— Tie!',
     tieExplain:'Both countries share the same rank — streak preserved',
     nextDuel:'Next Duel →', comingSoon:'Coming Soon',
+    classic:'Classic', backHome:'Home',
+    classicSubtitle:'Rank countries against the world',
+    duelSubtitle:'Pick the right flag, head-to-head',
+    revealSubtitle:"Guess the flag before it's revealed",
+    puzzleSubtitle:'Spot two flags merged into one',
+    dailyChallenge:'Daily Challenge',
+    dailyChallengeSub:'Classic · same countries for everyone today',
   },
   no: {
     hdiHigh:'Høyest HDI', hdiLow:'Lavest HDI',
@@ -190,6 +197,13 @@ const STRINGS = {
     correct:'✓ Riktig!', wrong:'✕ Feil!', tie:'— Uavgjort!',
     tieExplain:'Begge land deler samme rangering — streak beholdes',
     nextDuel:'Neste duell →', comingSoon:'Kommer snart',
+    classic:'Klassisk', backHome:'Hjem',
+    classicSubtitle:'Rangér land mot resten av verden',
+    duelSubtitle:'Velg riktig flagg, hode mot hode',
+    revealSubtitle:'Gjett flagget før det avsløres',
+    puzzleSubtitle:'Finn to flagg slått sammen til ett',
+    dailyChallenge:'Daglig utfordring',
+    dailyChallengeSub:'Klassisk · samme land for alle i dag',
   },
 };
 
@@ -985,17 +999,21 @@ function toggleDropdown(ddId, chevronId, btnId) {
   }
 }
 
-let currentMode = 'classic';
+let currentMode = 'landing';
 
 function switchMode(mode) {
   currentMode = mode;
   closeAllDropdowns();
 
+  document.getElementById('landing-game').classList.toggle('active', mode === 'landing');
   document.getElementById('classic-game').classList.toggle('active', mode === 'classic');
   document.getElementById('duel-game').classList.toggle('active', mode === 'duel');
   document.getElementById('reveal-game').classList.toggle('active', mode === 'reveal');
   document.getElementById('puzzle-game').classList.toggle('active', mode === 'puzzle');
   document.getElementById('coming-soon').classList.toggle('active', false);
+
+  document.getElementById('app-header').classList.toggle('hidden', mode === 'landing');
+  document.getElementById('settings-panel').classList.toggle('panel-anchor-landing', mode === 'landing');
 
   if (mode !== 'reveal') cleanupReveal();
   if (mode !== 'puzzle') cleanupPuzzle();
@@ -1003,7 +1021,7 @@ function switchMode(mode) {
   document.getElementById('progress-widget').classList.toggle('hidden', mode !== 'classic');
   document.getElementById('mode-label').textContent =
     t(mode === 'classic' ? 'flagGame' : mode === 'duel' ? 'flagDuel' :
-      mode === 'reveal' ? 'flagReveal' : 'flagPuzzle');
+      mode === 'reveal' ? 'flagReveal' : mode === 'puzzle' ? 'flagPuzzle' : 'flagGame');
 
   document.querySelectorAll('.mode-item').forEach(item => {
     item.classList.toggle('active', item.dataset.mode === mode);
@@ -1050,6 +1068,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('milestones-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget)
       document.getElementById('milestones-overlay').classList.add('hidden');
+  });
+
+  // ── Landing page ──
+  document.getElementById('home-btn').addEventListener('click', () => switchMode('landing'));
+  document.querySelectorAll('.landing-card').forEach(card => {
+    card.addEventListener('click', () => switchMode(card.dataset.mode));
+  });
+  document.getElementById('landing-settings-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleDropdown('settings-panel', null, 'landing-settings-btn');
   });
 
   // ── Mode dropdown ──
