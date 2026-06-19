@@ -1069,6 +1069,13 @@ let hideRevealSuggestions = () => {};
 let hidePuzzleSuggestions = () => {};
 let hideRevealKeyboard = () => {};
 let hidePuzzleKeyboard = () => {};
+// Called proactively at round-start (see setupRevealRound/setupPuzzleRound)
+// so the keyboard/dock are already pinned by the first frame, instead of
+// only activating ~80ms later when the round's auto-focus(input) fires —
+// that gap is what caused the dock to visibly flash in its old,
+// unpinned position before snapping into place.
+let showRevealKeyboard = () => {};
+let showPuzzleKeyboard = () => {};
 
 // ═══ DOM INIT ════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
@@ -1179,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initReveal();
   });
   hideRevealSuggestions = setupSuggestions('rv-input', 'rv-suggestions', handleRevealGuess);
-  hideRevealKeyboard = setupCustomKeyboard('rv-input', 'rv-custom-kb');
+  ({ show: showRevealKeyboard, hide: hideRevealKeyboard } = setupCustomKeyboard('rv-input', 'rv-custom-kb'));
 
   // ── Flag Puzzle event handlers ──
   document.getElementById('pz-submit').addEventListener('click', handlePuzzleGuess);
@@ -1192,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPuzzle();
   });
   hidePuzzleSuggestions = setupSuggestions('pz-input', 'pz-suggestions', handlePuzzleGuess);
-  hidePuzzleKeyboard = setupCustomKeyboard('pz-input', 'pz-custom-kb');
+  ({ show: showPuzzleKeyboard, hide: hidePuzzleKeyboard } = setupCustomKeyboard('pz-input', 'pz-custom-kb'));
 
   // ── Load ranking data, then start the appropriate game ──
   const types = [
@@ -1522,7 +1529,7 @@ function setupCustomKeyboard(inputId, kbId) {
     // is already wired separately and isn't affected by readonly.
   });
 
-  return hide;
+  return { show, hide };
 }
 
 // ── Sound synthesis ───────────────────────────────────────
@@ -1587,6 +1594,11 @@ function initReveal() {
 }
 
 function setupRevealRound() {
+  // Proactively pin the keyboard/dock now rather than waiting for the
+  // auto-focus() below to fire ~80ms from now — see showRevealKeyboard's
+  // declaration for why. No-ops on desktop (input.readOnly is false there).
+  showRevealKeyboard();
+
   rv.flagNum++;
   rv.answered = false;
   rv.possible = 500;
@@ -1942,6 +1954,11 @@ function initPuzzle() {
 }
 
 function setupPuzzleRound() {
+  // Proactively pin the keyboard/dock now rather than waiting for the
+  // auto-focus() below to fire ~80ms from now — see showPuzzleKeyboard's
+  // declaration for why. No-ops on desktop (input.readOnly is false there).
+  showPuzzleKeyboard();
+
   pz.puzzleNum++;
   pz.answered = false;
   pz.identified = [false, false];

@@ -1740,9 +1740,22 @@ body.dark .rv-tile {
    ~44px floor so it never drops below a comfortable touch target.
    Padding/gaps/font-size are all expressed as fractions of --kb-key-h
    so the whole keyboard scales together rather than one part growing
-   while another stays fixed. The existing getBoundingClientRect()
-   measurement in script.js (--kb-reserve) just measures whatever this
-   resolves to — that part didn't need to change. */
+   while another stays fixed. script.js measures the keyboard's actual
+   rendered height via getBoundingClientRect() and sets --kb-height /
+   --kb-reserve precisely from that — --kb-height-est below is only the
+   var() *fallback* used for the instant before that measurement runs
+   (e.g. the ~80ms between a round starting and its auto-focus firing),
+   so the dock starts out already roughly correctly positioned instead
+   of visibly snapping into place once the real measurement lands. It's
+   algebraically the same formula as the rules below (4 rows + 3 inter-row
+   gaps + padding + the bottom row's extra margin, all in terms of
+   --kb-key-h, plus the 1.5px top border) — if those rules change, this
+   estimate should be updated to match. 90px is a fixed (non-vh) estimate
+   for .rv-input-dock's own height, which uses flat mobile px values
+   (input/button padding, .rv-feedback's min-height) rather than vh. */
+:root {
+  --kb-height-est: calc(4.86 * clamp(44px, calc(var(--vh-px, 1vh) * 5.6), 56px) + 1.5px);
+}
 .custom-kb {
   display: none;
   position: fixed;
@@ -1973,19 +1986,30 @@ body.dark .rv-tile {
   .custom-kb:not(.hidden) { display: flex; }
   body.custom-kb-open #reveal-game {
     align-items: flex-end;
-    padding-bottom: var(--kb-reserve, 200px);
+    padding-bottom: var(--kb-reserve, calc(var(--kb-height-est) + 90px));
   }
   /* Docked directly above the keyboard instead of flowing normally —
-     see the --kb-height/--kb-reserve comment in setupCustomKeyboard(). */
+     see the --kb-height/--kb-reserve comment in setupCustomKeyboard(),
+     and the --kb-height-est comment above for the fallback. */
   body.custom-kb-open .rv-input-dock {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--kb-height, 0px);
+    bottom: var(--kb-height, var(--kb-height-est));
     z-index: 35;
     background: var(--c-bg);
     padding: 8px 14px;
   }
+  /* .rv-wrap's own fadeSlideUp animation (above) animates `transform`,
+     which makes .rv-wrap a containing block for fixed-position
+     descendants for as long as it's running — so .rv-input-dock's
+     `fixed` positioning above resolves against .rv-wrap's own
+     (still-translating) box instead of the viewport, making the dock
+     visually glide into place even though its target position is
+     already correct from the first frame. custom-kb-open is set before
+     the round's first paint (see showRevealKeyboard), so disabling the
+     animation here fully suppresses it rather than racing it. */
+  body.custom-kb-open .rv-wrap { animation: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2133,15 +2157,18 @@ body.dark .rv-tile {
   .custom-kb:not(.hidden) { display: flex; }
   body.custom-kb-open #puzzle-game {
     align-items: flex-end;
-    padding-bottom: var(--kb-reserve, 200px);
+    padding-bottom: var(--kb-reserve, calc(var(--kb-height-est) + 90px));
   }
   body.custom-kb-open .rv-input-dock {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--kb-height, 0px);
+    bottom: var(--kb-height, var(--kb-height-est));
     z-index: 35;
     background: var(--c-bg);
     padding: 8px 14px;
   }
+  /* See the matching .rv-wrap rule in the Reveal section above — same
+     containing-block issue, .pz-wrap is just the Puzzle equivalent. */
+  body.custom-kb-open .pz-wrap { animation: none; }
 }
