@@ -139,7 +139,6 @@ const STRINGS = {
     gameComplete:'Game Complete', newPersonalBest:'🏆 New Personal Best',
     avgRankingNote:'Average ranking — lower is better',
     personalBest:'Personal best:', playAgain:'Play Again',
-    share:'Share', copied:'✓ Copied!',
     unranked:'Unranked', yourBestScores:'Your Best Scores',
     flagGame:'Flag Game', flagDuel:'Flag Duel',
     flagReveal:'Flag Reveal', flagPuzzle:'Flag Puzzle',
@@ -186,7 +185,6 @@ const STRINGS = {
     gameComplete:'Spill fullført', newPersonalBest:'🏆 Ny personlig rekord',
     avgRankingNote:'Gjennomsnittlig rangering — lavere er bedre',
     personalBest:'Personlig rekord:', playAgain:'Spill igjen',
-    share:'Del', copied:'✓ Kopiert!',
     unranked:'Urangert', yourBestScores:'Dine beste resultater',
     flagGame:'Flag Game', flagDuel:'Flaggduell',
     flagReveal:'Flaggavsløring', flagPuzzle:'Flaggpuslespill',
@@ -654,30 +652,6 @@ function showScoreOverlay() {
     if (p < 1) requestAnimationFrame(step);
   }
   setTimeout(() => requestAnimationFrame(step), 200);
-
-  // Share button label
-  document.getElementById('share-btn').textContent = t('share');
-}
-
-async function handleShare() {
-  const valid = scores.filter(s => s !== 999);
-  const avg   = valid.reduce((a, b) => a + b, 0) / valid.length;
-  const lines = [
-    `🌍 Flag Game — Average Rank: ${avg.toFixed(1)}`,
-    '',
-    ...categories.map((c, i) => `${t(c.id)}: ${ordinalStr(scores[i])}`),
-  ].join('\n');
-
-  const shareBtn = document.getElementById('share-btn');
-  try {
-    if (navigator.share) {
-      await navigator.share({ text: lines });
-    } else {
-      await navigator.clipboard.writeText(lines);
-      shareBtn.textContent = t('copied');
-      setTimeout(() => { shareBtn.textContent = t('share'); }, 2000);
-    }
-  } catch (_) {}
 }
 
 // ═══ DUEL GAME ═══════════════════════════════════════════
@@ -1165,7 +1139,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('play-again-btn').addEventListener('click', initGame);
-  document.getElementById('share-btn').addEventListener('click', handleShare);
 
   // ── Phase 5: Flag Duel event handlers ──
   [0, 1].forEach(idx => {
