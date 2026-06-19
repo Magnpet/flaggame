@@ -384,23 +384,33 @@
           <span class="rv-stats-val rv-stats-score" id="rv-total">0</span>
         </div>
 
-        <!-- Guess input -->
-        <div class="rv-input-row">
-          <input class="rv-input" id="rv-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type country name…">
-          <button class="rv-btn-submit" id="rv-submit" data-i18n="submitBtn">Submit</button>
-          <button class="rv-btn-skip" id="rv-skip-btn" data-i18n="skipBtn">Skip</button>
-          <!-- Mobile-only tap-to-fill suggestions, popped up above the input/keyboard -->
-          <div class="rv-suggestions hidden" id="rv-suggestions"></div>
-        </div>
+        <!-- Guess input + feedback, grouped so they can be docked together
+             directly above the custom keyboard on mobile (see
+             .rv-input-dock in style.css) instead of floating wherever
+             normal flow puts them, leaving a gap above the keyboard. -->
+        <div class="rv-input-dock">
+          <div class="rv-input-row">
+            <input class="rv-input" id="rv-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type country name…">
+            <button class="rv-btn-submit" id="rv-submit" data-i18n="submitBtn">Submit</button>
+            <button class="rv-btn-skip" id="rv-skip-btn" data-i18n="skipBtn">Skip</button>
+            <!-- Mobile-only tap-to-fill suggestions, popped up above the input/keyboard -->
+            <div class="rv-suggestions hidden" id="rv-suggestions"></div>
+          </div>
 
-        <!-- Feedback message -->
-        <div class="rv-feedback" id="rv-feedback"></div>
+          <!-- Feedback message -->
+          <div class="rv-feedback" id="rv-feedback"></div>
+        </div>
 
         <!-- (score now lives in rv-stats-block above) -->
 
         <!-- spacer so layout doesn't collapse at game end -->
 
       </div>
+
+      <!-- Mobile-only custom on-screen keyboard — replaces the native
+           keyboard so the flag stays visible while typing (see
+           setupCustomKeyboard in script.js). Built fresh on focus. -->
+      <div class="custom-kb hidden" id="rv-custom-kb"></div>
     </div>
 
     <!-- ─── Flag Puzzle ─── -->
@@ -447,19 +457,27 @@
           <span class="rv-stats-val rv-stats-score" id="pz-total">0</span>
         </div>
 
-        <!-- Input row -->
-        <div class="pz-input-row">
-          <input class="rv-input" id="pz-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type country name…">
-          <button class="rv-btn-submit" id="pz-submit" data-i18n="submitBtn">Submit</button>
-          <button class="rv-btn-skip" id="pz-skip-btn" data-i18n="skipBtn">Skip</button>
-          <!-- Mobile-only tap-to-fill suggestions, popped up above the input/keyboard -->
-          <div class="rv-suggestions hidden" id="pz-suggestions"></div>
+        <!-- Input row + feedback, grouped so they can be docked together
+             directly above the custom keyboard on mobile — see the same
+             .rv-input-dock wrapper in the Flag Reveal section above. -->
+        <div class="rv-input-dock">
+          <div class="pz-input-row">
+            <input class="rv-input" id="pz-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type country name…">
+            <button class="rv-btn-submit" id="pz-submit" data-i18n="submitBtn">Submit</button>
+            <button class="rv-btn-skip" id="pz-skip-btn" data-i18n="skipBtn">Skip</button>
+            <!-- Mobile-only tap-to-fill suggestions, popped up above the input/keyboard -->
+            <div class="rv-suggestions hidden" id="pz-suggestions"></div>
+          </div>
+
+          <!-- Feedback -->
+          <div class="rv-feedback pz-feedback" id="pz-feedback"></div>
         </div>
 
-        <!-- Feedback -->
-        <div class="rv-feedback pz-feedback" id="pz-feedback"></div>
-
       </div>
+
+      <!-- Mobile-only custom on-screen keyboard — see comment on
+           #rv-custom-kb in the Flag Reveal section above. -->
+      <div class="custom-kb hidden" id="pz-custom-kb"></div>
     </div>
 
     <!-- ─── Coming Soon ─── -->

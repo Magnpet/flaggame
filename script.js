@@ -939,26 +939,6 @@ function updateLayout() {
   root.style.setProperty('--vh-px', (window.innerHeight / 100) + 'px');
 }
 
-// On-screen keyboards shrink the *visually* available area, but not all
-// browsers shrink window.innerHeight to match — iOS Safari in particular
-// keeps innerHeight at the full layout viewport and only shrinks
-// visualViewport.height, since the page doesn't actually resize, it's
-// just partially covered. Comparing the two gives a cross-browser signal
-// for "keyboard is open" without depending on focus state, and
-// --kb-vh-px (1% of the space that's actually still visible) lets CSS
-// shrink the flag/tile area to fit above the keyboard rather than being
-// pushed below it.
-function updateKeyboardCompacting() {
-  if (!window.visualViewport) return;
-  const obscured = window.innerHeight - window.visualViewport.height;
-  const keyboardOpen = obscured > 120;
-  document.body.classList.toggle('keyboard-open', keyboardOpen);
-  if (keyboardOpen) {
-    document.documentElement.style.setProperty(
-      '--kb-vh-px', (window.visualViewport.height / 100) + 'px'
-    );
-  }
-}
 
 function applyTheme(theme) {
   document.body.classList.toggle('dark', theme === 'dark');
@@ -1087,6 +1067,8 @@ function switchMode(mode) {
 // doesn't fire an 'input' event, so the dropdown wouldn't otherwise know).
 let hideRevealSuggestions = () => {};
 let hidePuzzleSuggestions = () => {};
+let hideRevealKeyboard = () => {};
+let hidePuzzleKeyboard = () => {};
 
 // ═══ DOM INIT ════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
@@ -1100,7 +1082,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // visualViewport's resize event covers that case too, where supported.
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateLayout);
-    window.visualViewport.addEventListener('resize', updateKeyboardCompacting);
   }
 
   // Keep roll button disabled until rankings + categories are loaded.
@@ -1198,6 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initReveal();
   });
   hideRevealSuggestions = setupSuggestions('rv-input', 'rv-suggestions', handleRevealGuess);
+  hideRevealKeyboard = setupCustomKeyboard('rv-input', 'rv-custom-kb');
 
   // ── Flag Puzzle event handlers ──
   document.getElementById('pz-submit').addEventListener('click', handlePuzzleGuess);
@@ -1210,6 +1192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPuzzle();
   });
   hidePuzzleSuggestions = setupSuggestions('pz-input', 'pz-suggestions', handlePuzzleGuess);
+  hidePuzzleKeyboard = setupCustomKeyboard('pz-input', 'pz-custom-kb');
 
   // ── Load ranking data, then start the appropriate game ──
   const types = [
@@ -1340,13 +1323,15 @@ function setupSuggestions(inputId, boxId, onSubmit) {
     // with several results it could otherwise extend up far enough to
     // cover the flag/tile area itself, defeating the point of shrinking
     // that area to stay visible while typing. .rv-stats-block (the
-    // possible-pts/score line) is the row's previous sibling in both
-    // Reveal and Puzzle's markup and sits between the flag and the
-    // input, so capping at its top means the dropdown can cover that
-    // stats line but never reach the flag above it. Falls back to a
-    // small scrollable floor if the two are unusually close together.
+    // possible-pts/score line) sits between the flag and the input in
+    // both Reveal and Puzzle's markup — it's .rv-input-dock's previous
+    // sibling (the input row's own previousElementSibling is null now
+    // that it's nested inside .rv-input-dock alongside .rv-feedback), so
+    // capping at its top means the dropdown can cover that stats line
+    // but never reach the flag above it. Falls back to a small
+    // scrollable floor if the two are unusually close together.
     const row      = box.parentElement;
-    const boundary = row.previousElementSibling;
+    const boundary = row.parentElement.previousElementSibling;
     const available = boundary
       ? row.getBoundingClientRect().top - boundary.getBoundingClientRect().top - 8
       : 200;
@@ -1370,6 +1355,171 @@ function setupSuggestions(inputId, boxId, onSubmit) {
     input.value = btn.dataset.name;
     hide();
     onSubmit();
+  });
+
+  return hide;
+}
+
+// ── Custom on-screen keyboard (mobile only) ───────────────
+// Native software keyboards vary in height across devices/browsers in
+// ways we don't control, which is exactly what made the earlier
+// visualViewport-based compacting unreliable. A keyboard we draw
+// ourselves has a known, fixed size, so the flag/tile area above it can
+// be sized to definitely fit instead of guessing.
+const MOBILE_KB_MQ = window.matchMedia('(max-width: 699px)');
+
+// QWERTY row layout — matches the muscle memory of a real keyboard
+// rather than alphabetical order. The Norwegian layout follows the
+// conventional Norwegian keyboard placement (å on row 1, ø/æ on row 2),
+// not just appended letters.
+const KB_ROWS_EN = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+const KB_ROWS_NO = ['qwertyuiopå', 'asdfghjkløæ', 'zxcvbnm'];
+function getKeyboardRows() {
+  return (settings.lang === 'no' ? KB_ROWS_NO : KB_ROWS_EN).map(row => row.split(''));
+}
+
+// Single insertion path for both the custom keys and the hardware-keyboard
+// bridge below, so "a character was typed" always behaves identically
+// regardless of source — cursor-aware rather than always appending, and
+// dispatching a real 'input' event so the existing autocomplete listener
+// picks it up exactly as if the browser had inserted the character itself.
+function insertCharAt(input, ch) {
+  const start = input.selectionStart ?? input.value.length;
+  const end   = input.selectionEnd   ?? input.value.length;
+  input.value = input.value.slice(0, start) + ch + input.value.slice(end);
+  const pos = start + ch.length;
+  input.setSelectionRange(pos, pos);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function backspaceAt(input) {
+  const start = input.selectionStart ?? input.value.length;
+  const end   = input.selectionEnd   ?? input.value.length;
+  if (start === end) {
+    if (start === 0) return;
+    input.value = input.value.slice(0, start - 1) + input.value.slice(end);
+    input.setSelectionRange(start - 1, start - 1);
+  } else {
+    input.value = input.value.slice(0, start) + input.value.slice(end);
+    input.setSelectionRange(start, start);
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function buildCustomKeyboard(kb) {
+  kb.innerHTML = '';
+  getKeyboardRows().forEach(rowLetters => {
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    rowLetters.forEach(letter => {
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'kb-key';
+      key.textContent = letter.toUpperCase();
+      key.dataset.char = letter;
+      row.appendChild(key);
+    });
+    kb.appendChild(row);
+  });
+
+  const bottomRow = document.createElement('div');
+  bottomRow.className = 'kb-row kb-row-bottom';
+  const spaceKey = document.createElement('button');
+  spaceKey.type = 'button';
+  spaceKey.className = 'kb-key kb-key-space';
+  spaceKey.dataset.char = ' ';
+  spaceKey.setAttribute('aria-label', 'Space');
+  const backKey = document.createElement('button');
+  backKey.type = 'button';
+  backKey.className = 'kb-key kb-key-backspace';
+  backKey.dataset.action = 'backspace';
+  backKey.setAttribute('aria-label', 'Backspace');
+  backKey.textContent = '⌫';
+  bottomRow.appendChild(spaceKey);
+  bottomRow.appendChild(backKey);
+  kb.appendChild(bottomRow);
+}
+
+// Shared wiring for the Reveal/Puzzle custom keyboards. Returns a hide()
+// for the same reset/cleanup call sites that already use the
+// suggestions dropdown's returned hide().
+function setupCustomKeyboard(inputId, kbId) {
+  const input = document.getElementById(inputId);
+  const kb    = document.getElementById(kbId);
+
+  function syncReadonly() {
+    // readonly is what actually stops the native keyboard from opening —
+    // unlike inputmode="none", it's honored consistently across
+    // browsers. It also blocks normal typing, which is why the
+    // keydown bridge further down exists for hardware keyboards.
+    input.readOnly = MOBILE_KB_MQ.matches;
+    if (!input.readOnly) hide();
+  }
+  syncReadonly();
+  MOBILE_KB_MQ.addEventListener('change', syncReadonly);
+
+  function show() {
+    if (!input.readOnly || input.disabled) return;
+    buildCustomKeyboard(kb); // rebuilt fresh so language changes apply immediately
+    kb.classList.remove('hidden');
+    document.body.classList.add('custom-kb-open');
+    const root = document.documentElement;
+
+    // The keyboard's height is fixed by its own CSS (not guessed), so
+    // measuring it once right after it's shown gives an exact value —
+    // no wasted space the way a worst-case constant would need.
+    // --kb-height positions .rv-input-dock right above the keyboard;
+    // setting it (and forcing the reflow that getBoundingClientRect
+    // below triggers) before measuring the dock means that measurement
+    // already reflects the dock's correct, pinned position.
+    const kbHeight = kb.getBoundingClientRect().height;
+    root.style.setProperty('--kb-height', kbHeight + 'px');
+
+    // The input row + feedback are docked together directly above the
+    // keyboard (see .rv-input-dock in style.css) instead of floating
+    // wherever normal flow puts them — otherwise growing the keyboard
+    // alone just leaves a gap between the input row and the keyboard on
+    // tall screens, since the content above it doesn't grow to match.
+    // --kb-reserve is the *combined* dock + keyboard height, reserved as
+    // padding-bottom on #reveal-game/#puzzle-game so the flag/HUD/stats
+    // above reflow to meet the dock with no gap (any leftover space
+    // moves above the HUD instead, via align-items:flex-end).
+    const dock = input.closest('.rv-input-dock');
+    const dockHeight = dock.getBoundingClientRect().height;
+    root.style.setProperty('--kb-reserve', (kbHeight + dockHeight) + 'px');
+  }
+  function hide() {
+    kb.classList.add('hidden');
+    kb.innerHTML = '';
+    document.body.classList.remove('custom-kb-open');
+  }
+
+  input.addEventListener('focus', show);
+  input.addEventListener('blur', () => setTimeout(hide, 0));
+
+  // pointerdown (not click) fires before blur, so the key registers
+  // before the keyboard gets torn down by the blur handler above — same
+  // trick as the suggestions dropdown.
+  kb.addEventListener('pointerdown', e => {
+    const key = e.target.closest('.kb-key');
+    if (!key) return;
+    e.preventDefault();
+    if (key.dataset.action === 'backspace') backspaceAt(input);
+    else insertCharAt(input, key.dataset.char);
+  });
+
+  // Hardware-keyboard bridge: only acts while readonly is blocking native
+  // typing (i.e. mobile). On desktop input.readOnly is false, so this
+  // no-ops and the browser's own typing handling proceeds untouched.
+  input.addEventListener('keydown', e => {
+    if (!input.readOnly) return;
+    if (e.key === 'Backspace') { e.preventDefault(); backspaceAt(input); return; }
+    if (e.key === ' ')         { e.preventDefault(); insertCharAt(input, ' '); return; }
+    if (e.key.length === 1 && /^[a-zæøåA-ZÆØÅ]$/.test(e.key)) {
+      e.preventDefault();
+      insertCharAt(input, e.key.toLowerCase());
+    }
+    // Enter, Tab, arrow keys etc. fall through untouched — Enter-to-submit
+    // is already wired separately and isn't affected by readonly.
   });
 
   return hide;
@@ -1418,6 +1568,7 @@ function cleanupReveal() {
   clearInterval(rv.countdownTimer);
   rv.active = false;
   hideRevealSuggestions();
+  hideRevealKeyboard();
 }
 
 function initReveal() {
@@ -1715,7 +1866,7 @@ function setRevealInputsDisabled(disabled) {
   document.getElementById('rv-input').disabled  = disabled;
   document.getElementById('rv-submit').disabled = disabled;
   document.getElementById('rv-skip-btn').disabled = disabled;
-  if (disabled) hideRevealSuggestions();
+  if (disabled) { hideRevealSuggestions(); hideRevealKeyboard(); }
 }
 
 function shakeRevealFlag() {
@@ -1771,6 +1922,7 @@ function cleanupPuzzle() {
   clearInterval(pz.countdownTimer);
   pz.active = false;
   hidePuzzleSuggestions();
+  hidePuzzleKeyboard();
 }
 
 // ── Init / round setup ────────────────────────────────────
@@ -2165,5 +2317,5 @@ function setPuzzleInputsDisabled(disabled) {
   document.getElementById('pz-input').disabled    = disabled;
   document.getElementById('pz-submit').disabled   = disabled;
   document.getElementById('pz-skip-btn').disabled = disabled;
-  if (disabled) hidePuzzleSuggestions();
+  if (disabled) { hidePuzzleSuggestions(); hidePuzzleKeyboard(); }
 }

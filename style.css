@@ -1622,6 +1622,19 @@ body.dark .rv-tile {
 }
 .rv-stats-score { color: var(--c-text); }
 
+/* ── Input dock — groups the input row + feedback so they can be pinned
+   together directly above the custom keyboard on mobile (see the
+   body.custom-kb-open override further down). Matches .rv-wrap's own
+   gap/centering so grouping them here looks identical to before on
+   desktop and whenever the keyboard isn't open. */
+.rv-input-dock {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(14px * var(--ui-scale));
+}
+
 /* ── Input row — constrained to flag width so it sits centred under the flag ── */
 .rv-input-row {
   width: calc(400px * var(--ui-scale));
@@ -1714,6 +1727,60 @@ body.dark .rv-tile {
 }
 .rv-suggestion-item:last-child { border-bottom: none; }
 .rv-suggestion-item:active { background: var(--c-accent-hover-bg); }
+
+/* ── Custom on-screen keyboard (mobile only — shared by Reveal + Puzzle,
+   #pz-custom-kb uses the same classes). Hidden by default/on desktop;
+   script.js only ever removes .hidden while #rv-input/#pz-input is
+   readonly (i.e. on mobile), but this default keeps desktop safe even
+   if that ever changes.
+
+   Key height is driven by --kb-key-h instead of a flat px value: it
+   scales up on tall screens (so there's no leftover dead gap between
+   the input row and the keyboard) and down on short ones, clamped to a
+   ~44px floor so it never drops below a comfortable touch target.
+   Padding/gaps/font-size are all expressed as fractions of --kb-key-h
+   so the whole keyboard scales together rather than one part growing
+   while another stays fixed. The existing getBoundingClientRect()
+   measurement in script.js (--kb-reserve) just measures whatever this
+   resolves to — that part didn't need to change. */
+.custom-kb {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--c-card);
+  border-top: 1.5px solid var(--c-card-border);
+  box-shadow: 0 -6px 16px rgba(0,0,0,0.15);
+  --kb-key-h: clamp(44px, calc(var(--vh-px, 1vh) * 5.6), 56px);
+  padding: calc(var(--kb-key-h) * 0.22);
+  flex-direction: column;
+  gap: calc(var(--kb-key-h) * 0.12);
+}
+/* Each QWERTY row is its own flex row of equal-width keys, so a shorter
+   row (e.g. zxcvbnm) gets proportionally wider keys than a longer one
+   (qwertyuiop) — the same visual relationship real keyboard rows have. */
+.kb-row { display: flex; gap: calc(var(--kb-key-h) * 0.12); }
+.kb-key {
+  flex: 1;
+  height: var(--kb-key-h);
+  border-radius: 6px;
+  background: var(--c-bg);
+  border: 1px solid var(--c-card-border);
+  font-family: 'Barlow', sans-serif;
+  font-size: calc(var(--kb-key-h) * 0.34);
+  font-weight: 700;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.kb-key:active { background: var(--c-accent-hover-bg); border-color: var(--c-accent); }
+.kb-row-bottom { margin-top: calc(var(--kb-key-h) * 0.06); }
+.kb-key-space  { flex: 5; }
+.kb-key-backspace { flex: 2; font-size: calc(var(--kb-key-h) * 0.42); }
 
 /* ── Feedback ── */
 .rv-feedback {
@@ -1867,6 +1934,7 @@ body.dark .rv-tile {
 @media (max-width: 699px) {
   #reveal-game { padding: 14px; }
   .rv-wrap     { gap: 10px; }
+  .rv-input-dock { gap: 10px; }
   .rv-timer    { font-size: 32px; min-width: 40px; }
   .rv-life     { font-size: 18px; }
 
@@ -1874,17 +1942,6 @@ body.dark .rv-tile {
     width: min(100%, clamp(210px, calc(var(--vh-px, 1vh) * 39), 400px));
     height: auto;
     aspect-ratio: 400 / 266;
-  }
-
-  /* While the on-screen keyboard is open (see updateKeyboardCompacting
-     in script.js), shrink the flag further so it — and the input/buttons
-     below it — stay visible in whatever space is left above the
-     keyboard, instead of being pushed out of view. --kb-vh-px is 1% of
-     the space that's actually still visible (window.visualViewport.height),
-     which on iOS Safari in particular is the only reliable signal —
-     window.innerHeight there doesn't shrink when the keyboard opens. */
-  body.keyboard-open .rv-flag-wrap {
-    width: min(100%, clamp(100px, calc(var(--kb-vh-px, 1vh) * 22), 220px));
   }
 
   .rv-stats-val { font-size: 22px; }
@@ -1903,6 +1960,32 @@ body.dark .rv-tile {
      than just unhiding the base rule (the base rule's display:none must
      keep winning on desktop regardless of the .hidden class). */
   .rv-suggestions:not(.hidden) { display: block; }
+
+  /* Custom keyboard — same :not(.hidden) gating pattern. --kb-reserve
+     (keyboard height + dock height, both measured by
+     setupCustomKeyboard() right after the keyboard is shown) is
+     reserved as padding-bottom so #reveal-game's in-flow content
+     (HUD/flag/stats) never gets covered by the dock+keyboard pinned
+     below it. align-items:flex-end pushes that in-flow content down to
+     meet the dock with no gap — any leftover space lands above the HUD
+     instead, which reads as breathing room rather than a dead zone
+     right above the keyboard. */
+  .custom-kb:not(.hidden) { display: flex; }
+  body.custom-kb-open #reveal-game {
+    align-items: flex-end;
+    padding-bottom: var(--kb-reserve, 200px);
+  }
+  /* Docked directly above the keyboard instead of flowing normally —
+     see the --kb-height/--kb-reserve comment in setupCustomKeyboard(). */
+  body.custom-kb-open .rv-input-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--kb-height, 0px);
+    z-index: 35;
+    background: var(--c-bg);
+    padding: 8px 14px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2030,17 +2113,12 @@ body.dark .rv-tile {
 @media (max-width: 699px) {
   #puzzle-game { padding: 14px; }
   .pz-wrap     { gap: 10px; }
+  .rv-input-dock { gap: 10px; }
 
   .pz-merged {
     width: min(100%, clamp(210px, calc(var(--vh-px, 1vh) * 39), 400px));
     height: auto;
     aspect-ratio: 400 / 266;
-  }
-
-  /* Same keyboard-open compacting as .rv-flag-wrap — see that rule's
-     comment in the Reveal section above. */
-  body.keyboard-open .pz-merged {
-    width: min(100%, clamp(100px, calc(var(--kb-vh-px, 1vh) * 22), 220px));
   }
 
   .pz-chips { min-height: 24px; gap: 6px; }
@@ -2049,4 +2127,21 @@ body.dark .rv-tile {
   /* Tap-to-fill suggestions — #pz-input shares .rv-input/.rv-suggestions
      so this is the same override as the Reveal section above. */
   .rv-suggestions:not(.hidden) { display: block; }
+
+  /* Custom keyboard — see the Reveal section above for why this is
+     gated this way and what --kb-height/--kb-reserve do. */
+  .custom-kb:not(.hidden) { display: flex; }
+  body.custom-kb-open #puzzle-game {
+    align-items: flex-end;
+    padding-bottom: var(--kb-reserve, 200px);
+  }
+  body.custom-kb-open .rv-input-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--kb-height, 0px);
+    z-index: 35;
+    background: var(--c-bg);
+    padding: 8px 14px;
+  }
 }
