@@ -877,6 +877,14 @@ input  { font-family: inherit; }
    reflowed via grid-template-areas, and .cat-card's existing slot+info
    layout is scaled down rather than restructured. */
 @media (max-width: 699px) {
+  /* Everything below is clamp(min, vh-based preferred, max) rather than a
+     flat px value — sized for a tall phone (iPhone 14 Pro Max, ~930px
+     viewport) at the max end, but shrinks proportionally on shorter real
+     viewports (e.g. Galaxy S24 in Chrome with the address bar visible,
+     ~650-780px) instead of overflowing and forcing extra scroll. */
+
+  #app-header { height: clamp(48px, 7vh, 58px); }
+
   .classic-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
@@ -884,21 +892,28 @@ input  { font-family: inherit; }
       "left right";
     align-items: start;
   }
+  #classic-game { padding: clamp(10px, 2vh, 20px) 14px; }
   .flag-center {
     grid-area: flag;
     position: sticky;
     top: 0;
     z-index: 5;
     background: var(--c-bg);
-    padding: 4px 4px 14px;
+    padding: clamp(2px, 0.6vh, 4px) 4px clamp(8px, 1.8vh, 14px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   }
   #cats-left  { grid-area: left; }
   #cats-right { grid-area: right; }
 
-  .roll-country-name { font-size: 19px; margin-bottom: 9px; }
-  .flag-frame  { width: 228px; height: 164px; margin-bottom: 16px; }
-  .roll-btn    { padding: 11px 38px; font-size: 16px; }
+  .roll-country-name { font-size: 19px; margin-bottom: clamp(4px, 1.2vh, 9px); }
+  .flag-frame {
+    height: clamp(96px, 20vh, 164px);
+    aspect-ratio: 228 / 164;
+    width: auto;
+    margin-bottom: clamp(8px, 2vh, 16px);
+  }
+  .roll-btn  { padding: clamp(8px, 1.6vh, 11px) 38px; font-size: 16px; }
+  .skip-row  { margin-top: clamp(6px, 1.6vh, 14px); }
 
   /* Reserve the pick-prompt's space even while hidden (idle/rolling), so
      .flag-center doesn't change height when it appears after a roll
@@ -910,11 +925,13 @@ input  { font-family: inherit; }
     visibility: hidden;
   }
 
-  /* Fixed min-height so a one-line "Empty" card and a filled card (flag
-     thumbnail + name + rank) in the same grid row stay the same height —
-     otherwise rows drift out of alignment as cards get filled in. */
-  .cat-card    { padding: 9px 10px; margin-bottom: 14px; min-height: 70px; }
-  .cat-lbl     { font-size: 9px; margin-bottom: 6px; }
+  /* min-height (not height) so a one-line "Empty" card and a filled card
+     (flag thumbnail + name + rank) in the same grid row stay the same
+     height — otherwise rows drift out of alignment as cards get filled
+     in. Padding/gaps also shrink on short viewports so the floor of this
+     clamp is actually reachable rather than being overridden by content. */
+  .cat-card    { padding: clamp(6px, 1.5vh, 9px) 10px; margin-bottom: clamp(8px, 1.8vh, 14px); min-height: clamp(56px, 9vh, 70px); }
+  .cat-lbl     { font-size: 9px; margin-bottom: clamp(3px, 1vh, 6px); }
   .cat-body    { gap: 8px; }
   .cat-slot    { width: 38px; height: 27px; border-radius: 5px; }
   .cat-empty-icon  { font-size: 13px; }
