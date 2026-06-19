@@ -928,6 +928,15 @@ function updateLayout() {
   root.style.setProperty('--ui-scale',     scale);
   root.style.setProperty('--flag-frame-w', fw + 'px');
   root.style.setProperty('--flag-frame-h', fh + 'px');
+
+  // 1% of the *actually visible* viewport height, in px. Mobile browsers'
+  // CSS vh unit is often computed against an inflated viewport (as if the
+  // address bar were hidden), which can make vh-based sizing/scroll math
+  // wrong on a real device even though it looks right in desktop devtools
+  // emulation. window.innerHeight doesn't have that problem, so layout
+  // that needs to track real available height should use var(--vh-px)
+  // (e.g. calc(var(--vh-px, 1vh) * 20)) instead of a raw vh value.
+  root.style.setProperty('--vh-px', (window.innerHeight / 100) + 'px');
 }
 
 function applyTheme(theme) {
@@ -1057,6 +1066,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Phase 1: layout + settings ──
   applySettings();
   window.addEventListener('resize', updateLayout);
+  window.addEventListener('orientationchange', updateLayout);
+  // Mobile browsers showing/hiding the address bar on scroll changes the
+  // visible viewport without always firing a plain 'resize' event —
+  // visualViewport's resize event covers that case too, where supported.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateLayout);
+  }
 
   // Keep roll button disabled until rankings + categories are loaded.
   // applySettings() above enables it (phase='idle'), but initGame() hasn't run yet.
