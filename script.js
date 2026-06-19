@@ -939,6 +939,27 @@ function updateLayout() {
   root.style.setProperty('--vh-px', (window.innerHeight / 100) + 'px');
 }
 
+// On-screen keyboards shrink the *visually* available area, but not all
+// browsers shrink window.innerHeight to match — iOS Safari in particular
+// keeps innerHeight at the full layout viewport and only shrinks
+// visualViewport.height, since the page doesn't actually resize, it's
+// just partially covered. Comparing the two gives a cross-browser signal
+// for "keyboard is open" without depending on focus state, and
+// --kb-vh-px (1% of the space that's actually still visible) lets CSS
+// shrink the flag/tile area to fit above the keyboard rather than being
+// pushed below it.
+function updateKeyboardCompacting() {
+  if (!window.visualViewport) return;
+  const obscured = window.innerHeight - window.visualViewport.height;
+  const keyboardOpen = obscured > 120;
+  document.body.classList.toggle('keyboard-open', keyboardOpen);
+  if (keyboardOpen) {
+    document.documentElement.style.setProperty(
+      '--kb-vh-px', (window.visualViewport.height / 100) + 'px'
+    );
+  }
+}
+
 function applyTheme(theme) {
   document.body.classList.toggle('dark', theme === 'dark');
 }
@@ -1060,6 +1081,13 @@ function switchMode(mode) {
   applySettings(); // refresh best-score visibility
 }
 
+// Reassigned once setupSuggestions runs; called from the round-reset /
+// guess-submitted spots below so a stale suggestion list never lingers
+// after the input is cleared programmatically (clearing .value directly
+// doesn't fire an 'input' event, so the dropdown wouldn't otherwise know).
+let hideRevealSuggestions = () => {};
+let hidePuzzleSuggestions = () => {};
+
 // ═══ DOM INIT ════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -1072,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // visualViewport's resize event covers that case too, where supported.
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateLayout);
+    window.visualViewport.addEventListener('resize', updateKeyboardCompacting);
   }
 
   // Keep roll button disabled until rankings + categories are loaded.
@@ -1168,6 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('rv-results-overlay').classList.add('hidden');
     initReveal();
   });
+  hideRevealSuggestions = setupSuggestions('rv-input', 'rv-suggestions', handleRevealGuess);
 
   // ── Flag Puzzle event handlers ──
   document.getElementById('pz-submit').addEventListener('click', handlePuzzleGuess);
@@ -1179,6 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pz-results-overlay').classList.add('hidden');
     initPuzzle();
   });
+  hidePuzzleSuggestions = setupSuggestions('pz-input', 'pz-suggestions', handlePuzzleGuess);
 
   // ── Load ranking data, then start the appropriate game ──
   const types = [
@@ -1253,6 +1284,97 @@ function matchCountryName(input) {
   return null;
 }
 
+// ── Mobile autocomplete suggestions ───────────────────────
+// Matches against the *full* country list, not just whatever the current
+// round's correct answer is — narrowing to the correct answer(s) would
+// turn the suggestion list into an answer key. Checks both the canonical
+// English name and the localized cn() name so suggestions still appear
+// while typing in a non-English locale, even though matchCountryName
+// itself only resolves the canonical English form.
+function getCountrySuggestions(query) {
+  const clean = query.trim().toLowerCase();
+  if (clean.length < 1) return [];
+  const starts = [];
+  const contains = [];
+  for (const c of COUNTRIES) {
+    const en    = c.name.toLowerCase();
+    const local = cn(c.name).toLowerCase();
+    if (en.startsWith(clean) || local.startsWith(clean)) {
+      starts.push(c);
+    } else if (en.includes(clean) || local.includes(clean)) {
+      contains.push(c);
+    }
+  }
+  return [...starts, ...contains].slice(0, 6);
+}
+
+// Shared wiring for the Reveal/Puzzle suggestion dropdowns — same
+// behavior for both, just different input/box ids and a different
+// submit callback. Tapping a suggestion fills the input with the
+// canonical name (so matchCountryName resolves it regardless of locale)
+// and immediately calls the same submit handler typing+Enter would use,
+// so scoring/lives/etc. logic isn't duplicated.
+function setupSuggestions(inputId, boxId, onSubmit) {
+  const input = document.getElementById(inputId);
+  const box   = document.getElementById(boxId);
+
+  function render() {
+    const matches = getCountrySuggestions(input.value);
+    box.innerHTML = '';
+    if (!matches.length || input.disabled) {
+      box.classList.add('hidden');
+      return;
+    }
+    matches.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rv-suggestion-item';
+      btn.dataset.name = c.name;
+      btn.textContent = cn(c.name);
+      box.appendChild(btn);
+    });
+    box.classList.remove('hidden');
+
+    // Cap the dropdown's height to the actual gap above the input row
+    // rather than letting it grow to fit all matches unconditionally —
+    // with several results it could otherwise extend up far enough to
+    // cover the flag/tile area itself, defeating the point of shrinking
+    // that area to stay visible while typing. .rv-stats-block (the
+    // possible-pts/score line) is the row's previous sibling in both
+    // Reveal and Puzzle's markup and sits between the flag and the
+    // input, so capping at its top means the dropdown can cover that
+    // stats line but never reach the flag above it. Falls back to a
+    // small scrollable floor if the two are unusually close together.
+    const row      = box.parentElement;
+    const boundary = row.previousElementSibling;
+    const available = boundary
+      ? row.getBoundingClientRect().top - boundary.getBoundingClientRect().top - 8
+      : 200;
+    box.style.maxHeight = Math.max(60, available) + 'px';
+  }
+
+  function hide() {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+  }
+
+  input.addEventListener('input', render);
+  input.addEventListener('blur', () => setTimeout(hide, 0));
+
+  // pointerdown (not click) fires before the input's blur, so the tap
+  // registers before the dropdown gets torn down by the blur handler above.
+  box.addEventListener('pointerdown', e => {
+    const btn = e.target.closest('.rv-suggestion-item');
+    if (!btn) return;
+    e.preventDefault();
+    input.value = btn.dataset.name;
+    hide();
+    onSubmit();
+  });
+
+  return hide;
+}
+
 // ── Sound synthesis ───────────────────────────────────────
 function playSound(type) {
   if (!settings.sound) return;
@@ -1295,6 +1417,7 @@ function cleanupReveal() {
   clearInterval(rv.tileTimer);
   clearInterval(rv.countdownTimer);
   rv.active = false;
+  hideRevealSuggestions();
 }
 
 function initReveal() {
@@ -1346,6 +1469,7 @@ function setupRevealRound() {
   fb.textContent = ''; fb.className = 'rv-feedback';
   const inp = document.getElementById('rv-input');
   inp.value = '';
+  hideRevealSuggestions();
 
   // Start 30s countdown
   rv.countdown = 30;
@@ -1438,6 +1562,7 @@ function handleRevealGuess() {
 
   const matched = matchCountryName(raw);
   inp.value = '';
+  hideRevealSuggestions();
 
   if (!matched) {
     shakeRevealFlag();
@@ -1590,6 +1715,7 @@ function setRevealInputsDisabled(disabled) {
   document.getElementById('rv-input').disabled  = disabled;
   document.getElementById('rv-submit').disabled = disabled;
   document.getElementById('rv-skip-btn').disabled = disabled;
+  if (disabled) hideRevealSuggestions();
 }
 
 function shakeRevealFlag() {
@@ -1644,6 +1770,7 @@ const pz = {
 function cleanupPuzzle() {
   clearInterval(pz.countdownTimer);
   pz.active = false;
+  hidePuzzleSuggestions();
 }
 
 // ── Init / round setup ────────────────────────────────────
@@ -1690,6 +1817,7 @@ function setupPuzzleRound() {
   document.getElementById('pz-merged').classList.remove('correct-glow', 'shake');
   document.getElementById('pz-possible').textContent = '1000';
   document.getElementById('pz-input').value = '';
+  hidePuzzleSuggestions();
 
   pz.countdown = 60;
   updatePuzzleTimerDisplay();
@@ -1829,6 +1957,7 @@ function handlePuzzleGuess() {
 
   const matched = matchCountryName(raw);
   inp.value = '';
+  hidePuzzleSuggestions();
 
   if (!matched) {
     shakePuzzle(); playSound('wrong');
@@ -2036,4 +2165,5 @@ function setPuzzleInputsDisabled(disabled) {
   document.getElementById('pz-input').disabled    = disabled;
   document.getElementById('pz-submit').disabled   = disabled;
   document.getElementById('pz-skip-btn').disabled = disabled;
+  if (disabled) hidePuzzleSuggestions();
 }

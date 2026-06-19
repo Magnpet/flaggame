@@ -1628,6 +1628,7 @@ body.dark .rv-tile {
   max-width: 100%;
   display: flex;
   gap: calc(8px * var(--ui-scale));
+  position: relative;
 }
 .rv-input {
   flex: 1;
@@ -1677,6 +1678,42 @@ body.dark .rv-tile {
 }
 .rv-btn-skip:hover:not(:disabled) { border-color: var(--c-accent); color: var(--c-accent); }
 .rv-btn-skip:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Mobile-only tap-to-fill suggestions (shared by Reveal + Puzzle,
+   #pz-input reuses .rv-input so this lives in one place). Hidden by
+   default/on desktop; the mobile media query further down turns it back
+   on for whichever instance doesn't have the .hidden class — that class
+   is what JS toggles based on whether there are any matches to show. */
+.rv-suggestions {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: 6px;
+  background: var(--c-card);
+  border: 1.5px solid var(--c-card-border);
+  border-radius: 10px;
+  box-shadow: var(--c-card-shadow);
+  max-height: 38vh;
+  overflow-y: auto;
+  z-index: 30;
+}
+.rv-suggestion-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--c-card-border);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.rv-suggestion-item:last-child { border-bottom: none; }
+.rv-suggestion-item:active { background: var(--c-accent-hover-bg); }
 
 /* ── Feedback ── */
 .rv-feedback {
@@ -1839,6 +1876,17 @@ body.dark .rv-tile {
     aspect-ratio: 400 / 266;
   }
 
+  /* While the on-screen keyboard is open (see updateKeyboardCompacting
+     in script.js), shrink the flag further so it — and the input/buttons
+     below it — stay visible in whatever space is left above the
+     keyboard, instead of being pushed out of view. --kb-vh-px is 1% of
+     the space that's actually still visible (window.visualViewport.height),
+     which on iOS Safari in particular is the only reliable signal —
+     window.innerHeight there doesn't shrink when the keyboard opens. */
+  body.keyboard-open .rv-flag-wrap {
+    width: min(100%, clamp(100px, calc(var(--kb-vh-px, 1vh) * 22), 220px));
+  }
+
   .rv-stats-val { font-size: 22px; }
   .rv-feedback  { font-size: 15px; }
 
@@ -1849,6 +1897,12 @@ body.dark .rv-tile {
      Shared with Puzzle's input row below since both reuse .rv-input. */
   .rv-input      { min-width: 0; font-size: 14px; }
   .rv-btn-submit, .rv-btn-skip { font-size: 14px; padding: 10px 12px; }
+
+  /* Tap-to-fill suggestions — see the shared .rv-suggestions rule above
+     for why this is gated to mobile via a :not(.hidden) override rather
+     than just unhiding the base rule (the base rule's display:none must
+     keep winning on desktop regardless of the .hidden class). */
+  .rv-suggestions:not(.hidden) { display: block; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1962,6 +2016,7 @@ body.dark .rv-tile {
   max-width: 100%;
   display: flex;
   gap: calc(8px * var(--ui-scale));
+  position: relative;
 }
 
 /* Feedback reuses .rv-feedback; extra class .pz-feedback for future specificity */
@@ -1982,6 +2037,16 @@ body.dark .rv-tile {
     aspect-ratio: 400 / 266;
   }
 
+  /* Same keyboard-open compacting as .rv-flag-wrap — see that rule's
+     comment in the Reveal section above. */
+  body.keyboard-open .pz-merged {
+    width: min(100%, clamp(100px, calc(var(--kb-vh-px, 1vh) * 22), 220px));
+  }
+
   .pz-chips { min-height: 24px; gap: 6px; }
   .pz-chip  { font-size: 12px; padding: 3px 11px; }
+
+  /* Tap-to-fill suggestions — #pz-input shares .rv-input/.rv-suggestions
+     so this is the same override as the Reveal section above. */
+  .rv-suggestions:not(.hidden) { display: block; }
 }
