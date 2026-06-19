@@ -1108,6 +1108,43 @@ input  { font-family: inherit; }
   margin-bottom: calc(14px * var(--ui-scale));
 }
 
+/* ─── Mobile: bigger flags, less dead vertical space ───
+   Two problems compounded: .duel-flag had a flat 160px height regardless
+   of how wide the card rendered, so the (mostly landscape) flag image —
+   fit via background-size:contain to the card's width — left empty
+   space above/below it inside that too-tall box. And the side-by-side
+   1fr/auto/1fr grid meant each card only ever got roughly a quarter of
+   the screen's width, capping how big the flag could ever get and
+   leaving the rest of the screen's height empty above/below the whole
+   block once it was centered. Stacking the cards full-width instead
+   lets each flag grow to roughly the full screen width (aspect-ratio
+   keeps it proportional), which fills far more of the vertical space
+   naturally — the var(--vh-px) cap just keeps it from growing past what
+   actually fits on a short viewport. */
+@media (max-width: 699px) {
+  #duel-game     { padding: 16px; }
+  .duel-question { margin-bottom: 14px; }
+  .duel-cat-name { font-size: 26px; }
+
+  .duel-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .duel-vs { font-size: 16px; padding: 2px 0; opacity: 0.55; }
+  .duel-card { padding: 12px; }
+  .duel-flag {
+    width: min(100%, calc(var(--vh-px, 1vh) * 34));
+    height: auto;
+    aspect-ratio: 4 / 3;
+    margin: 0 auto 8px;
+  }
+  .duel-country { font-size: 16px; }
+  .duel-rank    { font-size: 22px; }
+  .duel-streaks { gap: 28px; margin-bottom: 14px; }
+  .duel-streak-val { font-size: 28px; }
+}
+
 /* ═══════════════════════════════════════════════════════════
    COMING SOON
 ═══════════════════════════════════════════════════════════ */
@@ -1708,6 +1745,38 @@ body.dark .rv-tile {
   text-align: right;
 }
 
+/* ─── Mobile ───
+   .rv-flag-wrap was a flat 400×266px regardless of viewport — wider than
+   most phones, causing horizontal overflow that pushed Submit/Skip off
+   the right edge. width: min(100%, ...) guarantees it can never exceed
+   the available width, and the clamp's vh term (same var(--vh-px)
+   approach as Classic) shrinks it further on short screens so it
+   doesn't dominate the screen and crowd out the HUD/input/buttons below.
+   aspect-ratio keeps height proportional automatically. */
+@media (max-width: 699px) {
+  #reveal-game { padding: 14px; }
+  .rv-wrap     { gap: 10px; }
+  .rv-timer    { font-size: 32px; min-width: 40px; }
+  .rv-life     { font-size: 18px; }
+
+  .rv-flag-wrap {
+    width: min(100%, clamp(210px, calc(var(--vh-px, 1vh) * 39), 400px));
+    height: auto;
+    aspect-ratio: 400 / 266;
+  }
+
+  .rv-stats-val { font-size: 22px; }
+  .rv-feedback  { font-size: 15px; }
+
+  /* .rv-input-row already has max-width:100%, but .rv-input's default
+     flex min-width (auto) refused to shrink below its content size,
+     forcing the row itself wider than available and clipping the Skip
+     button off the right edge — min-width:0 lets it actually shrink.
+     Shared with Puzzle's input row below since both reuse .rv-input. */
+  .rv-input      { min-width: 0; font-size: 14px; }
+  .rv-btn-submit, .rv-btn-skip { font-size: 14px; padding: 10px 12px; }
+}
+
 /* ═══════════════════════════════════════════════════════════
    FLAG PUZZLE
 ═══════════════════════════════════════════════════════════ */
@@ -1822,3 +1891,23 @@ body.dark .rv-tile {
 }
 
 /* Feedback reuses .rv-feedback; extra class .pz-feedback for future specificity */
+
+/* ─── Mobile ─── same fix as .rv-flag-wrap: a flat 400×266px box caused
+   horizontal overflow and crowded out the HUD/input/buttons below it.
+   The region/tile split logic in script.js positions everything with
+   percentages and clip-path, so the box can resize freely here without
+   any JS changes. (.rv-input's min-width:0 fix above already covers
+   Puzzle's input too, since #pz-input shares the .rv-input class.) */
+@media (max-width: 699px) {
+  #puzzle-game { padding: 14px; }
+  .pz-wrap     { gap: 10px; }
+
+  .pz-merged {
+    width: min(100%, clamp(210px, calc(var(--vh-px, 1vh) * 39), 400px));
+    height: auto;
+    aspect-ratio: 400 / 266;
+  }
+
+  .pz-chips { min-height: 24px; gap: 6px; }
+  .pz-chip  { font-size: 12px; padding: 3px 11px; }
+}
