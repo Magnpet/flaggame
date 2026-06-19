@@ -214,9 +214,40 @@ input  { font-family: inherit; }
 #app-header #milestones-btn,
 #app-header .best-score,
 #app-header #progress-widget,
-#app-header #mode-wrap,
 #app-header .hdr-sep {
   display: none;
+}
+
+/* The dropdown trigger itself is repurposed as the header's centered
+   title instead of being hidden like the rest above: #mode-label's text
+   is already kept in sync with the active mode by switchMode() (it used
+   to be the dropdown's button label), so reusing it here means the
+   title is correct with no JS changes — just the chevron/menu underneath
+   stay hidden and #mode-btn is stripped down to plain centered text,
+   reusing .hdr-title's own absolute-centering recipe. */
+#app-header #mode-wrap {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+#mode-wrap #mode-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  pointer-events: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: calc(20px * var(--ui-scale));
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+#mode-wrap #mode-chevron,
+#mode-wrap #mode-menu {
+  display: none !important;
 }
 
 .hdr-left, .hdr-right {
@@ -959,7 +990,14 @@ input  { font-family: inherit; }
    FLAG DUEL
 ═══════════════════════════════════════════════════════════ */
 #duel-game {
-  align-items: center;
+  /* safe center: plain `center` lets an oversized child overflow equally
+     top+bottom with neither side counted as scrollable overflow — content
+     can end up genuinely unreachable despite this being a scroll
+     container. `safe` falls back to start-alignment only once content
+     no longer fits, so it's a no-op visually whenever centering already
+     has room (which is the normal case), just a guarantee against
+     getting stuck if it ever doesn't. */
+  align-items: safe center;
   justify-content: center;
   overflow-y: auto;
   padding: calc(24px * var(--ui-scale)) calc(20px * var(--ui-scale));
@@ -1123,26 +1161,62 @@ input  { font-family: inherit; }
    actually fits on a short viewport. */
 @media (max-width: 699px) {
   #duel-game     { padding: 16px; }
-  .duel-question { margin-bottom: 14px; }
-  .duel-cat-name { font-size: 26px; }
+  .duel-question { margin-bottom: 10px; }
+  .duel-cat-name { font-size: 24px; }
 
   .duel-row {
     grid-template-columns: 1fr;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .duel-vs { font-size: 16px; padding: 2px 0; opacity: 0.55; }
-  .duel-card { padding: 12px; }
+  .duel-card { padding: 10px; }
+  /* Smaller than the first pass — this mode needs fast back-to-back
+     taps with zero scroll, and the margin freed up here is what the
+     reserved-space footer/rank treatment below spends to stay scroll-free.
+     clamp's floor shrinks more aggressively than a straight vh multiple
+     would on the shortest real phones, since that's exactly where the
+     reserved space below is tightest. */
   .duel-flag {
-    width: min(100%, calc(var(--vh-px, 1vh) * 34));
+    width: min(100%, clamp(90px, calc(var(--vh-px, 1vh) * 16), 190px));
     height: auto;
     aspect-ratio: 4 / 3;
-    margin: 0 auto 8px;
+    margin: 0 auto 6px;
   }
   .duel-country { font-size: 16px; }
-  .duel-rank    { font-size: 22px; }
+
+  /* .duel-rank starts genuinely empty (no text until answered), so an
+     empty block has no line box at all — visibility:hidden alone
+     wouldn't reserve anything. min-height forces the line's worth of
+     space to always exist, and the .hidden override (matching the
+     #pick-prompt trick from Classic) keeps it invisible-but-present
+     instead of display:none-collapsed, so revealing the rank text never
+     changes the card's height. */
+  .duel-rank { font-size: 22px; min-height: 22px; }
+  .duel-rank.hidden { display: block !important; visibility: hidden; }
+
   .duel-streaks { gap: 28px; margin-bottom: 14px; }
   .duel-streak-val { font-size: 28px; }
+
+  /* Same reserved-space approach for the footer: click-hint, result,
+     tie-note and the Next Duel button are normally swapped in/out via
+     display:none, so the footer's total height jumps when an answer
+     reveals result+tie-note+button in place of the hint. Making all
+     four always occupy their box (visibility-toggled, never
+     display:none) means the footer is exactly as tall before answering
+     as after, on every outcome including a tie — nothing pushes the
+     Next Duel button out of view. */
+  .duel-click-hint { font-size: 12px; }
+  .duel-click-hint.hidden { display: block !important; visibility: hidden; }
+
+  .duel-result { font-size: 16px; margin-bottom: 6px; min-height: 19px; }
+  .duel-result.hidden { display: block !important; visibility: hidden; }
+
+  .duel-tie-note { font-size: 10px; margin-bottom: 6px; }
+  .duel-tie-note.hidden { display: block !important; visibility: hidden; }
+
+  .roll-btn.duel-next { padding: 9px 26px; font-size: 14px; margin-top: 6px; }
+  #duel-next-btn.hidden { display: inline-block !important; visibility: hidden; }
 }
 
 /* ═══════════════════════════════════════════════════════════
