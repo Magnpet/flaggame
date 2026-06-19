@@ -199,6 +199,20 @@ input  { font-family: inherit; }
   transition: background 0.3s, border-color 0.3s;
 }
 
+/* In-game header is now just Home (left) + Settings (right) — mode
+   switching lives on the landing page and Milestones has its own icon
+   there. These are hidden rather than removed so existing JS (switchMode,
+   applySettings best-score logic, the milestones click handler) keeps
+   working untouched; they're just not reachable from this header anymore. */
+#app-header .hdr-title,
+#app-header #milestones-btn,
+#app-header .best-score,
+#app-header #progress-widget,
+#app-header #mode-wrap,
+#app-header .hdr-sep {
+  display: none;
+}
+
 .hdr-left, .hdr-right {
   flex: 1;
   display: flex;
@@ -419,12 +433,11 @@ input  { font-family: inherit; }
   position: relative;
 }
 
-/* Circular icon-only button — reuses .hdr-btn for active-state JS hooks,
-   overridden here for the floating pill look. */
-.icon-fab {
-  position: absolute;
-  top: calc(20px * var(--ui-scale));
-  right: calc(20px * var(--ui-scale));
+/* Circular icon-only button — reuses .hdr-btn for active-state JS hooks
+   (closeAllDropdowns toggles .active-btn on every .hdr-btn). Used by the
+   landing page's Milestones/Settings icons and the in-game header's
+   Home/Settings icons. */
+.icon-btn {
   width: calc(40px * var(--ui-scale));
   height: calc(40px * var(--ui-scale));
   padding: 0;
@@ -435,6 +448,14 @@ input  { font-family: inherit; }
   justify-content: center;
   font-size: calc(17px * var(--ui-scale));
   color: var(--c-sub);
+}
+
+.landing-icon-row {
+  position: absolute;
+  top: calc(20px * var(--ui-scale));
+  right: calc(20px * var(--ui-scale));
+  display: flex;
+  gap: calc(8px * var(--ui-scale));
 }
 
 .landing-title {
@@ -849,6 +870,57 @@ input  { font-family: inherit; }
   text-transform: uppercase;
   border: 1px solid rgba(0,0,0,0.08);
   animation: pickPulse 1.6s ease-in-out infinite;
+}
+
+/* ─── Mobile: flag area pinned on top, categories in a 2×4 grid below ───
+   Same markup/JS as desktop throughout — cats-left/cats-right just get
+   reflowed via grid-template-areas, and .cat-card's existing slot+info
+   layout is scaled down rather than restructured. */
+@media (max-width: 699px) {
+  .classic-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "flag flag"
+      "left right";
+    align-items: start;
+  }
+  .flag-center {
+    grid-area: flag;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--c-bg);
+    padding: 4px 4px 14px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  }
+  #cats-left  { grid-area: left; }
+  #cats-right { grid-area: right; }
+
+  .roll-country-name { font-size: 19px; margin-bottom: 9px; }
+  .flag-frame  { width: 228px; height: 164px; margin-bottom: 16px; }
+  .roll-btn    { padding: 11px 38px; font-size: 16px; }
+
+  /* Reserve the pick-prompt's space even while hidden (idle/rolling), so
+     .flag-center doesn't change height when it appears after a roll
+     settles — that height change was shoving the card grid below it
+     down and back up every roll. Specificity (id+class, both !important)
+     beats the global .hidden{display:none!important} rule. */
+  #pick-prompt.hidden {
+    display: block !important;
+    visibility: hidden;
+  }
+
+  /* Fixed min-height so a one-line "Empty" card and a filled card (flag
+     thumbnail + name + rank) in the same grid row stay the same height —
+     otherwise rows drift out of alignment as cards get filled in. */
+  .cat-card    { padding: 9px 10px; margin-bottom: 14px; min-height: 70px; }
+  .cat-lbl     { font-size: 9px; margin-bottom: 6px; }
+  .cat-body    { gap: 8px; }
+  .cat-slot    { width: 38px; height: 27px; border-radius: 5px; }
+  .cat-empty-icon  { font-size: 13px; }
+  .cat-placed-name { font-size: 9.5px; }
+  .cat-placed-rank { font-size: 16px; }
+  .cat-empty-txt   { font-size: 10.5px; }
 }
 
 /* ═══════════════════════════════════════════════════════════

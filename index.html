@@ -13,7 +13,7 @@
   <header id="app-header" class="hidden">
 
     <div class="hdr-left">
-      <button class="hdr-btn" id="home-btn">← <span data-i18n="backHome">Home</span></button>
+      <button class="hdr-btn icon-btn" id="home-btn" aria-label="Home">←</button>
       <button class="hdr-btn" id="milestones-btn">🏆 <span data-i18n="milestones">Milestones</span></button>
       <div class="best-score hidden" id="best-score">
         <span class="best-lbl">Best</span>
@@ -51,7 +51,7 @@
       <div class="hdr-sep"></div>
 
       <div class="hdr-dd-wrap" id="settings-wrap">
-        <button class="hdr-btn" id="settings-btn">⚙ <span data-i18n="settings">Settings</span></button>
+        <button class="hdr-btn icon-btn" id="settings-btn" aria-label="Settings">⚙</button>
       </div>
 
     </div>
@@ -98,7 +98,10 @@
     <!-- ─── Landing ─── -->
     <div class="game-mode active" id="landing-game">
       <div class="landing-wrap">
-        <button class="hdr-btn icon-fab" id="landing-settings-btn" aria-label="Settings">⚙</button>
+        <div class="landing-icon-row">
+          <button class="hdr-btn icon-btn" id="landing-milestones-btn" aria-label="Milestones">🏆</button>
+          <button class="hdr-btn icon-btn" id="landing-settings-btn" aria-label="Settings">⚙</button>
+        </div>
         <div class="landing-title">Flag Game</div>
 
         <div class="landing-grid">

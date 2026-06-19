@@ -986,6 +986,23 @@ function closeAllDropdowns() {
   document.querySelectorAll('.hdr-btn').forEach(b => b.classList.remove('active-btn'));
 }
 
+function openMilestones() {
+  closeAllDropdowns();
+  const hs      = parseFloat(localStorage.getItem('fg_r_hs')      || '0');
+  const duelH   = parseInt(localStorage.getItem('fg_duel_hs')     || '0', 10);
+  const revealH = parseInt(localStorage.getItem('fg_reveal_hs')   || '0', 10);
+  const puzzleH = parseInt(localStorage.getItem('fg_puzzle_hs')   || '0', 10);
+  const set = (id, val, isZero) => {
+    document.getElementById(id).textContent = isZero ? '—' : val;
+    document.getElementById(id).classList.toggle('none', isZero);
+  };
+  set('ms-classic', hs.toFixed(1),  hs      === 0);
+  set('ms-duel',    duelH,           duelH   === 0);
+  set('ms-reveal',  revealH,         revealH === 0);
+  set('ms-puzzle',  puzzleH,         puzzleH === 0);
+  document.getElementById('milestones-overlay').classList.remove('hidden');
+}
+
 function toggleDropdown(ddId, chevronId, btnId) {
   const dd      = document.getElementById(ddId);
   const ch      = document.getElementById(chevronId);
@@ -1046,22 +1063,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('roll-btn').disabled = true;
 
   // ── Milestones ──
-  document.getElementById('milestones-btn').addEventListener('click', () => {
-    closeAllDropdowns();
-    const hs      = parseFloat(localStorage.getItem('fg_r_hs')      || '0');
-    const duelH   = parseInt(localStorage.getItem('fg_duel_hs')     || '0', 10);
-    const revealH = parseInt(localStorage.getItem('fg_reveal_hs')   || '0', 10);
-    const puzzleH = parseInt(localStorage.getItem('fg_puzzle_hs')   || '0', 10);
-    const set = (id, val, isZero) => {
-      document.getElementById(id).textContent = isZero ? '—' : val;
-      document.getElementById(id).classList.toggle('none', isZero);
-    };
-    set('ms-classic', hs.toFixed(1),  hs      === 0);
-    set('ms-duel',    duelH,           duelH   === 0);
-    set('ms-reveal',  revealH,         revealH === 0);
-    set('ms-puzzle',  puzzleH,         puzzleH === 0);
-    document.getElementById('milestones-overlay').classList.remove('hidden');
-  });
+  document.getElementById('milestones-btn').addEventListener('click', openMilestones);
+  document.getElementById('landing-milestones-btn').addEventListener('click', openMilestones);
   document.getElementById('milestones-close').addEventListener('click', () => {
     document.getElementById('milestones-overlay').classList.add('hidden');
   });
