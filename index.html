@@ -38,6 +38,9 @@
       <div class="hdr-dd-wrap" id="mode-wrap">
         <button class="hdr-btn mode-btn" id="mode-btn">
           <span id="mode-label">Flag Game</span>
+          <span class="daily-badge hidden" id="daily-badge-inline">
+            <span class="daily-badge-dot">✦</span><span id="daily-badge-text-inline">Daily #1</span>
+          </span>
           <span class="chevron" id="mode-chevron">▼</span>
         </button>
         <div class="hdr-dd" id="mode-menu">
@@ -56,6 +59,7 @@
 
     </div>
   </header>
+
 
   <!-- Settings panel: lives outside the header so it's reachable from the
        landing page (where the header is hidden) as well as from inside a
@@ -140,10 +144,13 @@
 
         <div class="landing-daily" id="landing-daily">
           <div class="landing-daily-info">
-            <div class="landing-daily-title" data-i18n="dailyChallenge">Daily Challenge</div>
-            <div class="landing-daily-sub" data-i18n="dailyChallengeSub">Classic · same countries for everyone today</div>
+            <div class="landing-daily-title" id="landing-daily-title">Daily Challenge</div>
+            <div class="landing-daily-sub" id="landing-daily-sub">Classic · same countries for everyone today</div>
           </div>
-          <div class="landing-daily-cta" aria-disabled="true" data-i18n="comingSoon">Coming Soon</div>
+          <div class="landing-daily-cta" id="landing-daily-cta">Play</div>
+          <div class="landing-daily-done hidden" id="landing-daily-done">
+            <span class="landing-daily-done-check">✓</span><span>Done</span>
+          </div>
         </div>
       </div>
     </div>
@@ -523,6 +530,7 @@
         <strong id="score-best-val">—</strong>
       </div>
       <div class="score-grid" id="score-grid"></div>
+      <div class="score-insight hidden" id="score-insight"></div>
       <div class="score-actions">
         <button class="btn-primary" id="play-again-btn" data-i18n="playAgain">Play Again</button>
       </div>

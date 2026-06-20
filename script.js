@@ -142,6 +142,7 @@ const STRINGS = {
     unranked:'Unranked', yourBestScores:'Your Best Scores',
     flagGame:'Flag Game', flagDuel:'Flag Duel',
     flagReveal:'Flag Reveal', flagPuzzle:'Flag Puzzle',
+    classicTitle:'Classic',
     close:'Close', english:'English', norwegian:'Norwegian (Bokmål)',
     rerolls:'re-rolls', placed:'Placed',
     whichHigher:'Which country ranks higher in…',
@@ -156,6 +157,12 @@ const STRINGS = {
     puzzleSubtitle:'Spot two flags merged into one',
     dailyChallenge:'Daily Challenge',
     dailyChallengeSub:'Classic · same countries for everyone today',
+    dailyBadge:'Daily #{0}',
+    play:'Play',
+    dailyDone:'Done',
+    dailyCompletedTitle:'Daily Challenge Completed',
+    dailyCompletedScore:'Score: {0}',
+    dailyMissLine:'You picked {0} for {1}. {2} ({3}) would have been a better fit.',
   },
   no: {
     hdiHigh:'Høyest HDI', hdiLow:'Lavest HDI',
@@ -188,6 +195,7 @@ const STRINGS = {
     unranked:'Urangert', yourBestScores:'Dine beste resultater',
     flagGame:'Flag Game', flagDuel:'Flaggduell',
     flagReveal:'Flaggavsløring', flagPuzzle:'Flaggpuslespill',
+    classicTitle:'Klassisk',
     close:'Lukk', english:'English', norwegian:'Norsk (Bokmål)',
     rerolls:'reruller', placed:'Plassert',
     whichHigher:'Hvilket land rangeres høyere i…',
@@ -202,6 +210,12 @@ const STRINGS = {
     puzzleSubtitle:'Finn to flagg slått sammen til ett',
     dailyChallenge:'Daglig utfordring',
     dailyChallengeSub:'Klassisk · samme land for alle i dag',
+    dailyBadge:'Daglig #{0}',
+    play:'Spill',
+    dailyDone:'Ferdig',
+    dailyCompletedTitle:'Daglig utfordring fullført',
+    dailyCompletedScore:'Poengsum: {0}',
+    dailyMissLine:'Du valgte {0} for {1}. {2} ({3}) hadde passet bedre.',
   },
 };
 
@@ -256,6 +270,7 @@ function rankColor(score) {
 }
 
 // ═══ GAME STATE ══════════════════════════════════════════
+const SKIP_BUDGET = 3;
 let rankings     = {};
 let categories   = [];      // 8 selected category variants
 let slots        = Array(8).fill(null);   // placed countries
@@ -263,7 +278,7 @@ let scores       = Array(8).fill(999);   // calculated ranks
 let currentCountry = null;
 let phase        = 'idle';  // 'idle' | 'rolling' | 'placing' | 'complete'
 let isRolling    = false;
-let skipsLeft    = 3;
+let skipsLeft    = SKIP_BUDGET;
 let rolledSet    = new Set();
 let filledCount  = 0;
 let highScore    = 0;
@@ -281,16 +296,167 @@ let duelResult     = null;       // 'correct' | 'wrong' | 'tie' | null
 let duelIsNewBest  = false;
 let dataReady      = false;      // true once rankings + initGame have run
 
-// ═══ GAME FUNCTIONS ══════════════════════════════════════
+// ── Daily Challenge state ──────────────────────────────
+let dailyMode         = false;  // true only for a round started from the landing banner
+let dailyNumber       = 0;      // "Daily #N" shown in the badge
+let dailyCountryQueue = [];     // pre-rolled, seeded — drawn from instead of random
+let dailyQueueIdx     = 0;
+let dailyJustCompleted = false; // one-shot: plays the "done" pop only right after finishing
 
-function initGame() {
-  clearTimeout(rollTimer);
+// ═══ DAILY CHALLENGE GENERATOR ══════════════════════════
+// Fully client-side and deterministic: every player who opens the Daily
+// Challenge on the same calendar day gets the same 8 categories and the
+// same countries, with no server involved. "Today" is the player's own
+// local date — there's no backend to reconcile timezones against, so a
+// player near midnight may see "today" change at a different moment than
+// someone elsewhere; that's an accepted tradeoff of being client-only.
 
-  // Pick 8 random category variants (one per pair)
-  categories = CATEGORY_PAIRS.map(pair => {
-    const v = pair.variants[Math.floor(Math.random() * 2)];
+// Epoch for "Daily #N" numbering — arbitrary, just needs to never change
+// once players start seeing numbers (changing it would renumber every
+// past challenge). Easy to move if a real launch date is decided later.
+const DAILY_EPOCH_MS = new Date('2025-01-01T00:00:00').getTime();
+
+function getDailyDateKey(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getDailyNumber(dateKey) {
+  const local = new Date(`${dateKey}T00:00:00`);
+  return Math.floor((local.getTime() - DAILY_EPOCH_MS) / 86400000) + 1;
+}
+
+// djb2 string hash → 32-bit seed
+function hashStringToSeed(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h) + str.charCodeAt(i);
+    h = h >>> 0;
+  }
+  return h >>> 0;
+}
+
+// mulberry32 — small, fast, deterministic PRNG from a 32-bit seed
+function mulberry32(seed) {
+  let a = seed;
+  return function next() {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Builds today's deterministic categories + a pre-shuffled country queue
+// (8 needed + the full 3-skip budget = 11, so skipping never has to fall
+// back to randomness and stays identical for every player who skips the
+// same number of times).
+function generateDailySet(dateKey) {
+  const rng = mulberry32(hashStringToSeed(dateKey));
+
+  const dailyCategories = CATEGORY_PAIRS.map(pair => {
+    const v = pair.variants[rng() < 0.5 ? 0 : 1];
     return { ...v, dataType: pair.dataType };
   });
+
+  const indices = COUNTRIES.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const queueLen = Math.min(8 + SKIP_BUDGET, indices.length);
+  const countryQueue = indices.slice(0, queueLen); // COUNTRIES indices, not objects
+
+  return { categories: dailyCategories, countryQueue };
+}
+
+// ── Local history (no login, no backend — just this browser) ──
+function getDailyHistory() {
+  try { return JSON.parse(localStorage.getItem('fg_daily_history') || '{}'); }
+  catch (_) { return {}; }
+}
+function saveDailyResult(dateKey, dayNumber, score) {
+  const hist = getDailyHistory();
+  hist[dateKey] = { dayNumber, score };
+  localStorage.setItem('fg_daily_history', JSON.stringify(hist));
+}
+
+// Landing banner: "Play" prompt before today's challenge is done, the
+// score achieved after — flips back to the prompt the next calendar day
+// since it's keyed by date, not by a flag that needs resetting.
+function refreshDailyBanner() {
+  const bannerEl = document.getElementById('landing-daily');
+  const titleEl  = document.getElementById('landing-daily-title');
+  const subEl    = document.getElementById('landing-daily-sub');
+  const ctaEl    = document.getElementById('landing-daily-cta');
+  const doneEl   = document.getElementById('landing-daily-done');
+  if (!titleEl) return; // landing markup not in DOM yet
+
+  const dateKey = getDailyDateKey();
+  const done    = getDailyHistory()[dateKey];
+
+  bannerEl.classList.toggle('is-done', !!done);
+
+  if (done) {
+    titleEl.textContent = t('dailyCompletedTitle');
+    subEl.textContent   = t('dailyCompletedScore').replace('{0}', done.score.toFixed(1));
+    ctaEl.classList.add('hidden');
+    doneEl.classList.remove('hidden');
+    doneEl.querySelector('span:last-child').textContent = t('dailyDone');
+    // Plays once, right when the banner first shows the completed state
+    // after finishing today's round — not on every later landing visit.
+    if (dailyJustCompleted) {
+      dailyJustCompleted = false;
+      doneEl.classList.remove('pop-in');
+      void doneEl.offsetWidth; // restart the animation if it's somehow re-triggered
+      doneEl.classList.add('pop-in');
+    }
+  } else {
+    titleEl.textContent = t('dailyChallenge');
+    subEl.textContent   = t('dailyChallengeSub');
+    ctaEl.textContent   = t('play');
+    ctaEl.classList.remove('hidden');
+    doneEl.classList.add('hidden');
+    doneEl.classList.remove('pop-in');
+  }
+}
+
+// Placement: tested as its own centered row under the header against the
+// real device matrix first (preferred — kept the badge off the title
+// row entirely). On the shortest viewport (360x650) that row's ~37px
+// pushed an entire category-card row below the fold (the baseline
+// without it only clipped a few px), so it ships inline next to
+// #mode-label instead, accepting the minor header asymmetry.
+function updateDailyBadge() {
+  const show = dailyMode && currentMode === 'classic';
+  document.getElementById('daily-badge-text-inline').textContent =
+    t('dailyBadge').replace('{0}', dailyNumber);
+  document.getElementById('daily-badge-inline').classList.toggle('hidden', !show);
+}
+
+// ═══ GAME FUNCTIONS ══════════════════════════════════════
+
+function initGame(daily = false) {
+  clearTimeout(rollTimer);
+
+  dailyMode = daily;
+  if (daily) {
+    const dateKey = getDailyDateKey();
+    dailyNumber = getDailyNumber(dateKey);
+    const set = generateDailySet(dateKey);
+    categories         = set.categories;
+    dailyCountryQueue   = set.countryQueue;
+    dailyQueueIdx       = 0;
+  } else {
+    // Pick 8 random category variants (one per pair)
+    categories = CATEGORY_PAIRS.map(pair => {
+      const v = pair.variants[Math.floor(Math.random() * 2)];
+      return { ...v, dataType: pair.dataType };
+    });
+  }
+  updateDailyBadge();
 
   // Reset state
   slots        = Array(8).fill(null);
@@ -298,7 +464,7 @@ function initGame() {
   currentCountry = null;
   phase        = 'idle';
   isRolling    = false;
-  skipsLeft    = 3;
+  skipsLeft    = SKIP_BUDGET;
   rolledSet    = new Set();
   filledCount  = 0;
   isNewHigh    = false;
@@ -402,8 +568,13 @@ function startRoll() {
       flagDisplay.style.backgroundImage = `url(${COUNTRIES[ri].flagUrl})`;
       rollTimer = setTimeout(tick, interval);
     } else {
-      // Settle on final country
-      const fi = available[Math.floor(Math.random() * available.length)];
+      // Settle on final country — daily mode draws the next item from the
+      // pre-shuffled, date-seeded queue instead of picking randomly, so
+      // every player sees the same country here (the mid-spin flicker
+      // above stays random since it's cosmetic, not the actual outcome).
+      const fi = dailyMode
+        ? dailyCountryQueue[Math.min(dailyQueueIdx++, dailyCountryQueue.length - 1)]
+        : available[Math.floor(Math.random() * available.length)];
       const fc = COUNTRIES[fi];
       rolledSet.add(fi);
       currentCountry = fc;
@@ -574,11 +745,47 @@ function updateCardWatermark(i) {
 
 // ─── Score overlay ────────────────────────────────────────
 
+// Daily-only: did any placed country's own data fit one of the round's
+// *other* 7 categories meaningfully better than where it was actually
+// placed? Looks only at that country's own numbers in each category —
+// not whether swapping it in would also still work out for whoever
+// currently holds that slot. Returns null if nothing stands out.
+const DAILY_MISS_THRESHOLD = 30; // out of a ~195-rank scale
+function computeDailyMissInsight() {
+  let best = null;
+  for (let i = 0; i < 8; i++) {
+    const country = slots[i];
+    if (!country) continue;
+    for (let j = 0; j < 8; j++) {
+      if (j === i) continue;
+      const altCat   = categories[j];
+      const altRd    = getRankData(rankings, altCat.dataType);
+      const altScore = getScore(country.name, altRd, altCat.higher, altCat.dataType);
+      const gap      = scores[i] - altScore; // positive = the other category was better
+      if (gap > 0 && (!best || gap > best.gap)) {
+        best = { gap, slotIdx: i, altIdx: j, altScore };
+      }
+    }
+  }
+  if (!best || best.gap < DAILY_MISS_THRESHOLD) return null;
+  return {
+    country:     slots[best.slotIdx],
+    originalCat: categories[best.slotIdx],
+    altCat:      categories[best.altIdx],
+    altScore:    best.altScore,
+  };
+}
+
 function showScoreOverlay() {
   phase = 'complete';
 
   const valid = scores.filter(s => s !== 999 && s !== null);
   const avg   = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : 0;
+
+  if (dailyMode) {
+    saveDailyResult(getDailyDateKey(), dailyNumber, avg);
+    dailyJustCompleted = true;
+  }
 
   // High score (lower is better)
   isNewHigh = false;
@@ -635,6 +842,20 @@ function showScoreOverlay() {
     row.appendChild(info);
     grid.appendChild(row);
   });
+
+  // Daily-only "biggest miss" insight — shown only when one clearly stands out
+  const insightEl = document.getElementById('score-insight');
+  const insight    = dailyMode ? computeDailyMissInsight() : null;
+  if (insight) {
+    insightEl.textContent = t('dailyMissLine')
+      .replace('{0}', cn(insight.country.name))
+      .replace('{1}', t(insight.originalCat.id))
+      .replace('{2}', t(insight.altCat.id))
+      .replace('{3}', ordinalStr(insight.altScore));
+    insightEl.classList.remove('hidden');
+  } else {
+    insightEl.classList.add('hidden');
+  }
 
   // Show overlay
   document.getElementById('score-overlay').classList.remove('hidden');
@@ -844,7 +1065,7 @@ function applyI18n() {
 
   // Mode button label (header)
   const modeMap = {
-    classic: t('flagGame'), duel: t('flagDuel'),
+    classic: t('classicTitle'), duel: t('flagDuel'),
     reveal: t('flagReveal'), puzzle: t('flagPuzzle'),
   };
   document.getElementById('mode-label').textContent = modeMap[currentMode] || currentMode;
@@ -875,6 +1096,9 @@ function applyI18n() {
 
   // Roll button stays in English (same as React version)
   updateRollButton();
+
+  refreshDailyBanner();
+  updateDailyBadge();
 }
 
 // ═══ PHASE 1: SETTINGS / LAYOUT / THEME ══════════════════
@@ -1021,7 +1245,7 @@ function switchMode(mode) {
 
   document.getElementById('progress-widget').classList.toggle('hidden', mode !== 'classic');
   document.getElementById('mode-label').textContent =
-    t(mode === 'classic' ? 'flagGame' : mode === 'duel' ? 'flagDuel' :
+    t(mode === 'classic' ? 'classicTitle' : mode === 'duel' ? 'flagDuel' :
       mode === 'reveal' ? 'flagReveal' : mode === 'puzzle' ? 'flagPuzzle' : 'flagGame');
 
   document.querySelectorAll('.mode-item').forEach(item => {
@@ -1083,7 +1307,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Landing page ──
   document.getElementById('home-btn').addEventListener('click', () => switchMode('landing'));
   document.querySelectorAll('.landing-card').forEach(card => {
-    card.addEventListener('click', () => switchMode(card.dataset.mode));
+    card.addEventListener('click', () => {
+      // The plain Classic card is an explicit "normal round" entry point —
+      // don't let a previous Daily Challenge session leak into it.
+      if (card.dataset.mode === 'classic' && dailyMode) initGame(false);
+      switchMode(card.dataset.mode);
+    });
+  });
+  document.getElementById('landing-daily-cta').addEventListener('click', () => {
+    initGame(true);
+    switchMode('classic');
   });
   document.getElementById('landing-settings-btn').addEventListener('click', e => {
     e.stopPropagation();
@@ -1138,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.getElementById('play-again-btn').addEventListener('click', initGame);
+  document.getElementById('play-again-btn').addEventListener('click', () => initGame(false));
 
   // ── Phase 5: Flag Duel event handlers ──
   [0, 1].forEach(idx => {

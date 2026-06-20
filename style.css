@@ -250,6 +250,35 @@ input  { font-family: inherit; }
   display: none !important;
 }
 
+/* Daily Challenge badge — shown only for a round started from the
+   landing page's Daily Challenge banner (see dailyMode/updateDailyBadge
+   in script.js). Colors reuse --c-accent/--c-accent-glow rather than a
+   hardcoded gold so it stays gold/navy in dark mode (the theme it was
+   designed against) but still matches light mode's own accent instead
+   of clashing with it. */
+.daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 4px;
+  border-radius: 999px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: calc(11px * var(--ui-scale));
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--c-accent);
+  background: var(--c-accent-hover-bg);
+  border: 1.3px solid var(--c-accent);
+  animation: dailyGlowPulse 2.4s ease-in-out infinite;
+}
+.daily-badge-dot { font-size: 0.8em; transform: translateY(-0.5px); }
+@keyframes dailyGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 10px 2px var(--c-accent-glow); }
+}
+
 .hdr-left, .hdr-right {
   flex: 1;
   display: flex;
@@ -579,7 +608,6 @@ input  { font-family: inherit; }
   border-radius: calc(13px * var(--ui-scale));
   border: 1.5px solid var(--c-card-border);
   background: var(--c-card);
-  opacity: 0.7;
 }
 .landing-daily-title {
   font-family: 'Barlow Condensed', sans-serif;
@@ -594,6 +622,19 @@ input  { font-family: inherit; }
   color: var(--c-sub);
   margin-top: 2px;
 }
+
+/* Completed state: brighter title + a legible (not washed-out) gold
+   score line, instead of reusing the same muted look the not-yet-played
+   state uses. */
+.landing-daily.is-done .landing-daily-title { color: var(--c-text); }
+.landing-daily.is-done .landing-daily-sub {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+/* Play CTA — the feature is live, so this reuses the same prominent
+   gold-fill recipe as .roll-btn/.btn-primary rather than the disabled
+   "Coming Soon" look it used to inherit. */
 .landing-daily-cta {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 800;
@@ -601,12 +642,58 @@ input  { font-family: inherit; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--c-sub);
-  background: var(--c-bg);
-  border: 1.5px solid var(--c-card-border);
+  color: var(--c-btn-text);
+  background: var(--c-btn);
+  border: none;
   border-radius: calc(9px * var(--ui-scale));
   padding: calc(8px * var(--ui-scale)) calc(18px * var(--ui-scale));
-  cursor: not-allowed;
+  box-shadow: var(--c-btn-shadow);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.landing-daily-cta:hover  { transform: scale(1.04); }
+.landing-daily-cta:active { transform: scale(0.97); }
+
+/* Completed badge — gold-outlined (not gray) so it still reads as an
+   active/accomplished state, distinct from the solid-fill Play CTA. */
+.landing-daily-done {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6px * var(--ui-scale));
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: calc(13px * var(--ui-scale));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--c-accent);
+  background: var(--c-accent-hover-bg);
+  border: 1.5px solid var(--c-accent);
+  border-radius: calc(9px * var(--ui-scale));
+  padding: calc(8px * var(--ui-scale)) calc(16px * var(--ui-scale));
+}
+.landing-daily-done-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: var(--c-btn-text);
+  font-size: 0.8em;
+  line-height: 1;
+}
+/* One-shot pop + glow, played only the first time the banner renders
+   the completed state right after finishing today's round (see
+   dailyJustCompleted in script.js) — not a permanent loop. */
+.landing-daily-done.pop-in {
+  animation: dailyDonePop 0.6s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes dailyDonePop {
+  0%   { transform: scale(0.6); opacity: 0; box-shadow: 0 0 0 0 transparent; }
+  55%  { transform: scale(1.12); opacity: 1; box-shadow: 0 0 14px 4px var(--c-accent-glow); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 transparent; }
 }
 
 /* Desktop: more breathing room, larger icons/type (mobile defaults above
@@ -1332,6 +1419,17 @@ input  { font-family: inherit; }
   font-weight: 800;
   font-size: 18px;
   line-height: 1;
+}
+.score-insight {
+  background: var(--c-accent-hover-bg);
+  border: 1px solid var(--c-accent-glow);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--c-text);
+  text-align: left;
 }
 .score-actions { display: flex; gap: 10px; justify-content: center; }
 
