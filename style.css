@@ -725,7 +725,13 @@ input  { font-family: inherit; }
   gap: calc(16px * var(--ui-scale));
   align-items: center;
 }
-.cat-col { padding-top: 8px; }
+/* min-width:0 here (not just on .cat-info further down) is what actually
+   lets this grid column shrink below a long nowrap placed-country-name's
+   natural width — without it, a single long name (e.g. "Saint Vincent
+   and the Grenadines") forces this 1fr track wider, stealing space from
+   the opposite column and throwing the two columns out of sync even
+   though both are nominally 1fr. */
+.cat-col { padding-top: 8px; min-width: 0; }
 
 /* ─── Category card ─── */
 .cat-card {
@@ -1386,6 +1392,13 @@ input  { font-family: inherit; }
   margin-bottom: 24px;
 }
 .score-row {
+  /* Grid items default to min-width:auto (their content's min-content
+     size), which can force a 1fr column wider than its fair share —
+     min-width:0 on .score-row-info alone isn't enough, since that only
+     governs shrinking *within* .score-row's own flex layout, not how
+     wide .score-row itself is allowed to be as a grid item. Long real
+     category names (not short placeholders) are what exposed this. */
+  min-width: 0;
   background: var(--c-score-row);
   border-radius: 10px;
   padding: 9px 12px;
@@ -1405,14 +1418,18 @@ input  { font-family: inherit; }
 }
 .score-row-info { flex: 1; min-width: 0; text-align: left; }
 .score-row-cat {
+  /* Wraps instead of truncating with an ellipsis, matching .cat-lbl's
+     treatment in the live in-game grid — full category names like
+     "Fewest Olympic Medals" stay fully readable instead of losing
+     information to a cut-off label. .score-grid's implicit row tracks
+     stretch both cards in a row to match (grid's default
+     align-items:stretch), so a 2-line label doesn't look lopsided next
+     to a 1-line one beside it. */
   font-size: 10px;
   color: var(--c-sub);
   font-weight: 500;
   line-height: 1.3;
   margin-bottom: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .score-row-rank {
   font-family: 'Barlow Condensed', sans-serif;
@@ -1432,6 +1449,16 @@ input  { font-family: inherit; }
   text-align: left;
 }
 .score-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* This overlay never got a mobile-specific pass before — the flat 40px
+   horizontal padding above eats nearly half the available width on a
+   narrow phone (e.g. ~331px modal at 360px viewport), which is what let
+   the .score-row min-width bug above bite so hard. Trimming it here
+   gives the grid noticeably more room without touching desktop. */
+@media (max-width: 699px) {
+  .score-modal { padding: 28px 18px; }
+  .score-grid  { gap: 6px; }
+}
 
 /* Milestones modal */
 .modal-box {
